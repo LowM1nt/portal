@@ -1,5 +1,4 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from './AuthProvider.tsx'
@@ -40,11 +39,11 @@ describe('AuthProvider — tela de entrada centralizada', () => {
   })
 
   it('erro de login aparece dentro do cartão', async () => {
-    const usuario = userEvent.setup()
     renderizar(clienteFalso(false).cliente)
     const titulo = await screen.findByRole('heading', { name: 'Entrar' })
-    await usuario.type(screen.getByLabelText('E-mail'), 'a@exemplo.com')
-    await usuario.type(screen.getByLabelText('Senha'), 'errada{Enter}')
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'a@exemplo.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'errada' } })
+    fireEvent.submit(titulo.closest('form') as HTMLFormElement)
     const alerta = await screen.findByRole('alert')
     expect(titulo.closest('.painel')).toContainElement(alerta)
   })
