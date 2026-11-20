@@ -77,3 +77,15 @@ Contrato da API:
 | `PUT /api/integracoes/github` | Bearer, `X-Workspace-Id`, `{ token, repositorios: ["dono/repo"] }` | `{ configurado: true, finalToken: "abcd", repositorios }` | 400 (token vazio, repo mal formado), 401, 404 |
 | `GET /api/integracoes/github` | Bearer, `X-Workspace-Id` | `{ configurado, finalToken, repositorios, ultimaSincronizacao, ultimoErro }` | 401, 404 |
 | `DELETE /api/integracoes/github` | Bearer, `X-Workspace-Id` | 204 | 401, 404 |
+
+## D-005 — "Aguardando revisão" (P-009) · 20/11/2026 · PROVISÓRIA (aguarda confirmação do dono)
+
+- **Aguardando revisão** = PR **aberta**, **não rascunho** e com **pelo menos um revisor solicitado ainda pendente** (o `requested_reviewers` da listagem do GitHub; quem já revisou sai dessa lista). É o "Review requested" do próprio GitHub.
+- Vem inteira da listagem que o portal já busca: **nenhuma chamada extra** à API do GitHub.
+- "Por quem revisa" = os logins em `requested_reviewers` (equipes em `requested_teams` aparecem com o nome da equipe).
+
+Contrato:
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `GET /api/revisoes?repositorio=dono/repo&revisor=login` | Bearer, `X-Workspace-Id` (filtros opcionais) | `[{ numero, titulo, autor, url, repositorio, revisores: ["login"], statusCi, atualizadaEm }]`, mais antigas primeiro | 401, 404 |

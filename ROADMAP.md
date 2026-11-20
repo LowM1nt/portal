@@ -180,13 +180,21 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - arquivos: `apps/api/src/Portal.Api/Integracoes/GitHub/SincronizacaoGitHub.cs` (`BackgroundService`)
   - aceite: a cada 10 min sincroniza os workspaces com token; falha do GitHub (token expirado, rede) fica registrada no workspace (`ultimoErro`, `ultimaSincronizacao`) e nunca derruba o portal; um workspace com erro não impede os outros
   - testes: o serviço com relógio falso e cliente falso — roda no intervalo, registra o erro, segue para o próximo workspace
-- [ ] **P-009 — Fila de revisão de PRs**
+- [ ] **P-009 — API: fila de revisão de PRs**
   - nível: padrao
-  - repo: portal · superfícies: api, ui
-  - arquivos: `apps/api/Revisoes/`, `apps/web/src/features/revisoes/`
-  - aceite: lista as PRs aguardando revisão, com filtro por repositório e por quem revisa; estados vazio, erro e carregando
-  - testes: integração da API e componente da lista
+  - repo: portal · superfícies: api, dados
+  - decisões: `docs/decisoes.md` D-005 (definição de "aguardando revisão" e contrato) — não reabrir
+  - arquivos: o importador do GitHub passa a guardar `draft` e os revisores solicitados (`requested_reviewers`, `requested_teams`) de cada PR (colunas + migration); `apps/api/src/Portal.Api/Revisoes/` (endpoint)
+  - aceite: o contrato da D-005 funciona; filtros por repositório e por revisor; só PRs do workspace; rascunho e PR sem revisor pendente não aparecem; ordem: mais antigas primeiro
+  - testes: importação com respostas gravadas contendo `draft` e `requested_reviewers`; integração do endpoint (filtros, outro workspace recusado, rascunho fora)
 
+- [ ] **P-023 — Web: tela da fila de revisão**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - pré-requisito: P-009
+  - arquivos: `apps/web/src/features/revisoes/`, rota no `apps/web/src/App.tsx`
+  - aceite: lista as PRs aguardando revisão (título com link, repositório, autor, revisores, status de CI com `.selo`, há quanto tempo), filtros por repositório e por revisor; estados vazio ("Nenhuma PR esperando revisão"), erro com "Tentar de novo" e carregando; nada vaza da tela em 360 px
+  - testes: componente com cliente falso — lista, filtros, os três estados
 - [x] **P-010 — Demo pública com dados fictícios**
   - nível: padrao
   - repo: portal · superfícies: api, ui, dados
