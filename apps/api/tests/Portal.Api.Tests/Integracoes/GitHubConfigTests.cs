@@ -55,7 +55,7 @@ public class ApiComLogsCapturados : ApiFactory
 public class GitHubConfigTests
 {
     private const string Rota = "/api/integracoes/github";
-    private const string Token = "github_pat_SEGREDO_unico_0123456789_wxyz";
+    private const string Token = "token-de-teste-SEGREDO-unico-0123456789-wxyz";
 
     private readonly PostgresFixture _pg;
 
