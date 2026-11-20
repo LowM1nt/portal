@@ -22,10 +22,20 @@ const diaHora = new Intl.DateTimeFormat('pt-BR', {
 const diaMes = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', timeZone: FUSO })
 const soDia = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', timeZone: FUSO })
 
-const ROTULO_RESULTADO: Record<string, string> = { pr_aberta: 'PR aberta', reprovada: 'Reprovada' }
+const reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+
+const SELO: Record<TarefaDaNoite['estado'], { rotulo: string; classe: string }> = {
+  merge: { rotulo: 'Merge feito', classe: 'selo selo-ok' },
+  pr_aberta: { rotulo: 'PR aberta', classe: 'selo selo-roxo' },
+  reprovada: { rotulo: 'Reprovada', classe: 'selo selo-erro' },
+  fila_dificeis: { rotulo: 'Fila de difíceis', classe: 'selo selo-atencao' },
+}
 
 function formatarTokens(n: number): string {
-  return n >= 1000 ? `${numero.format(Math.round(n / 1000))} mil` : numero.format(n)
+  const mil = Math.round(n / 1000)
+  if (n >= 1_000_000 || mil >= 1000) return `${decimal.format(n / 1_000_000)} mi`
+  return n >= 1000 ? `${numero.format(mil)} mil` : numero.format(n)
 }
 
 function formatarHora(iso: string): string {
@@ -152,17 +162,17 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
       {d.tarefas.length > 0 && <LinhaDaNoite tarefas={d.tarefas} minutosFora={d.minutosFora} />}
 
       <div className="grade grade-4">
-        <Numero rotulo="PRs abertas" valor={String(d.prs)} />
+        <Numero rotulo="PRs com merge" valor={String(d.prsComMerge)} />
         <Numero rotulo="Portões de primeira" valor={`${portoesDePrimeira} de ${d.tarefas.length}`} />
         <Numero rotulo="Tokens na noite" valor={formatarTokens(d.tokensDaNoite)} />
-        <Numero rotulo="Gasto no mês" valor={`${formatarTokens(d.gastoNoMes)} tokens`} />
+        <Numero rotulo="Gasto no mês" valor={reais.format(d.gastoNoMes)} />
       </div>
 
       <section className="painel" aria-label="Tarefas da noite">
         <header>
           <h2>Tarefas da noite</h2>
         </header>
-        {d.tarefas.length === 0 ? (
+        {d.itensDaNoite.length === 0 ? (
           <p className="vazio">Nenhuma tarefa registrada nesta noite.</p>
         ) : (
           <table className="tabela">
@@ -176,15 +186,14 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
               </tr>
             </thead>
             <tbody>
-              {d.tarefas.map((t) => (
+              {d.itensDaNoite.map((t) => (
                 <tr key={t.id}>
                   <td>
-                    {t.item} · {formatarHora(t.ts)}
+                    <b>{t.item}</b>
+                    {t.titulo && <> {t.titulo}</>} <span className="suave pequeno">· {formatarHora(t.ts)}</span>
                   </td>
                   <td>
-                    <span className={t.resultado === 'pr_aberta' ? 'selo selo-ok' : 'selo selo-atencao'}>
-                      {ROTULO_RESULTADO[t.resultado] ?? t.resultado}
-                    </span>
+                    <span className={SELO[t.estado].classe}>{SELO[t.estado].rotulo}</span>
                   </td>
                   <td className="num">{formatarTokens(t.tokens)}</td>
                 </tr>

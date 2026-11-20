@@ -24,7 +24,7 @@ describe('VisaoGeral pelo contrato', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /Noite de \d+ para \d+ de novembro/ })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Linha da noite' })).toBeInTheDocument()
     expect(container.querySelectorAll('.grade-4 .painel.numero')).toHaveLength(4)
-    for (const rotulo of ['PRs abertas', 'Portões de primeira', 'Tokens na noite', 'Gasto no mês']) {
+    for (const rotulo of ['PRs com merge', 'Portões de primeira', 'Tokens na noite', 'Gasto no mês']) {
       expect(screen.getByText(rotulo)).toBeInTheDocument()
     }
     expect(screen.getByText('390 mil')).toBeInTheDocument()
