@@ -108,6 +108,13 @@ namespace Portal.Api.Dados.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("repositorio_id");
 
+                    b.Property<string>("ShaUltimoCommit")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StatusCi")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasMaxLength(300)

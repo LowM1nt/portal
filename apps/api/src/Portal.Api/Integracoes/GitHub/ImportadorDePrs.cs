@@ -89,9 +89,33 @@ public class ImportadorDePrs
 
         // A paginação do GitHub é por página: uma PR aberta entre duas páginas pode vir duas vezes.
         var vistas = new HashSet<int>();
+        var tokenInvalido = false;
+        var limiteAtingido = false;
         foreach (var pr in lista.Prs)
         {
             if (!vistas.Add(pr.Numero)) continue;
+
+            // Erro numa PR não interrompe as outras: ela mantém o status anterior.
+            string? statusCi = null;
+            if (pr.Sha is { Length: > 0 } sha && !tokenInvalido && !limiteAtingido)
+            {
+                try
+                {
+                    var ci = await _cliente.ConsultarStatusCiAsync(repo, sha, token, ct);
+                    statusCi = ci.Status;
+                    if (ci.LimiteRestante is { } r && r <= ClienteGitHub.LimiteMinimo) limiteAtingido = true;
+                }
+                catch (TokenInvalidoException)
+                {
+                    tokenInvalido = true;
+                }
+                catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException
+                    or InvalidOperationException or OperationCanceledException && !ct.IsCancellationRequested)
+                {
+                    statusCi = null;
+                }
+            }
+
             if (existentes.Remove(pr.Numero, out var atual))
             {
                 atual.Titulo = pr.Titulo;
@@ -99,6 +123,7 @@ public class ImportadorDePrs
                 atual.Estado = "open";
                 atual.Url = pr.Url;
                 atual.AtualizadaEm = pr.AtualizadaEm;
+                if (statusCi is not null) { atual.StatusCi = statusCi; atual.ShaUltimoCommit = pr.Sha; }
             }
             else
             {
@@ -107,6 +132,7 @@ public class ImportadorDePrs
                     WorkspaceId = workspaceId, RepositorioId = rep.Id, Numero = pr.Numero,
                     Titulo = pr.Titulo, Autor = pr.Autor, Estado = "open",
                     Url = pr.Url, AtualizadaEm = pr.AtualizadaEm,
+                    StatusCi = statusCi ?? "sem CI", ShaUltimoCommit = statusCi is null ? null : pr.Sha,
                 });
             }
         }
@@ -114,6 +140,7 @@ public class ImportadorDePrs
         // O que sobrou não veio numa listagem completa: foi fechada.
         _db.PullRequests.RemoveRange(existentes.Values);
         await _db.SaveChangesAsync(ct);
-        return new(repo, StatusImportacao.Importado);
+        if (tokenInvalido) return new(repo, StatusImportacao.TokenInvalido, new TokenInvalidoException().Message);
+        return new(repo, limiteAtingido ? StatusImportacao.LimiteAtingido : StatusImportacao.Importado);
     }
 }
