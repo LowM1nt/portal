@@ -104,7 +104,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: depois do login, a visão geral carrega com os dados reais do Supabase (sem erro), mostra "última sincronização: há X min", e o layout segue a prévia nos dois temas; estados vazio, erro com "Tentar de novo" e carregando
   - testes: **teste de contrato** — o cliente falso recusa (lança erro) qualquer tabela ou coluna fora de `contrato.ts`, e `contrato.ts` bate com `docs/eventos.md`; componente com uma noite real (`noite_resumo` + `tarefa_metricas`) e com noite vazia; "Cancelar post" grava o comando certo
 
-- [ ] **P-016 — Login centralizado (painel e web)**
+- [x] **P-016 — Login centralizado (painel e web)**
   - nível: barato
   - repo: portal · superfícies: ui
   - pedido do dono: o login vira um cartão central, no estilo de modal

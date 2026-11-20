@@ -117,12 +117,23 @@ function Entrar({ cliente }: { cliente: SupabaseClient }) {
   }
 
   return (
-    <main className="conteudo">
-      <h1>Painel do agente</h1>
-      <form className="painel" onSubmit={(e) => void enviar(e)} aria-label="Entrar no painel">
+    <main className="entrada">
+      <form className="painel entrada-cartao" onSubmit={(e) => void enviar(e)} aria-label="Entrar no painel">
+        <div className="marca">
+          <span className="lua" aria-hidden="true" />
+          Madrugada
+        </div>
+        <h1>Entrar</h1>
         <label className="campo">
           E-mail
-          <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            type="email"
+            autoComplete="email"
+            autoFocus
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </label>
         <label className="campo">
           Senha
@@ -139,7 +150,7 @@ function Entrar({ cliente }: { cliente: SupabaseClient }) {
             {erro}
           </p>
         )}
-        <button type="submit" className="botao botao-primario" disabled={enviando}>
+        <button type="submit" className="botao botao-primario entrada-botao" disabled={enviando}>
           {enviando ? 'Entrando…' : 'Entrar'}
         </button>
       </form>

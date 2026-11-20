@@ -59,6 +59,7 @@
 
   --foco: 0 0 0 2px var(--noite), 0 0 0 4px var(--roxo-forte);
   --largura-leitura: 68ch;
+  --largura-cartao: 400px;
 }
 
 /* tema claro: papel levemente lilás, roxo mais fundo para manter contraste */

@@ -1,4 +1,3 @@
-import { useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider.tsx'
@@ -25,7 +24,7 @@ function App({ cliente = clientePadrao }: Props) {
 }
 
 export function Telas() {
-  const { estado, workspaces, workspaceAtivo, trocarWorkspace, sair, tentarDeNovo, cliente } = useAuth()
+  const { estado, workspaces, workspaceAtivo, trocarWorkspace, sair, tentarDeNovo } = useAuth()
 
   if (estado === 'carregando') {
     return (
@@ -35,8 +34,6 @@ export function Telas() {
       </main>
     )
   }
-
-  if (estado === 'sem-sessao') return <Entrar cliente={cliente} />
 
   if (estado === 'erro') {
     return (
@@ -76,52 +73,6 @@ export function Telas() {
         </div>
       </header>
       {workspaceAtivo && <Calendario />}
-    </main>
-  )
-}
-
-function Entrar({ cliente }: { cliente: SupabaseClient }) {
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState('')
-  const [enviando, setEnviando] = useState(false)
-
-  async function enviar(e: FormEvent) {
-    e.preventDefault()
-    setErro('')
-    setEnviando(true)
-    const { error } = await cliente.auth.signInWithPassword({ email, password: senha })
-    setEnviando(false)
-    if (error) setErro('E-mail ou senha incorretos.')
-  }
-
-  return (
-    <main className="conteudo">
-      <h1>Portal</h1>
-      <form className="painel" onSubmit={(e) => void enviar(e)} aria-label="Entrar no portal">
-        <label className="campo">
-          E-mail
-          <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-        <label className="campo">
-          Senha
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-          />
-        </label>
-        {erro && (
-          <p role="alert" className="selo selo-erro">
-            {erro}
-          </p>
-        )}
-        <button type="submit" className="botao botao-primario" disabled={enviando}>
-          {enviando ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
     </main>
   )
 }

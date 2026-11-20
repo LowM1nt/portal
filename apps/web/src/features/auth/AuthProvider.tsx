@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { chamarApi } from './apiClient.ts'
+import { Entrar } from './Entrar.tsx'
 
 export type Workspace = { id: string; nome: string; papel: string }
 
@@ -118,7 +119,11 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
     [estado, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
   )
 
-  return <AuthContexto.Provider value={valor}>{children}</AuthContexto.Provider>
+  return (
+    <AuthContexto.Provider value={valor}>
+      {estado === 'sem-sessao' ? <Entrar cliente={cliente} /> : children}
+    </AuthContexto.Provider>
+  )
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
