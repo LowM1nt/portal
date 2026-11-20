@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { formatarNumero } from "../../formatar.ts";
 import { buscarPerformance, type Indicadores, type Periodo } from "./dados.ts";
 
 type Estado =
@@ -16,7 +17,7 @@ const inteiro = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 
 function Numero({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
-    <div className="numero">
+    <div className="painel numero">
       <b>{valor}</b> <span>{rotulo}</span>
     </div>
   );
@@ -66,14 +67,15 @@ export default function Performance({ cliente }: { cliente: SupabaseClient }) {
 
   return (
     <div className="grade">
-      <div className="abas" role="group" aria-label="Período">
+      <h1>Performance</h1>
+      <div className="abas" role="tablist" aria-label="Período">
         {([7, 30] as const).map((p) => (
           <button
             key={p}
             type="button"
+            role="tab"
             className="aba"
             aria-selected={periodo === p}
-            aria-pressed={periodo === p}
             onClick={() => escolher(p)}
           >
             {p} dias
@@ -123,7 +125,7 @@ export default function Performance({ cliente }: { cliente: SupabaseClient }) {
               valor={
                 estado.indicadores.tokensPorTarefa === null
                   ? semValor
-                  : inteiro.format(estado.indicadores.tokensPorTarefa)
+                  : formatarNumero(estado.indicadores.tokensPorTarefa)
               }
             />
             <Numero
@@ -131,12 +133,12 @@ export default function Performance({ cliente }: { cliente: SupabaseClient }) {
               valor={
                 estado.indicadores.filaDificeis === null
                   ? semValor
-                  : inteiro.format(estado.indicadores.filaDificeis)
+                  : formatarNumero(estado.indicadores.filaDificeis)
               }
             />
             <Numero
               rotulo="Acionamentos do fallback"
-              valor={inteiro.format(estado.indicadores.fallbacks)}
+              valor={formatarNumero(estado.indicadores.fallbacks)}
             />
           </div>
         </section>

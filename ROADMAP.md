@@ -136,7 +136,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
     - títulos e números com a fonte e o peso do design system (a fonte já é carregada no index.html)
   - testes: componente — cartão de merge conta `tarefa_mergeada`; gasto mostra "R$"; item repetido aparece uma vez com o estado mais recente
 
-- [ ] **P-019 — Painel: acabamento da performance e da visão geral**
+- [x] **P-019 — Painel: acabamento da performance e da visão geral**
   - nível: barato
   - repo: portal · superfícies: ui
   - por quê: segunda comparação por captura de tela (20/11) com `docs/design-system/capturas/painel-escuro.png`

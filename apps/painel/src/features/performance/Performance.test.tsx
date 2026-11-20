@@ -32,7 +32,7 @@ describe('Performance', () => {
     await screen.findByText(/PRs por noite/i)
     expect(indicador(/PRs por noite/i)).toHaveTextContent(/2[.,]33|2[.,]3\b/) // (3+2+2) ÷ 3 noites
     expect(indicador(/Taxa de aprovação nos portões/i)).toHaveTextContent(/75\s?%/)
-    expect(indicador(/Tokens por tarefa/i)).toHaveTextContent(/3[.,]?000/) // (2000+4000+2000+4000) ÷ 4
+    expect(indicador(/Tokens por tarefa/i)).toHaveTextContent(/3 mil/) // (2000+4000+2000+4000) ÷ 4
     expect(indicador(/Fila de difíceis/i)).toHaveTextContent('6')
     expect(indicador(/Acionamentos do fallback/i)).toHaveTextContent('3')
   })
