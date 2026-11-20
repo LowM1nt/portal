@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Portal.Api.Dados;
 using Portal.Api.Dados.Entidades;
+using Portal.Api.Deploys;
 using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Workspaces;
 

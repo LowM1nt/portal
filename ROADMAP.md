@@ -157,7 +157,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - testes: integração — salvar, ler (sem o token), apagar; outro workspace recusado; o valor gravado no banco não é o token em texto puro
   - fora do escopo: chamar o GitHub (é o P-020)
 
-- [ ] **P-020 — GitHub: cliente da API e importação de PRs abertas**
+- [x] **P-020 — GitHub: cliente da API e importação de PRs abertas**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - pré-requisito: P-008
