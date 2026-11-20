@@ -101,7 +101,7 @@ public partial class ClienteGitHub
         p.TryGetProperty("head", out var hd) && hd.ValueKind == JsonValueKind.Object
             && hd.TryGetProperty("sha", out var sh) ? sh.GetString() : null);
 
-    private static readonly string[] ConclusoesDeFalha = ["failure", "timed_out", "cancelled", "action_required", "startup_failure", "stale"];
+    private static readonly string[] ConclusoesDeFalha = ["failure", "timed_out", "cancelled", "action_required", "startup_failure"]; // "stale" é check marcado como velho, não falha
 
     /// <summary>Status combinado (commit statuses + check runs) do commit, nos 4 estados do portal.</summary>
     public async Task<ResultadoCi> ConsultarStatusCiAsync(string repo, string sha, string token, CancellationToken ct)

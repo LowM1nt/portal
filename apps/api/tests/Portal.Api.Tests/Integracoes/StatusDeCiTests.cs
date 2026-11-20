@@ -228,6 +228,36 @@ public class StatusDeCiTests
     }
 
     [Fact]
+    public async Task Commit_novo_com_ci_ilegivel_nao_mostra_o_ci_do_commit_antigo()
+    {
+        const string ShaNovo = "3333333333333333333333333333333333333333";
+        var gh = NovoGitHub();
+        Ci(gh, Sha12, "status-sucesso.json", "checks-sucesso.json");
+        Ci(gh, Sha15, "status-sucesso.json", "checks-sucesso.json");
+        await using var api = await NovaApiAsync(gh);
+        var ws = await NovoWorkspaceAsync(api, Token);
+        await ImportarAsync(api, ws);
+        Assert.Equal("sucesso", StatusDe((await PrsAsync(api, ws))[0]));
+
+        // push na PR 12: a listagem traz o SHA novo, mas o CI dele falha na consulta
+        gh.Rotas[$"/repos/{Repo}/pulls"] = () =>
+        {
+            var resposta = Json(Gravacao("prs-ci.json").Replace(Sha12, ShaNovo));
+            resposta.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"prs-ci-v2\"");
+            return resposta;
+        };
+        gh.Rotas[$"/repos/{Repo}/commits/{ShaNovo}/status"] = () => Json(Gravacao("erro-500.json"), HttpStatusCode.InternalServerError);
+        gh.Rotas[$"/repos/{Repo}/commits/{ShaNovo}/check-runs"] = () => Json(Gravacao("erro-500.json"), HttpStatusCode.InternalServerError);
+        await ImportarAsync(api, ws);
+        Assert.Equal("rodando", StatusDe((await PrsAsync(api, ws))[0])); // nunca o "sucesso" do commit antigo
+
+        // na volta seguinte (lista sem mudança, 304), o CI do commit novo é lido
+        Ci(gh, ShaNovo, "status-falhou.json", "checks-sucesso.json");
+        await ImportarAsync(api, ws);
+        Assert.Equal("falhou", StatusDe((await PrsAsync(api, ws))[0]));
+    }
+
+    [Fact]
     public async Task Reimportar_com_status_mudado_atualiza_a_pr_sem_duplicar()
     {
         var gh = NovoGitHub();
