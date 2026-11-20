@@ -76,8 +76,8 @@ public sealed class GitHubFalso : HttpMessageHandler
 public class ImportadorDePrsTests
 {
     private const string Repo = "acme/portal";
-    private const string TokenA = "github_pat_TOKEN-DO-WORKSPACE-A-0001";
-    private const string TokenB = "github_pat_TOKEN-DO-WORKSPACE-B-0002";
+    private const string TokenA = "token-de-teste-workspace-a-0001";
+    private const string TokenB = "token-de-teste-workspace-b-0002";
 
     private readonly PostgresFixture _pg;
 
