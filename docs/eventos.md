@@ -39,7 +39,7 @@ Como calcular, no período escolhido:
 | `comite_aprovou` / `comite_sem_plano` | `item`, `partes`, `ciclos` |
 | `infra_falhou` | `etapa`, `erro` |
 
-Além de `eventos`, o painel lê `public.sincronizacao` (`ultima_vez`), `public.posts` e grava em
+Além de `eventos`, o painel lê `public.sincronizacao` (`ultima_vez`, `perfil_ativo`, `perfis_disponiveis` — lista de texto), `public.posts` e grava em
 `public.comandos` (`pausar`, `retomar`, `trocar_perfil`, `cancelar_post`).
 
 ## Regras para o front
