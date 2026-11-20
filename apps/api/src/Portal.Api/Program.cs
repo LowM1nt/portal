@@ -1,8 +1,41 @@
+using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Portal.Api.Auth;
+using Portal.Api.Dados;
+using Portal.Api.Workspaces;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// A configuração é lida de forma tardia (dentro dos callbacks) para valer o que o host final define.
+builder.Services.AddDbContext<PortalDbContext>((sp, o) =>
+    o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Portal")));
+builder.Services.AddScoped<WorkspaceAtual>();
+builder.Services.AddScoped<WorkspaceService>();
+builder.Services.AddAutenticacaoSupabase();
+
+// CORS: só a origem do web (Cors:Origem; padrão = Vite local).
+builder.Services.AddCors();
+builder.Services.AddOptions<CorsOptions>().Configure<IConfiguration>((o, config) =>
+    o.AddDefaultPolicy(p => p
+        .WithOrigins(config["Cors:Origem"] ?? "http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
 
 var app = builder.Build();
 
+// Migrations no startup só em Development; em produção, `dotnet ef database update` à mão.
+if (app.Environment.IsDevelopment() && !string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("Portal")))
+{
+    using var escopo = app.Services.CreateScope();
+    escopo.ServiceProvider.GetRequiredService<PortalDbContext>().Database.Migrate();
+}
+
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapWorkspaces();
 
 app.Run();
 
