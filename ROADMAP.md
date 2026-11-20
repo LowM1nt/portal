@@ -65,7 +65,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - testes: integração com `WebApplicationFactory` e tokens assinados no teste (chave de teste no lugar do JWKS): dois usuários, dois workspaces — os dados de um nunca aparecem no outro; 401 sem token; 404 para outro dono
   - fora do escopo: qualquer arquivo em `apps/web/` (é o P-014)
 
-- [ ] **P-014 — Web: login e workspace ativo**
+- [x] **P-014 — Web: login e workspace ativo**
   - nível: padrao
   - repo: portal · superfícies: ui
   - pré-requisito: P-004 (contrato da API em `docs/decisoes.md`)
