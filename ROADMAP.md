@@ -38,6 +38,23 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: os dois apps usam os tokens do Madrugada; o tema escuro é o padrão e o claro entra por `data-theme="light"`
   - testes: teste de componente confirma a troca de tema
 
+> **Prioridade (Noite 4 do CHECKLIST):** o painel vem antes do resto da fase 1. O login do painel
+> (Supabase Auth, só o dono) já existe em `apps/painel/src/App.tsx`; os itens abaixo partem dele.
+
+- [ ] **P-012 — Painel: visão geral**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - arquivos: `apps/painel/src/features/visao-geral/`
+  - pré-requisito: login do painel (pronto); tabelas `eventos`, `sincronizacao` e `comandos` no Supabase (prontas)
+  - aceite: a linha da noite, os 4 números, as tarefas da noite, o próximo post e "precisa de você", como na prévia do design system; mostra "última sincronização"; o botão "Pausar agente" grava o comando
+  - testes: componente com dados de uma noite e com noite vazia
+
+- [ ] **P-013 — Painel: performance do agente**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - arquivos: `apps/painel/src/features/performance/`
+  - aceite: PRs por noite, taxa de aprovação nos portões, tokens por tarefa, fila de difíceis e acionamentos do fallback, por período
+  - testes: componente com dados de uma semana
 - [ ] **P-004 — Autenticação e workspaces**
   - nível: dificil (decompor: login com biblioteca pronta · modelo de workspace · filtro por workspace)
   - repo: portal · superfícies: api, ui, dados
@@ -87,23 +104,10 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: um workspace de demonstração, só leitura, com dados fictícios; a URL da demo abre sem login
   - testes: a demo não aceita escrita
 
-- [ ] **P-011 — Eventos e sincronização com o painel**
+- [x] **P-011 — Eventos e sincronização com o painel**
   - nível: padrao
   - repo: agente · superfícies: dados
   - arquivos: `bin/fila-saida`, `sql/`
   - aceite: os eventos locais chegam ao Supabase pela fila de saída; sem internet, ficam pendentes e sobem depois, sem duplicar
   - testes: enviar, cair a conexão no meio e reenviar
 
-- [ ] **P-012 — Painel: visão geral**
-  - nível: padrao
-  - repo: portal · superfícies: ui
-  - arquivos: `apps/painel/src/features/visao-geral/`
-  - aceite: a linha da noite, os 4 números, as tarefas da noite, o próximo post e "precisa de você", como na prévia do design system; mostra "última sincronização"; o botão "Pausar agente" grava o comando
-  - testes: componente com dados de uma noite e com noite vazia
-
-- [ ] **P-013 — Painel: performance do agente**
-  - nível: padrao
-  - repo: portal · superfícies: ui
-  - arquivos: `apps/painel/src/features/performance/`
-  - aceite: PRs por noite, taxa de aprovação nos portões, tokens por tarefa, fila de difíceis e acionamentos do fallback, por período
-  - testes: componente com dados de uma semana
