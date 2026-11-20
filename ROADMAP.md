@@ -59,6 +59,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
 - [ ] **P-004 — Autenticação e workspaces**
   - nível: dificil (decompor: login com biblioteca pronta · modelo de workspace · filtro por workspace)
   - repo: portal · superfícies: api, ui, dados
+  - decisões: `docs/decisoes.md` (D-001: Supabase Auth, N:N com workspace ativo, workspace pessoal no 1º login, 404 para outro dono) e o contrato da API de lá
   - arquivos: `apps/api/Auth/`, `apps/api/Workspaces/`, `apps/web/src/features/auth/`
   - aceite: usuário entra, vê só o próprio workspace; toda consulta filtra pelo workspace; sem sessão, a API responde 401
   - testes: integração com dois workspaces — os dados de um nunca aparecem no outro
