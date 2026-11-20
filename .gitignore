@@ -1,0 +1,28 @@
+# Dependências e saídas de build
+node_modules/
+dist/
+dist-ssr/
+coverage/
+bin/
+obj/
+TestResults/
+
+# Segredos e ambiente local
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor e sistema
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.vs/
+*.suo
+*.user
+.DS_Store
+*.sw?
