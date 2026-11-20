@@ -13,7 +13,7 @@ const noiteReal: Opcoes['linhas'] = {
     { id: 3, ts: '2026-11-19T07:00:00Z', tipo: 'noite_resumo', origem: 'agente', dados: { prs: 2, reprovadas: 0, fila_dificeis: 1, fallbacks: 0, quedas: 1, minutos_fora: 12, perfil: 'principal', requisicoes: 42, tokens_entrada: 310000, tokens_saida: 80000 } },
   ],
   sincronizacao: [{ ultima_vez: ha(5) }],
-  posts: [{ id: 7, texto: 'Meu agente implementou o calendário de deploys do portal esta noite.', publica_em: '2026-11-19T12:00:00Z' }],
+  posts: [{ id: 7, texto: 'Meu agente implementou o calendário de deploys do portal esta noite.', publica_em: new Date(Date.now() + 86_400_000).toISOString() }],
 }
 
 describe('VisaoGeral pelo contrato', () => {
@@ -24,7 +24,7 @@ describe('VisaoGeral pelo contrato', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /Noite de \d+ para \d+ de novembro/ })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Linha da noite' })).toBeInTheDocument()
     expect(container.querySelectorAll('.grade-4 .painel.numero')).toHaveLength(4)
-    for (const rotulo of ['PRs com merge', 'Portões de primeira', 'Tokens na noite', 'Gasto no mês']) {
+    for (const rotulo of ['PRs abertas', 'Portões de primeira', 'Tokens na noite', 'Gasto no mês']) {
       expect(screen.getByText(rotulo)).toBeInTheDocument()
     }
     expect(screen.getByText('390 mil')).toBeInTheDocument()
@@ -54,6 +54,26 @@ describe('VisaoGeral pelo contrato', () => {
     expect(await screen.findByText(/nenhuma atividade/i)).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('com noite vazia, ainda mostra a sincronização e o próximo post', async () => {
+    const { cliente } = clienteContrato({
+      linhas: { eventos: [], sincronizacao: [{ ultima_vez: ha(3) }], posts: [{ id: 1, texto: 'Post futuro', publica_em: new Date(Date.now() + 3_600_000).toISOString() }] },
+    })
+    render(<VisaoGeral cliente={cliente} />)
+    expect(await screen.findByText(/nenhuma atividade/i)).toBeInTheDocument()
+    expect(screen.getByText(/última sincronização/i).parentElement).toHaveTextContent(/há 3 min/)
+    expect(within(screen.getByRole('region', { name: 'Próximo post' })).getByText('Post futuro')).toBeInTheDocument()
+  })
+
+  it('mostra o erro do botão quando a gravação do comando falha', async () => {
+    const usuario = userEvent.setup()
+    const { cliente } = clienteContrato({ linhas: noiteReal, erroInsert: true })
+    render(<VisaoGeral cliente={cliente} />)
+    await usuario.click(await screen.findByRole('button', { name: 'Cancelar post' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível cancelar/i)
+    await usuario.click(screen.getByRole('button', { name: 'Pausar agente' }))
+    await waitFor(() => expect(screen.getByText(/não foi possível enviar o comando de pausa/i)).toBeInTheDocument())
   })
 
   it('carregando, erro e "Tentar de novo" que volta para carregando e refaz a consulta', async () => {

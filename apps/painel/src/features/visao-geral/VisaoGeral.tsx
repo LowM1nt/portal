@@ -6,7 +6,7 @@ import { buscarVisaoGeral, type DadosVisaoGeral, type TarefaDaNoite } from './da
 type Estado =
   | { situacao: 'carregando' }
   | { situacao: 'erro' }
-  | { situacao: 'vazio' }
+  | { situacao: 'vazio'; dados: DadosVisaoGeral }
   | { situacao: 'pronto'; dados: DadosVisaoGeral }
 
 const FUSO = 'America/Sao_Paulo'
@@ -58,7 +58,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
     let ativo = true
     buscarVisaoGeral(cliente)
       .then((dados) => {
-        if (ativo) setEstado(dados ? { situacao: 'pronto', dados } : { situacao: 'vazio' })
+        if (ativo) setEstado(dados.noiteTs === null ? { situacao: 'vazio', dados } : { situacao: 'pronto', dados })
       })
       .catch(() => {
         if (ativo) setEstado({ situacao: 'erro' })
@@ -122,8 +122,9 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
   if (estado.situacao === 'vazio') {
     return (
       <div className="grade">
-        {cabecalho('Visão geral', null)}
+        {cabecalho('Visão geral', <Sincronizacao em={estado.dados.sincronizadoEm} />)}
         <p className="vazio">Nenhuma atividade do agente na última noite.</p>
+        <ProximoPost cliente={cliente} post={estado.dados.proximoPost} />
       </div>
     )
   }
@@ -138,23 +139,20 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
   return (
     <div className="grade">
       {cabecalho(
-        tituloDaNoite(d.noiteTs),
+        tituloDaNoite(d.noiteTs ?? ''),
         <>
           <p className="suave pequeno">
             {d.prs} {d.prs === 1 ? 'PR aberta' : 'PRs abertas'}.
             {d.minutosFora > 0 && ` A internet caiu por ${d.minutosFora} min.`}
           </p>
-          <p className="suave pequeno">
-            <span>Última sincronização:</span>{' '}
-            {d.sincronizadoEm ? <time dateTime={d.sincronizadoEm}>{haQuanto(d.sincronizadoEm)}</time> : 'nunca'}
-          </p>
+          <Sincronizacao em={d.sincronizadoEm} />
         </>,
       )}
 
       {d.tarefas.length > 0 && <LinhaDaNoite tarefas={d.tarefas} minutosFora={d.minutosFora} />}
 
       <div className="grade grade-4">
-        <Numero rotulo="PRs com merge" valor={String(d.prs)} />
+        <Numero rotulo="PRs abertas" valor={String(d.prs)} />
         <Numero rotulo="Portões de primeira" valor={`${portoesDePrimeira} de ${d.tarefas.length}`} />
         <Numero rotulo="Tokens na noite" valor={formatarTokens(d.tokensDaNoite)} />
         <Numero rotulo="Gasto no mês" valor={`${formatarTokens(d.gastoNoMes)} tokens`} />
@@ -197,30 +195,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
       </section>
 
       <div className="grade grade-2">
-        <section className="painel" aria-label="Próximo post">
-          <header>
-            <h2>Próximo post</h2>
-          </header>
-          {d.proximoPost ? (
-            <>
-              <p className="pequeno suave">{d.proximoPost.texto}</p>
-              {d.proximoPost.publicaEm && (
-                <p className="suave pequeno">Publica em {diaHora.format(new Date(d.proximoPost.publicaEm)).replace(':', 'h')}</p>
-              )}
-              <div className="pe">
-                <BotaoComando
-                  cliente={cliente}
-                  comando="cancelar_post"
-                  rotulo="Cancelar post"
-                  ok="Pedido de cancelamento enviado."
-                  falha="Não foi possível cancelar o post."
-                />
-              </div>
-            </>
-          ) : (
-            <p className="vazio">Nenhum post agendado.</p>
-          )}
-        </section>
+        <ProximoPost cliente={cliente} post={d.proximoPost} />
 
         <section className="painel" aria-label="Precisa de você">
           <header>
@@ -285,6 +260,43 @@ function LinhaDaNoite({ tarefas, minutosFora }: { tarefas: TarefaDaNoite[]; minu
           {formatarHora(tarefas[0].ts)} a {formatarHora(tarefas[tarefas.length - 1].ts)}
         </span>
       </div>
+    </section>
+  )
+}
+
+function Sincronizacao({ em }: { em: string | null }) {
+  return (
+    <p className="suave pequeno">
+      <span>Última sincronização:</span> {em ? <time dateTime={em}>{haQuanto(em)}</time> : 'nunca'}
+    </p>
+  )
+}
+
+function ProximoPost({ cliente, post }: { cliente: SupabaseClient; post: DadosVisaoGeral['proximoPost'] }) {
+  return (
+    <section className="painel" aria-label="Próximo post">
+      <header>
+        <h2>Próximo post</h2>
+      </header>
+      {post ? (
+        <>
+          <p className="pequeno suave">{post.texto}</p>
+          {post.publicaEm && (
+            <p className="suave pequeno">Publica em {diaHora.format(new Date(post.publicaEm)).replace(':', 'h')}</p>
+          )}
+          <div className="pe">
+            <BotaoComando
+              cliente={cliente}
+              comando="cancelar_post"
+              rotulo="Cancelar post"
+              ok="Pedido de cancelamento enviado."
+              falha="Não foi possível cancelar o post."
+            />
+          </div>
+        </>
+      ) : (
+        <p className="vazio">Nenhum post agendado.</p>
+      )}
     </section>
   )
 }

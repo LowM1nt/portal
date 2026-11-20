@@ -33,8 +33,28 @@ describe('buscarVisaoGeral', () => {
     expect(limites.every((l) => l.limite !== undefined)).toBe(true)
   })
 
-  it('sem noite_resumo devolve null; erro da consulta vira exceção', async () => {
-    expect(await buscarVisaoGeral(clienteContrato({ linhas: { eventos: [] } }).cliente)).toBeNull()
+  it('próximo post é o futuro mais próximo, ignorando o já publicado', async () => {
+    const agora = Date.now()
+    const h = (n: number) => new Date(agora + n * 3_600_000).toISOString()
+    const { cliente } = clienteContrato({
+      linhas: {
+        eventos: [],
+        posts: [
+          { id: 1, texto: 'passado', publica_em: h(-24) },
+          { id: 2, texto: 'longe', publica_em: h(48) },
+          { id: 3, texto: 'perto', publica_em: h(2) },
+        ],
+      },
+    })
+    expect((await buscarVisaoGeral(cliente)).proximoPost?.texto).toBe('perto')
+  })
+
+  it('sem noite_resumo devolve noiteTs nulo, mantendo sincronização e post; erro da consulta vira exceção', async () => {
+    const vazio = await buscarVisaoGeral(
+      clienteContrato({ linhas: { eventos: [], sincronizacao: [{ ultima_vez: '2026-11-19T07:05:00Z' }] } }).cliente,
+    )
+    expect(vazio.noiteTs).toBeNull()
+    expect(vazio.sincronizadoEm).toBe('2026-11-19T07:05:00Z')
     await expect(buscarVisaoGeral(clienteContrato({ erro: true }).cliente)).rejects.toThrow()
   })
 })
