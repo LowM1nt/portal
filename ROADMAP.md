@@ -104,6 +104,15 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: depois do login, a visão geral carrega com os dados reais do Supabase (sem erro), mostra "última sincronização: há X min", e o layout segue a prévia nos dois temas; estados vazio, erro com "Tentar de novo" e carregando
   - testes: **teste de contrato** — o cliente falso recusa (lança erro) qualquer tabela ou coluna fora de `contrato.ts`, e `contrato.ts` bate com `docs/eventos.md`; componente com uma noite real (`noite_resumo` + `tarefa_metricas`) e com noite vazia; "Cancelar post" grava o comando certo
 
+- [ ] **P-016 — Login centralizado (painel e web)**
+  - nível: barato
+  - repo: portal · superfícies: ui
+  - pedido do dono: o login vira um cartão central, no estilo de modal
+  - arquivos: `apps/painel/src/App.tsx` (tela de entrada), `apps/web/src/features/auth/` (tela de entrada do web); estilo só com tokens e componentes de `docs/design-system/`
+  - layout: a tela de entrada ocupa a altura toda, com o fundo do tema; no centro (horizontal e vertical) um cartão (`.painel`) de largura máxima ~400 px com a marca "Madrugada", o título "Entrar", os campos (`.campo`), a mensagem de erro e o botão primário de largura total; no celular o cartão ocupa a largura com o vão lateral dos tokens
+  - aceite: nos dois apps, sem sessão, aparece só o cartão central (sem a barra lateral); nada vaza da tela em 360, 768 e 1280 px; temas claro e escuro; Enter envia; foco inicial no e-mail
+  - testes: componente — sem sessão renderiza o cartão de entrada e não a navegação; foco inicial no campo de e-mail; erro de login aparece dentro do cartão
+
 - [ ] **P-008 — Integração com GitHub: PRs e status de CI**
   - nível: dificil (decompor: cliente da API · importação de PRs · status de CI · agendamento)
   - repo: portal · superfícies: api, dados
