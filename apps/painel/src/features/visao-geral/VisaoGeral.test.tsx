@@ -91,7 +91,7 @@ describe('VisaoGeral — acabamento fiel à prévia', () => {
 
   it('Gasto no mês mostra R$ 0 no perfil assinatura', async () => {
     await abrir([
-      metricas(1, '2026-11-19T03:00:00Z', 'P-001', { perfil: 'assinatura', custo_usd: 0, tokens_entrada: 9_000_000 }),
+      metricas(1, '2026-11-19T03:00:00Z', 'P-001', { perfil: 'assinatura', custo_usd: 2, tokens_entrada: 9_000_000 }),
       RESUMO,
     ])
     const valor = valorDoCartao('Gasto no mês')

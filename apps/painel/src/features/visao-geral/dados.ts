@@ -122,9 +122,12 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
   )
   const eventosDaNoite = [...mergeadas, ...planejadasDaNoite]
   const itemDe = (l: Linha) => (typeof l.dados?.item === 'string' ? l.dados.item : '')
-  const mergeados = new Set(eventosDaNoite.filter((l) => l.tipo === 'tarefa_mergeada').map(itemDe))
+  // só itens desta noite: merge de PR antiga não conta, e o plano da noite seguinte não sobrescreve este
+  const itensDaNoite = new Set(metricas.map(itemDe))
+  const mergeados = new Set(eventosDaNoite.filter((l) => l.tipo === 'tarefa_mergeada').map(itemDe).filter((i) => itensDaNoite.has(i)))
   const planejadas = new Map<string, Record<string, unknown>>()
-  for (const l of eventosDaNoite) if (l.tipo === 'tarefa_planejada' && l.dados) planejadas.set(itemDe(l), l.dados)
+  for (const l of eventosDaNoite)
+    if (l.tipo === 'tarefa_planejada' && l.dados && Date.parse(l.ts) <= Date.parse(resumo.ts)) planejadas.set(itemDe(l), l.dados)
 
   const tarefas: TarefaDaNoite[] = metricas.map((l) => {
     const item = itemDe(l)
