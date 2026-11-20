@@ -180,7 +180,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - arquivos: `apps/api/src/Portal.Api/Integracoes/GitHub/SincronizacaoGitHub.cs` (`BackgroundService`)
   - aceite: a cada 10 min sincroniza os workspaces com token; falha do GitHub (token expirado, rede) fica registrada no workspace (`ultimoErro`, `ultimaSincronizacao`) e nunca derruba o portal; um workspace com erro não impede os outros
   - testes: o serviço com relógio falso e cliente falso — roda no intervalo, registra o erro, segue para o próximo workspace
-- [ ] **P-009 — API: fila de revisão de PRs**
+- [x] **P-009 — API: fila de revisão de PRs**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - decisões: `docs/decisoes.md` D-005 (definição de "aguardando revisão" e contrato) — não reabrir

@@ -14,7 +14,6 @@
     ],
     "requested_teams": [
       { "name": "Time Backend", "slug": "time-backend", "id": 77 }
-    ],
-    "head": { "ref": "feat/relatorio", "sha": "3333333333333333333333333333333333333333" }
+    ]
   }
 ]
