@@ -54,3 +54,26 @@ Decididas pelo dono:
   num projeto Supabase separado do painel, só com dados fictícios. A demo fica no ar com o notebook desligado.
 - **TypeScript 7 fica de fora por enquanto:** o Dependabot ignora majors do TypeScript; a migração vira
   item do roadmap quando o ecossistema (ESLint, Vite) acompanhar.
+
+## D-004 — Integração com GitHub (P-008) · 20/11/2026
+
+Decididas pelo dono:
+
+- **Acesso por token fine-grained por workspace.** O time cola um token **só de leitura** (Metadata, Pull requests, Commit statuses/Checks: read) nas configurações do workspace. Sem GitHub App e sem OAuth por enquanto.
+- **Atualização a cada 10 minutos** (polling).
+
+Decididas na implementação (técnicas):
+
+- O token é guardado **criptografado** (ASP.NET Core Data Protection); nunca volta para o front nem aparece em log. A tela mostra só "configurado em DD/MM" e os 4 últimos caracteres.
+- Um `BackgroundService` percorre os workspaces com token a cada 10 min; importa as PRs abertas dos repositórios cadastrados e o status de CI do último commit de cada uma.
+- Respeita o limite da API: lê `X-RateLimit-Remaining`/`Reset` e para o ciclo antes de zerar; usa `ETag` (requisição condicional) para não gastar cota com o que não mudou.
+- **Falha do GitHub nunca derruba o portal:** o erro fica registrado no workspace ("última sincronização com o GitHub: falhou às HH:MM — token expirado") e a tela mostra os últimos dados bons.
+- Testes de contrato com **respostas gravadas** da API do GitHub (HttpMessageHandler falso); nenhum teste chama o GitHub de verdade.
+
+Contrato da API:
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `PUT /api/integracoes/github` | Bearer, `X-Workspace-Id`, `{ token, repositorios: ["dono/repo"] }` | `{ configurado: true, finalToken: "abcd", repositorios }` | 400 (token vazio, repo mal formado), 401, 404 |
+| `GET /api/integracoes/github` | Bearer, `X-Workspace-Id` | `{ configurado, finalToken, repositorios, ultimaSincronizacao, ultimoErro }` | 401, 404 |
+| `DELETE /api/integracoes/github` | Bearer, `X-Workspace-Id` | 204 | 401, 404 |
