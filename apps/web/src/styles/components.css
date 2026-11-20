@@ -113,6 +113,9 @@ code { font: 0.9em var(--fonte-codigo); background: var(--veu-alto); padding: 1p
 .abas { display: flex; gap: var(--e-4); border-bottom: 1px solid var(--linha); }
 .aba { height: var(--altura-controle); display: inline-flex; align-items: center; color: var(--texto-suave); text-decoration: none; font-size: var(--t-14); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .aba[aria-selected="true"] { color: var(--texto); border-color: var(--roxo-forte); font-weight: 600; }
+button.aba { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 0; font: inherit; color: var(--texto-suave); cursor: pointer; }
+button.aba[aria-selected="true"] { color: var(--texto); border-bottom-color: var(--roxo-forte); font-weight: 600; }
+button.aba:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
 .cartao { background: var(--veu-alto); border-radius: var(--raio-controle); padding: var(--e-4); display: grid; gap: var(--e-2); font-size: var(--t-14); align-content: start; }
 
 /* medidor (aderência, cota): ocupa a altura de um controle, para alinhar com campos */
