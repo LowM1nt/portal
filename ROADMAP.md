@@ -93,7 +93,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: semana com um cartão por deploy; navegar entre semanas; estados vazio, erro e carregando; no celular vira lista
   - testes: componente nos quatro estados
 
-- [ ] **P-015 — Painel: visão geral pelo contrato e layout da prévia**
+- [x] **P-015 — Painel: visão geral pelo contrato e layout da prévia**
   - nível: padrao
   - repo: portal · superfícies: ui
   - por quê: a visão geral (P-012) foi feita antes do contrato e consulta colunas que não existem (`eventos.criado_em`, `sincronizacao.sincronizado_em`, `eventos.tokens`); em produção mostra "Não foi possível carregar a visão geral". E o app não segue o layout da prévia do design system.

@@ -3,15 +3,25 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 type Resultado = 'ok' | 'erro' | null
 
-export default function PausarAgente({ cliente }: { cliente: SupabaseClient }) {
+type Props = {
+  cliente: SupabaseClient
+  comando: 'pausar' | 'cancelar_post'
+  rotulo: string
+  variante?: string
+  ok: string
+  falha: string
+}
+
+// Grava um comando em `comandos`; o agente lê e executa.
+export default function BotaoComando({ cliente, comando, rotulo, variante, ok, falha }: Props) {
   const [enviando, setEnviando] = useState(false)
   const [resultado, setResultado] = useState<Resultado>(null)
 
-  async function pausar() {
+  async function enviar() {
     setEnviando(true)
     setResultado(null)
     try {
-      const { error } = await cliente.from('comandos').insert({ comando: 'pausar' })
+      const { error } = await cliente.from('comandos').insert({ comando })
       setResultado(error ? 'erro' : 'ok')
     } catch {
       setResultado('erro')
@@ -22,17 +32,22 @@ export default function PausarAgente({ cliente }: { cliente: SupabaseClient }) {
 
   return (
     <div className="grupo-botoes">
-      <button type="button" className="botao botao-perigo" disabled={enviando} onClick={() => void pausar()}>
-        Pausar agente
+      <button
+        type="button"
+        className={variante ? `botao ${variante}` : 'botao'}
+        disabled={enviando}
+        onClick={() => void enviar()}
+      >
+        {rotulo}
       </button>
       {resultado === 'ok' && (
         <p role="status" className="selo selo-ok">
-          Comando de pausa enviado.
+          {ok}
         </p>
       )}
       {resultado === 'erro' && (
         <p role="alert" className="selo selo-erro">
-          Não foi possível enviar o comando de pausa.
+          {falha}
         </p>
       )}
     </div>

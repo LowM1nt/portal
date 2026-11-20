@@ -4,6 +4,8 @@ import { defineConfig } from 'vitest/config'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // o teste de contrato lê ../../docs/eventos.md
+  server: { fs: { allow: ['../..'] } },
   test: {
     environment: 'jsdom',
     css: { include: /.+/ },
