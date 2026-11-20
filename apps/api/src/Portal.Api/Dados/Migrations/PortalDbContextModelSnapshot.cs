@@ -157,6 +157,53 @@ namespace Portal.Api.Dados.Migrations
                     b.ToTable("repositorios", (string)null);
                 });
 
+            modelBuilder.Entity("Portal.Api.Integracoes.GitHub.ConfiguracaoGitHub", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ConfiguradoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("configurado_em");
+
+                    b.Property<string>("FinalToken")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)")
+                        .HasColumnName("final_token");
+
+                    b.Property<string[]>("Repositorios")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("repositorios");
+
+                    b.Property<string>("TokenCriptografado")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_criptografado");
+
+                    b.Property<DateTimeOffset?>("UltimaSincronizacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultima_sincronizacao");
+
+                    b.Property<string>("UltimoErro")
+                        .HasColumnType("text")
+                        .HasColumnName("ultimo_erro");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId")
+                        .IsUnique();
+
+                    b.ToTable("configuracoes_github", (string)null);
+                });
+
             modelBuilder.Entity("Portal.Api.Workspaces.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -223,6 +270,15 @@ namespace Portal.Api.Dados.Migrations
                     b.HasOne("Portal.Api.Dados.Entidades.Repositorio", null)
                         .WithMany()
                         .HasForeignKey("RepositorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Integracoes.GitHub.ConfiguracaoGitHub", b =>
+                {
+                    b.HasOne("Portal.Api.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

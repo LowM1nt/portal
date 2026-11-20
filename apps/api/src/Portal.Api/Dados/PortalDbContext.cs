@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Portal.Api.Dados.Entidades;
+using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Workspaces;
 
 namespace Portal.Api.Dados;
@@ -23,6 +24,8 @@ public class PortalDbContext : DbContext
     public DbSet<Deploy> Deploys => Set<Deploy>();
 
     public DbSet<PullRequest> PullRequests => Set<PullRequest>();
+
+    public DbSet<ConfiguracaoGitHub> ConfiguracoesGitHub => Set<ConfiguracaoGitHub>();
 
     // Lido pelo query filter a cada consulta (o EF o trata como parâmetro, não como constante).
     private Guid WorkspaceIdAtual => _workspaceAtual.Id;
@@ -97,6 +100,22 @@ public class PortalDbContext : DbContext
             e.HasIndex(p => new { p.WorkspaceId, p.CriadoEm });
             e.HasIndex(p => new { p.WorkspaceId, p.RepositorioId, p.Numero }).IsUnique();
             e.HasIndex(p => p.RepositorioId);
+        });
+
+        modelBuilder.Entity<ConfiguracaoGitHub>(e =>
+        {
+            e.ToTable("configuracoes_github");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).HasColumnName("id");
+            e.Property(c => c.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(c => c.TokenCriptografado).HasColumnName("token_criptografado").IsRequired();
+            e.Property(c => c.FinalToken).HasColumnName("final_token").HasMaxLength(4).IsRequired();
+            e.Property(c => c.Repositorios).HasColumnName("repositorios");
+            e.Property(c => c.ConfiguradoEm).HasColumnName("configurado_em");
+            e.Property(c => c.UltimaSincronizacao).HasColumnName("ultima_sincronizacao");
+            e.Property(c => c.UltimoErro).HasColumnName("ultimo_erro");
+            e.HasOne<Workspace>().WithMany().HasForeignKey(c => c.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => c.WorkspaceId).IsUnique();
         });
 
         AplicarFiltroPorWorkspace(modelBuilder);

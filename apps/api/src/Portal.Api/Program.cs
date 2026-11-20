@@ -4,6 +4,7 @@ using Portal.Api.Auth;
 using Portal.Api.Dados;
 using Portal.Api.Demo;
 using Portal.Api.Deploys;
+using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Workspaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,8 @@ builder.Services.AddDbContext<PortalDbContext>((sp, o) =>
 builder.Services.AddScoped<WorkspaceAtual>();
 builder.Services.AddScoped<WorkspaceService>();
 builder.Services.AddScoped<DeploysService>();
+builder.Services.AddScoped<GitHubConfigService>();
+builder.Services.AddDataProtection();
 builder.Services.AddAutenticacaoSupabase();
 
 // CORS: só a origem do web (Cors:Origem; padrão = Vite local).
@@ -47,6 +50,7 @@ app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapWorkspaces();
 app.MapDeploys();
+app.MapGitHub();
 if (demoLigada) app.MapDemo();
 
 app.Run();
