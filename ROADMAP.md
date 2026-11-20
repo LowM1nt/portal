@@ -150,6 +150,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
 
 - [ ] **P-008 — Integração com GitHub: PRs e status de CI**
   - nível: dificil (decompor: cliente da API · importação de PRs · status de CI · agendamento)
+  - decisões: `docs/decisoes.md` D-004 (token por workspace, 10 min) e o contrato da API de lá — não reabrir
   - repo: portal · superfícies: api, dados
   - arquivos: `apps/api/Integracoes/GitHub/`
   - aceite: importa as PRs abertas dos repositórios cadastrados, com status de CI; respeita o limite da API; falha do GitHub não derruba o portal
