@@ -1,0 +1,77 @@
+/* Madrugada — design system pessoal. Tokens.
+   Escuro é o padrão, sempre. Claro só por escolha: <html data-theme="light">.
+   Uso: importar este arquivo antes de components.css. */
+
+:root {
+  color-scheme: dark;
+
+  /* superfícies: cinza-escuro neutro, na linha do Discord. O roxo fica só na marca */
+  --noite: #313338;          /* fundo da página */
+  --veu: #2b2d31;            /* painéis e menu (um tom abaixo do fundo) */
+  --veu-alto: #383a40;       /* hover, item selecionado, campos */
+  --linha: #3f4147;          /* bordas e divisórias */
+
+  /* texto */
+  --texto: #f2f3f5;
+  --texto-suave: #b5bac1;
+  --texto-fraco: #8e929b;
+
+  /* roxo: a marca */
+  --roxo: #7a45f0;           /* preenchimentos (botão, barra, seleção) */
+  --roxo-forte: #8f5bff;     /* hover de preenchimento, foco */
+  --roxo-texto: #b79cff;     /* links e ícones sobre fundo escuro */
+  --roxo-veu: #3b3466;       /* fundo tingido (selo, destaque suave) */
+  --sobre-roxo: #ffffff;     /* texto sobre --roxo */
+
+  /* estado: só para informar, nunca para decorar */
+  --ok: #4ade9a;       --ok-veu: #233b30;
+  --atencao: #ffb85c;  --atencao-veu: #45371f;
+  --erro: #ff6b8a;     --erro-veu: #4a2530;
+
+  /* séries de gráfico, em ordem */
+  --serie-1: #8f5bff; --serie-2: #2dd4bf; --serie-3: #ffb85c; --serie-4: #f472b6;
+
+  /* tipografia */
+  --fonte-titulo: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --fonte-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fonte-codigo: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+
+  /* escala tipográfica (razão 1,25) */
+  --t-12: 0.75rem; --t-14: 0.875rem; --t-16: 1rem; --t-20: 1.25rem;
+  --t-25: 1.563rem; --t-31: 1.953rem; --t-39: 2.441rem;
+
+  /* espaço (base 4) */
+  --e-1: 4px; --e-2: 8px; --e-3: 12px; --e-4: 16px; --e-5: 24px; --e-6: 32px; --e-7: 48px; --e-8: 64px;
+
+  /* tamanhos únicos: todo controle tem a mesma altura, todo selo também */
+  --altura-controle: 40px;   /* botão, campo, select, item do menu, linha da noite */
+  --altura-selo: 24px;
+  --coluna: minmax(0, 1fr);  /* toda grade usa colunas iguais */
+  --vao: var(--e-5);         /* um único vão entre blocos: 24px */
+
+  /* raio: cresce com a hierarquia */
+  --raio-controle: 8px;   /* botão, campo, selo */
+  --raio-painel: 14px;    /* painel, diálogo */
+  --raio-pilula: 999px;
+
+  /* movimento: só em resposta a uma ação */
+  --rapido: 120ms; --normal: 200ms; --curva: cubic-bezier(.2, .7, .2, 1);
+
+  --foco: 0 0 0 2px var(--noite), 0 0 0 4px var(--roxo-forte);
+  --largura-leitura: 68ch;
+}
+
+/* tema claro: papel levemente lilás, roxo mais fundo para manter contraste */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --noite: #faf8ff; --veu: #ffffff; --veu-alto: #f1ecfd; --linha: #e2daf6;
+  --texto: #1b1530; --texto-suave: #5b5480; --texto-fraco: #8a84a8;
+  --roxo: #6a35e0; --roxo-forte: #5a27cc; --roxo-texto: #5a27cc; --roxo-veu: #efe8ff;
+  --ok: #0c7a4b; --ok-veu: #e2f6ec;
+  --atencao: #9a5600; --atencao-veu: #fff1dc;
+  --erro: #c2264d; --erro-veu: #ffe6ec;
+  --serie-1: #6a35e0; --serie-2: #0f9488; --serie-3: #b86e00; --serie-4: #c0267d;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --rapido: 0ms; --normal: 0ms; }
+}
