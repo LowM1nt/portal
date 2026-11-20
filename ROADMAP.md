@@ -148,14 +148,38 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
     - Performance: título da página; as abas "7 dias"/"30 dias" com `.abas` > `.aba` do design system (hoje parecem botões crus com borda branca); números no mesmo formato da visão geral ("1,4 mi", não "1.353.831"); cada número num `.painel.numero`, como na visão geral
   - testes: formatador ("1.353.831" → "1,4 mi", "760.000" → "760 mil"); tarefa com título mostra código e título; abas com `role="tab"` e `aria-selected`
 
-- [ ] **P-008 — Integração com GitHub: PRs e status de CI**
-  - nível: dificil (decompor: cliente da API · importação de PRs · status de CI · agendamento)
-  - decisões: `docs/decisoes.md` D-004 (token por workspace, 10 min) e o contrato da API de lá — não reabrir
+- [ ] **P-008 — GitHub: configuração do token do workspace**
+  - nível: padrao
   - repo: portal · superfícies: api, dados
-  - arquivos: `apps/api/Integracoes/GitHub/`
-  - aceite: importa as PRs abertas dos repositórios cadastrados, com status de CI; respeita o limite da API; falha do GitHub não derruba o portal
-  - testes: contrato com respostas gravadas da API
+  - decisões: `docs/decisoes.md` D-004 — não reabrir
+  - arquivos: `apps/api/src/Portal.Api/Integracoes/GitHub/` (entidade da configuração, endpoints PUT/GET/DELETE `/api/integracoes/github`, token criptografado com Data Protection), migration, `apps/api/tests/Portal.Api.Tests/Integracoes/`
+  - aceite: o contrato da D-004 funciona; o token nunca volta na resposta (só `finalToken`) nem aparece em log; outro workspace não vê nem altera a configuração (404); repo mal formado → 400
+  - testes: integração — salvar, ler (sem o token), apagar; outro workspace recusado; o valor gravado no banco não é o token em texto puro
+  - fora do escopo: chamar o GitHub (é o P-020)
 
+- [ ] **P-020 — GitHub: cliente da API e importação de PRs abertas**
+  - nível: padrao
+  - repo: portal · superfícies: api, dados
+  - pré-requisito: P-008
+  - arquivos: `apps/api/src/Portal.Api/Integracoes/GitHub/ClienteGitHub.cs` (HttpClient tipado, ETag, leitura de `X-RateLimit-*`), `ImportadorDePrs.cs`, testes com respostas gravadas em `apps/api/tests/Portal.Api.Tests/Integracoes/Gravacoes/`
+  - aceite: para cada repositório configurado, importa as PRs abertas (número, título, autor, url, atualizada em) no workspace certo; reimportar não duplica; PR fechada no GitHub sai da lista; com `X-RateLimit-Remaining` baixo, para antes de zerar; nenhuma chamada real ao GitHub nos testes
+  - testes: contrato com respostas gravadas (lista de PRs, 304 com ETag, 401 de token inválido, limite baixo)
+
+- [ ] **P-021 — GitHub: status de CI das PRs**
+  - nível: padrao
+  - repo: portal · superfícies: api, dados
+  - pré-requisito: P-020
+  - arquivos: `apps/api/src/Portal.Api/Integracoes/GitHub/` (status do último commit de cada PR), a entidade de PR
+  - aceite: cada PR importada tem o status de CI (`sucesso` · `falhou` · `rodando` · `sem CI`) do último commit; erro do GitHub numa PR não impede as outras
+  - testes: respostas gravadas para cada estado
+
+- [ ] **P-022 — GitHub: sincronização a cada 10 minutos**
+  - nível: padrao
+  - repo: portal · superfícies: api
+  - pré-requisito: P-021
+  - arquivos: `apps/api/src/Portal.Api/Integracoes/GitHub/SincronizacaoGitHub.cs` (`BackgroundService`)
+  - aceite: a cada 10 min sincroniza os workspaces com token; falha do GitHub (token expirado, rede) fica registrada no workspace (`ultimoErro`, `ultimaSincronizacao`) e nunca derruba o portal; um workspace com erro não impede os outros
+  - testes: o serviço com relógio falso e cliente falso — roda no intervalo, registra o erro, segue para o próximo workspace
 - [ ] **P-009 — Fila de revisão de PRs**
   - nível: padrao
   - repo: portal · superfícies: api, ui
