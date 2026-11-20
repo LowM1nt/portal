@@ -8,17 +8,20 @@ export type TarefaDaNoite = {
   tentativas: number
   tokens: number
   segundos: number
+  titulo: string | null
+  estado: 'merge' | 'pr_aberta' | 'reprovada' | 'fila_dificeis'
 }
 
 export type DadosVisaoGeral = {
   noiteTs: string | null // null = nenhuma noite registrada ainda (sincronização e post continuam valendo)
   prs: number
+  prsComMerge: number
   filaDificeis: number
   reprovadas: number
   minutosFora: number
   tarefas: TarefaDaNoite[]
   tokensDaNoite: number
-  gastoNoMes: number
+  gastoNoMes: number // em R$
   sincronizadoEm: string | null
   proximoPost: { id: number; texto: string; publicaEm: string | null } | null
 }
@@ -30,11 +33,16 @@ type Linha = { id: number; ts: string; tipo: string; dados: Record<string, unkno
 export const LIMITE_TAREFAS = 200
 // Teto do PostgREST: acima disso o gasto do mês seria cortado em silêncio.
 export const LIMITE_MES = 1000
+export const COTACAO_DOLAR = 5.4
 const JANELA_DA_NOITE_MS = 12 * 60 * 60 * 1000
 
 // Campo ausente ou null não conta (nem como 0).
 function numero(valor: unknown): number {
   return typeof valor === 'number' && Number.isFinite(valor) ? valor : 0
+}
+
+function custoEmReais(dados: Record<string, unknown> | null): number {
+  return dados?.perfil === 'assinatura' ? 0 : numero(dados?.custo_usd) * COTACAO_DOLAR
 }
 
 function tokensDe(dados: Record<string, unknown> | null): number {
@@ -66,13 +74,14 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
   const ultimaVez = lancar<{ ultima_vez: string | null }[]>(sync)[0]?.ultima_vez ?? null
   // posts não está detalhado em docs/eventos.md: se falhar, a tela segue sem o próximo post.
   const post = posts.error ? undefined : ((posts.data ?? []) as { id: number; texto: string | null; publicar_em: string | null }[])[0]
-  const gastoNoMes = lancar<Linha[]>(mes).reduce((soma, l) => soma + tokensDe(l.dados), 0)
+  const gastoNoMes = lancar<Linha[]>(mes).reduce((soma, l) => soma + custoEmReais(l.dados), 0)
   const proximoPost = post ? { id: post.id, texto: post.texto ?? '', publicaEm: post.publicar_em } : null
 
   if (!resumo) {
     return {
       noiteTs: null,
       prs: 0,
+      prsComMerge: 0,
       filaDificeis: 0,
       reprovadas: 0,
       minutosFora: 0,
@@ -95,24 +104,57 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
       .order('ts', { ascending: true })
       .limit(LIMITE_TAREFAS),
   )
-  const tarefas = metricas.map((l) => ({
-    id: l.id,
-    item: typeof l.dados?.item === 'string' ? l.dados.item : '',
-    ts: l.ts,
-    resultado: typeof l.dados?.resultado === 'string' ? l.dados.resultado : '',
-    tentativas: numero(l.dados?.tentativas),
-    tokens: tokensDe(l.dados),
-    segundos: numero(l.dados?.segundos_modelo),
-  }))
+  const eventosDaNoite = lancar<Linha[]>(
+    await cliente
+      .from('eventos')
+      .select('id, ts, tipo, dados')
+      .in('tipo', ['tarefa_mergeada', 'tarefa_planejada'])
+      .gte('ts', inicioDaNoite)
+      .lte('ts', resumo.ts)
+      .order('ts', { ascending: true })
+      .limit(LIMITE_TAREFAS),
+  )
+  const itemDe = (l: Linha) => (typeof l.dados?.item === 'string' ? l.dados.item : '')
+  const mergeados = new Set(eventosDaNoite.filter((l) => l.tipo === 'tarefa_mergeada').map(itemDe))
+  const planejadas = new Map<string, Record<string, unknown>>()
+  for (const l of eventosDaNoite) if (l.tipo === 'tarefa_planejada' && l.dados) planejadas.set(itemDe(l), l.dados)
+
+  // Uma linha por item: a tentativa mais recente (as métricas vêm em ordem crescente de ts).
+  const maisRecentes = new Map<string, Linha>()
+  for (const l of metricas) maisRecentes.set(itemDe(l) || `#${l.id}`, l)
+  const tarefas: TarefaDaNoite[] = [...maisRecentes.values()].map((l) => {
+    const item = itemDe(l)
+    const plano = planejadas.get(item)
+    const resultado = typeof l.dados?.resultado === 'string' ? l.dados.resultado : ''
+    const estado: TarefaDaNoite['estado'] = mergeados.has(item)
+      ? 'merge'
+      : plano?.estado === 'fila_dificeis'
+        ? 'fila_dificeis'
+        : resultado === 'reprovada'
+          ? 'reprovada'
+          : 'pr_aberta'
+    return {
+      id: l.id,
+      item,
+      ts: l.ts,
+      resultado,
+      tentativas: numero(l.dados?.tentativas),
+      tokens: tokensDe(l.dados),
+      segundos: numero(l.dados?.segundos_modelo),
+      titulo: typeof plano?.titulo === 'string' && plano.titulo !== '' ? plano.titulo : null,
+      estado,
+    }
+  })
 
   return {
     noiteTs: resumo.ts,
     prs: numero(resumo.dados?.prs),
+    prsComMerge: mergeados.size,
     filaDificeis: numero(resumo.dados?.fila_dificeis),
     reprovadas: numero(resumo.dados?.reprovadas),
     minutosFora: numero(resumo.dados?.minutos_fora),
     tarefas,
-    tokensDaNoite: tarefas.reduce((s, t) => s + t.tokens, 0),
+    tokensDaNoite: metricas.reduce((s, l) => s + tokensDe(l.dados), 0),
     gastoNoMes,
     sincronizadoEm: ultimaVez,
     proximoPost,

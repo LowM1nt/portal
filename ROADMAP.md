@@ -122,7 +122,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: o painel mostra o perfil ativo (`.selo`); um seletor lista os perfis disponíveis; escolher outro pede confirmação ("O agente passa a usar o perfil X a partir da próxima tarefa") e grava o comando; depois da próxima sincronização, o perfil exibido muda; estados carregando e erro
   - testes: componente — mostra o perfil ativo; troca grava o comando certo; cancelar a confirmação não grava nada
 
-- [ ] **P-018 — Painel: acabamento fiel à prévia**
+- [x] **P-018 — Painel: acabamento fiel à prévia**
   - nível: barato
   - repo: portal · superfícies: ui
   - por quê: comparação por captura de tela (20/11) entre o painel publicado e `docs/design-system/capturas/painel-escuro.png`
