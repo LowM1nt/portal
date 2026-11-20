@@ -10,7 +10,7 @@ Colunas: `id` (bigint), `ts` (timestamptz), `tipo` (text), `origem` (text), `tar
 
 | tipo | quando | `dados` |
 | --- | --- | --- |
-| `tarefa_metricas` | uma vez por tarefa encerrada | `item`, `resultado` (`pr_aberta` \| `reprovada`), `perfil`, `tentativas`, `requisicoes`, `tokens_entrada`, `tokens_saida`, `segundos_modelo`, `custo_usd`, `modelos` (lista) |
+| `tarefa_metricas` | uma vez por tarefa encerrada | `item`, `titulo`, `resultado` (`pr_aberta` \| `reprovada`), `perfil`, `tentativas`, `requisicoes`, `tokens_entrada`, `tokens_saida`, `segundos_modelo`, `custo_usd`, `modelos` (lista) |
 | `noite_resumo` | fim de cada noite | `prs`, `reprovadas`, `fila_dificeis` (**tamanho atual** da fila, não do período), `fallbacks`, `quedas`, `minutos_fora`, `perfil`, `requisicoes`, `tokens_entrada`, `tokens_saida` |
 | `fallback_acionado` | troca automática de perfil | `de`, `para`, `modelo` |
 | `tarefa_mergeada` | PR do agente entrou na main | `item`, `pr` |

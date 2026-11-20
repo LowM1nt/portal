@@ -136,6 +136,18 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
     - títulos e números com a fonte e o peso do design system (a fonte já é carregada no index.html)
   - testes: componente — cartão de merge conta `tarefa_mergeada`; gasto mostra "R$"; item repetido aparece uma vez com o estado mais recente
 
+- [ ] **P-019 — Painel: acabamento da performance e da visão geral**
+  - nível: barato
+  - repo: portal · superfícies: ui
+  - por quê: segunda comparação por captura de tela (20/11) com `docs/design-system/capturas/painel-escuro.png`
+  - arquivos: `apps/painel/src/features/visao-geral/`, `apps/painel/src/features/performance/`, um formatador de números compartilhado em `apps/painel/src/formatar.ts`
+  - aceite (cada linha é uma diferença medida):
+    - tarefas da noite: "**P-018** Painel: acabamento…" — código em negrito seguido do título (`dados.titulo` de `tarefa_metricas`; só o código se faltar); a hora sai da coluna principal
+    - subtítulo da noite coerente com os cartões ("10 PRs com merge…"), nunca "2 PRs abertas" ao lado de "10 com merge"
+    - "Próximo post": texto limitado a ~5 linhas com "Ler inteiro" que expande (como na prévia); "Cancelar post" com a classe de botão do design system, não um cinza sólido
+    - Performance: título da página; as abas "7 dias"/"30 dias" com `.abas` > `.aba` do design system (hoje parecem botões crus com borda branca); números no mesmo formato da visão geral ("1,4 mi", não "1.353.831"); cada número num `.painel.numero`, como na visão geral
+  - testes: formatador ("1.353.831" → "1,4 mi", "760.000" → "760 mil"); tarefa com título mostra código e título; abas com `role="tab"` e `aria-selected`
+
 - [ ] **P-008 — Integração com GitHub: PRs e status de CI**
   - nível: dificil (decompor: cliente da API · importação de PRs · status de CI · agendamento)
   - repo: portal · superfícies: api, dados
