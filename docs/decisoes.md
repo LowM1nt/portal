@@ -24,6 +24,17 @@ Decididas na implementação (técnicas):
 - CORS da API: só a origem do web (`http://localhost:5173` em dev; a do deploy em produção, por configuração).
 - Token no front: o SDK do Supabase cuida (armazenamento e refresh); a API recebe `Authorization: Bearer`.
 
+## D-002 — Testes de integração com banco · 20/11/2026
+
+- Testes que precisam de Postgres usam **Testcontainers** (`Testcontainers.PostgreSql`, imagem
+  `postgres:16-alpine`): cada execução sobe um banco descartável no Docker. Funciona igual no
+  notebook e no GitHub Actions (runner `ubuntu-latest` tem Docker).
+- **Nunca** apontar teste para `127.0.0.1:5432`: nesse endereço roda o banco do agente, não o do portal.
+- Testes sem banco (validação de JWT, 401/404, CORS) usam o provider em memória do EF Core ou
+  `WebApplicationFactory` com o banco do Testcontainers — o que for mais simples para o caso.
+- Tokens de teste: assinados com uma chave simétrica de teste configurada só no ambiente `Testing`;
+  `notBefore` sempre **antes** de `expires` (token expirado = `notBefore` e `expires` no passado).
+
 ## Contrato da API (P-004)
 
 | Método e rota | Entrada | Saída | Erros |
