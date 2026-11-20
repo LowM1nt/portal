@@ -278,6 +278,6 @@ public class GitHubConfigTests
         (await c.GetAsync(Rota)).Dispose();
 
         Assert.NotEmpty(api.Logs.Linhas);
-        Assert.DoesNotContain(api.Logs.Linhas, l => l.Contains(Token) || l.Contains("SEGREDO_unico"));
+        Assert.DoesNotContain(api.Logs.Linhas, l => l.Contains(Token) || l.Contains("SEGREDO-unico"));
     }
 }

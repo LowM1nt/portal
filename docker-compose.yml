@@ -26,9 +26,12 @@ services:
       ConnectionStrings__Portal: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-portal};Username=${POSTGRES_USER:-portal};Password=${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env (veja .env.example)}"
     ports:
       - "127.0.0.1:${API_PORTA:-8080}:8080"
+    volumes:
+      - chaves_dp:/app/chaves-dp   # chaves do Data Protection: sem elas os tokens salvos não abrem
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   pgdata:
+  chaves_dp:
