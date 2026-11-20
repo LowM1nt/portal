@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import VisaoGeral from './features/visao-geral/VisaoGeral.tsx'
+import PerfilSeletor from './features/perfil/PerfilSeletor.tsx'
 import Performance from './features/performance/Performance.tsx'
 
 type Aba = 'visao-geral' | 'performance'
@@ -84,6 +85,7 @@ function App({ cliente = clientePadrao }: Props) {
       <main className="conteudo">
         <div className="cabecalho">
           <span className="suave pequeno">{sessao.user.email}</span>
+          <PerfilSeletor cliente={cliente} />
           <button type="button" className="botao botao-quieto" onClick={() => void cliente.auth.signOut()}>
             Sair
           </button>
