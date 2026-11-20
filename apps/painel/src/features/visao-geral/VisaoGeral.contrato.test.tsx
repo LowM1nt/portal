@@ -13,7 +13,7 @@ const noiteReal: Opcoes['linhas'] = {
     { id: 3, ts: '2026-11-19T07:00:00Z', tipo: 'noite_resumo', origem: 'agente', dados: { prs: 2, reprovadas: 0, fila_dificeis: 1, fallbacks: 0, quedas: 1, minutos_fora: 12, perfil: 'principal', requisicoes: 42, tokens_entrada: 310000, tokens_saida: 80000 } },
   ],
   sincronizacao: [{ ultima_vez: ha(5) }],
-  posts: [{ id: 7, texto: 'Meu agente implementou o calendário de deploys do portal esta noite.', publica_em: new Date(Date.now() + 86_400_000).toISOString() }],
+  posts: [{ id: 7, texto: 'Meu agente implementou o calendário de deploys do portal esta noite.', publicar_em: new Date(Date.now() + 86_400_000).toISOString() }],
 }
 
 describe('VisaoGeral pelo contrato', () => {
@@ -58,7 +58,7 @@ describe('VisaoGeral pelo contrato', () => {
 
   it('com noite vazia, ainda mostra a sincronização e o próximo post', async () => {
     const { cliente } = clienteContrato({
-      linhas: { eventos: [], sincronizacao: [{ ultima_vez: ha(3) }], posts: [{ id: 1, texto: 'Post futuro', publica_em: new Date(Date.now() + 3_600_000).toISOString() }] },
+      linhas: { eventos: [], sincronizacao: [{ ultima_vez: ha(3) }], posts: [{ id: 1, texto: 'Post futuro', publicar_em: new Date(Date.now() + 3_600_000).toISOString() }] },
     })
     render(<VisaoGeral cliente={cliente} />)
     expect(await screen.findByText(/nenhuma atividade/i)).toBeInTheDocument()

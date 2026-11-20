@@ -2,7 +2,7 @@
 export const CONTRATO = {
   eventos: ['id', 'ts', 'tipo', 'origem', 'tarefa_id', 'dados'],
   sincronizacao: ['ultima_vez'],
-  posts: ['id', 'texto', 'publica_em'],
+  posts: ['id', 'texto', 'publicar_em'],
   comandos: ['comando'],
 } as const
 

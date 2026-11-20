@@ -23,7 +23,7 @@ describe('contrato.ts × docs/eventos.md', () => {
     expect(CONTRATO.eventos).toEqual(expect.arrayContaining(['ts', 'tipo', 'dados']))
     expect(CONTRATO.sincronizacao).toContain('ultima_vez')
     expect(CONTRATO.comandos).toContain('comando')
-    expect(CONTRATO.posts).toEqual(expect.arrayContaining(['id', 'texto', 'publica_em']))
+    expect(CONTRATO.posts).toEqual(expect.arrayContaining(['id', 'texto', 'publicar_em']))
   })
 
   it('não contém as colunas antigas que não existem no Supabase', () => {

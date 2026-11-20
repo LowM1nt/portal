@@ -59,15 +59,15 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
   const [resumos, sync, posts, mes] = await Promise.all([
     cliente.from('eventos').select('id, ts, tipo, dados').eq('tipo', 'noite_resumo').order('ts', { ascending: false }).limit(1),
     cliente.from('sincronizacao').select('ultima_vez').order('ultima_vez', { ascending: false }).limit(1),
-    cliente.from('posts').select('id, texto, publica_em').gte('publica_em', agora.toISOString()).order('publica_em', { ascending: true }).limit(1),
+    cliente.from('posts').select('id, texto, publicar_em').gte('publicar_em', agora.toISOString()).order('publicar_em', { ascending: true }).limit(1),
     cliente.from('eventos').select('id, ts, tipo, dados').eq('tipo', 'tarefa_metricas').gte('ts', inicioDoMes).limit(LIMITE_MES),
   ])
   const resumo = lancar<Linha[]>(resumos)[0]
   const ultimaVez = lancar<{ ultima_vez: string | null }[]>(sync)[0]?.ultima_vez ?? null
   // posts não está detalhado em docs/eventos.md: se falhar, a tela segue sem o próximo post.
-  const post = posts.error ? undefined : ((posts.data ?? []) as { id: number; texto: string | null; publica_em: string | null }[])[0]
+  const post = posts.error ? undefined : ((posts.data ?? []) as { id: number; texto: string | null; publicar_em: string | null }[])[0]
   const gastoNoMes = lancar<Linha[]>(mes).reduce((soma, l) => soma + tokensDe(l.dados), 0)
-  const proximoPost = post ? { id: post.id, texto: post.texto ?? '', publicaEm: post.publica_em } : null
+  const proximoPost = post ? { id: post.id, texto: post.texto ?? '', publicaEm: post.publicar_em } : null
 
   if (!resumo) {
     return {
