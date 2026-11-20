@@ -66,3 +66,34 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByRole('form', { name: 'Entrar no painel' })).toBeInTheDocument())
   })
 })
+
+describe('App — abas', () => {
+  function clienteComTabelas(sessao: Session | null) {
+    const base = clienteFalso(sessao) as unknown as { auth: unknown }
+    const resposta = Promise.resolve({ data: [], error: null })
+    const construtor: unknown = new Proxy(() => {}, {
+      get(_alvo, prop) {
+        if (prop === 'then') return (ok: (v: unknown) => unknown, ko?: (e: unknown) => unknown) => resposta.then(ok, ko)
+        return () => construtor
+      },
+    })
+    return { ...base, from: vi.fn(() => construtor) } as unknown as SupabaseClient
+  }
+
+  it('depois do login, mostra as abas Visão geral e Performance e Performance troca a visão', async () => {
+    const usuario = userEvent.setup()
+    render(<App cliente={clienteComTabelas({ user: { email: 'dono@exemplo.com' } } as Session)} />)
+
+    expect(await screen.findByText('Visão geral')).toBeInTheDocument()
+    expect(screen.queryByText(/7 dias/)).not.toBeInTheDocument()
+    await usuario.click(screen.getByText('Performance'))
+    expect(await screen.findByText(/7 dias/)).toBeInTheDocument()
+  })
+
+  it('sem login, as abas não aparecem', async () => {
+    render(<App cliente={clienteComTabelas(null)} />)
+    await screen.findByRole('form', { name: 'Entrar no painel' })
+    expect(screen.queryByText('Visão geral')).not.toBeInTheDocument()
+    expect(screen.queryByText('Performance')).not.toBeInTheDocument()
+  })
+})
