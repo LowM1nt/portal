@@ -41,7 +41,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
 > **Prioridade (Noite 4 do CHECKLIST):** o painel vem antes do resto da fase 1. O login do painel
 > (Supabase Auth, só o dono) já existe em `apps/painel/src/App.tsx`; os itens abaixo partem dele.
 
-- [ ] **P-012 — Painel: visão geral**
+- [x] **P-012 — Painel: visão geral**
   - nível: padrao
   - repo: portal · superfícies: ui
   - arquivos: `apps/painel/src/features/visao-geral/`
