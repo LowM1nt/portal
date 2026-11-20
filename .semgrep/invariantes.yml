@@ -1,0 +1,45 @@
+# portal/.semgrep/invariantes.yml
+# Regras iniciais para as invariantes do portal. São um ponto de partida:
+# ajustar os padrões aos nomes reais do código quando ele existir.
+rules:
+  - id: sql-por-concatenacao
+    languages: [csharp]
+    severity: ERROR
+    message: "SQL montado por concatenação ou interpolação. Use parâmetros."
+    patterns:
+      - pattern-either:
+          - pattern: $DB.Database.ExecuteSqlRaw($"...", ...)
+          - pattern: $DB.Database.ExecuteSqlRaw("..." + $X, ...)
+          - pattern: $SET.FromSqlRaw($"...", ...)
+          - pattern: $SET.FromSqlRaw("..." + $X, ...)
+
+  - id: consulta-sem-filtro-de-workspace
+    languages: [csharp]
+    severity: WARNING
+    message: "Consulta sem filtro por workspace. Toda leitura e escrita filtra pelo workspace do usuário."
+    patterns:
+      - pattern: $CTX.$TABELA.ToListAsync(...)
+      - metavariable-regex:
+          metavariable: $TABELA
+          regex: ^(Deploys|PullRequests|Repositorios|Bugs|ItensDoRoadmap)$
+
+  - id: segredo-no-codigo
+    languages: [generic]
+    severity: ERROR
+    message: "Parece um segredo no código. Segredos ficam no .env, fora do git."
+    pattern-regex: (?i)(api[_-]?key|secret|token|password)\s*[:=]\s*["'][A-Za-z0-9_\-]{20,}["']
+
+  - id: any-explicito
+    languages: [typescript]
+    severity: WARNING
+    message: "Evite 'any'. O projeto roda com TypeScript em modo strict."
+    pattern-either:
+      - pattern: "let $X: any = ..."
+      - pattern: "const $X: any = ..."
+      - pattern: "($X: any) => ..."
+
+  - id: refetch-geral-em-tempo-real
+    languages: [typescript]
+    severity: WARNING
+    message: "Evento de tempo real deve atualizar o cache (setQueryData), não invalidar tudo."
+    pattern: $QC.invalidateQueries()

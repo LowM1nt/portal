@@ -1,0 +1,18 @@
+# portal/.github/dependabot.yml — atualização de dependências, validada pelos portões.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+  - package-ecosystem: npm
+    directory: /apps/painel
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+  - package-ecosystem: nuget
+    directory: /apps/api
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
