@@ -148,7 +148,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
     - Performance: título da página; as abas "7 dias"/"30 dias" com `.abas` > `.aba` do design system (hoje parecem botões crus com borda branca); números no mesmo formato da visão geral ("1,4 mi", não "1.353.831"); cada número num `.painel.numero`, como na visão geral
   - testes: formatador ("1.353.831" → "1,4 mi", "760.000" → "760 mil"); tarefa com título mostra código e título; abas com `role="tab"` e `aria-selected`
 
-- [ ] **P-008 — GitHub: configuração do token do workspace**
+- [x] **P-008 — GitHub: configuração do token do workspace**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - decisões: `docs/decisoes.md` D-004 — não reabrir
