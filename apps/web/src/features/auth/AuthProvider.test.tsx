@@ -23,12 +23,13 @@ function clienteFalso(sessaoInicial: Session | null, falharSignOut = false) {
 }
 
 function Consumidor() {
-  const { estado, workspaceAtivo, sair } = useAuth()
+  const { estado, workspaceAtivo, sair, trocarWorkspace } = useAuth()
   return (
     <div>
       <p data-testid="estado">{estado}</p>
       <p data-testid="ativo">{workspaceAtivo?.nome ?? '-'}</p>
       <button onClick={() => void sair().catch(() => undefined)}>sair</button>
+      <button onClick={() => trocarWorkspace('w2')}>trocar</button>
     </div>
   )
 }
@@ -65,5 +66,22 @@ describe('AuthProvider', () => {
     fireEvent.click(screen.getByText('sair'))
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.queryByTestId('estado')).not.toBeInTheDocument()
+  })
+
+  it('depois de sair, o próximo usuário não herda o workspace escolhido', async () => {
+    const respostas = [
+      [{ id: 'w1', nome: 'Primeiro', papel: 'dono' }, { id: 'w2', nome: 'Segundo', papel: 'dono' }],
+      [{ id: 'w9', nome: 'Outro', papel: 'dono' }, { id: 'w2', nome: 'Segundo', papel: 'dono' }],
+    ]
+    vi.stubGlobal('fetch', vi.fn(async () => me(respostas.shift() ?? [])()))
+    const { cliente, emitir } = clienteFalso(sessao)
+    render(<AuthProvider cliente={cliente}><Consumidor /></AuthProvider>)
+    await waitFor(() => expect(screen.getByTestId('ativo')).toHaveTextContent('Primeiro'))
+    fireEvent.click(screen.getByText('trocar'))
+    expect(screen.getByTestId('ativo')).toHaveTextContent('Segundo')
+    fireEvent.click(screen.getByText('sair'))
+    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
+    emitir({ access_token: 'tok-9', user: { id: 'u2' } } as Session)
+    await waitFor(() => expect(screen.getByTestId('ativo')).toHaveTextContent('Outro'))
   })
 })

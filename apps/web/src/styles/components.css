@@ -162,6 +162,6 @@ code { font: 0.9em var(--fonte-codigo); background: var(--veu-alto); padding: 1p
 
 /* Tela de entrada: cartão central */
 .entrada { min-height: 100dvh; display: grid; place-items: center; padding: var(--e-4); }
-.entrada-cartao { width: 100%; max-width: 400px; }
+.entrada-cartao { width: 100%; max-width: var(--largura-cartao); }
 .entrada-cartao .marca { margin-bottom: 0; padding: 0; }
 .entrada-botao { width: 100%; }

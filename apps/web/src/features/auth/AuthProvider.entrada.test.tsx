@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from './AuthProvider.tsx'
@@ -46,5 +46,17 @@ describe('AuthProvider — tela de entrada centralizada', () => {
     fireEvent.submit(titulo.closest('form') as HTMLFormElement)
     const alerta = await screen.findByRole('alert')
     expect(titulo.closest('.painel')).toContainElement(alerta)
+  })
+
+  it('enviar o formulário (Enter) chama o login', async () => {
+    const { auth, cliente } = clienteFalso()
+    renderizar(cliente)
+    fireEvent.change(await screen.findByLabelText('E-mail'), { target: { value: 'a@exemplo.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'segredo' } })
+    // O Enter no campo dispara o envio implícito do form; no jsdom isso é o clique no botão de envio.
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    await waitFor(() =>
+      expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: 'a@exemplo.com', password: 'segredo' }),
+    )
   })
 })
