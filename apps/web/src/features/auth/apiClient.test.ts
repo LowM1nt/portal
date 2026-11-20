@@ -22,7 +22,7 @@ describe('apiClient', () => {
     await chamarApi('/api/me', { token: 'tok-1', workspaceId: null, onNaoAutorizado: vi.fn() })
     await chamarApi('/api/workspaces', { token: 'tok-1', workspaceId: 'w1', onNaoAutorizado: vi.fn() })
     expect(fetchFalso).toHaveBeenCalledTimes(2)
-    for (const [, init] of fetchFalso.mock.calls as [string, RequestInit][]) {
+    for (const [, init] of fetchFalso.mock.calls as unknown as [string, RequestInit][]) {
       expect(new Headers(init.headers).get('Authorization')).toBe('Bearer tok-1')
     }
   })
