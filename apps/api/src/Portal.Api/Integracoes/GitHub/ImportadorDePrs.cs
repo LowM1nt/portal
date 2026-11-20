@@ -87,13 +87,18 @@ public class ImportadorDePrs
             .Where(p => p.WorkspaceId == workspaceId && p.RepositorioId == rep.Id)
             .ToDictionaryAsync(p => p.Numero, ct);
 
+        // A paginação do GitHub é por página: uma PR aberta entre duas páginas pode vir duas vezes.
+        var vistas = new HashSet<int>();
         foreach (var pr in lista.Prs)
         {
+            if (!vistas.Add(pr.Numero)) continue;
             if (existentes.Remove(pr.Numero, out var atual))
             {
                 atual.Titulo = pr.Titulo;
                 atual.Autor = pr.Autor;
                 atual.Estado = "open";
+                atual.Url = pr.Url;
+                atual.AtualizadaEm = pr.AtualizadaEm;
             }
             else
             {
@@ -101,6 +106,7 @@ public class ImportadorDePrs
                 {
                     WorkspaceId = workspaceId, RepositorioId = rep.Id, Numero = pr.Numero,
                     Titulo = pr.Titulo, Autor = pr.Autor, Estado = "open",
+                    Url = pr.Url, AtualizadaEm = pr.AtualizadaEm,
                 });
             }
         }

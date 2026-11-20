@@ -202,6 +202,19 @@ public class ImportadorDePrsTests
     // ---------- testes ----------
 
     [Fact]
+    public async Task Pr_repetida_entre_paginas_vira_uma_linha_so()
+    {
+        var gh = new GitHubFalso().Servir(Repo, (_, _) => Json(Gravacao("prs-repetida.json")));
+        await using var mundo = await NovoMundoAsync(gh);
+        var ws = await mundo.NovoWorkspaceAsync(TokenA, [Repo]);
+
+        await mundo.ImportarAsync(ws);
+
+        var prs = await mundo.PrsAsync(ws);
+        Assert.Equal([12, 15], prs.Select(p => p.Numero));
+    }
+
+    [Fact]
     public async Task Importa_as_2_prs_abertas_no_workspace_da_configuracao()
     {
         var gh = new GitHubFalso().Servir(Repo, (_, _) => Json(Gravacao("prs-abertas-2.json")));
@@ -214,6 +227,8 @@ public class ImportadorDePrsTests
         Assert.Equal([12, 15], prs.Select(p => p.Numero));
         Assert.Equal(["Corrige o cálculo de lead time", "Adiciona filtro por ambiente nos deploys"], prs.Select(p => p.Titulo));
         Assert.Equal(["ana-dev", "bruno-dev"], prs.Select(p => p.Autor));
+        Assert.Equal(["https://github.com/acme/portal/pull/12", "https://github.com/acme/portal/pull/15"], prs.Select(p => p.Url));
+        Assert.Equal([DateTimeOffset.Parse("2026-11-18T09:41:27Z"), DateTimeOffset.Parse("2026-11-19T16:05:42Z")], prs.Select(p => p.AtualizadaEm!.Value));
         Assert.All(prs, p => Assert.Equal(ws, p.WorkspaceId));
         Assert.Empty(gh.Inesperadas);
     }
