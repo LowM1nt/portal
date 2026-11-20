@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import BotaoComando from '../visao-geral/BotaoComando.tsx'
 
 type Perfis = { ativo: string; disponiveis: string[] }
-type Resultado = 'ok' | 'erro' | null
 
 // Mostra o perfil ativo e grava `trocar_perfil` em `comandos` depois da confirmação.
 export default function PerfilSeletor({ cliente }: { cliente: SupabaseClient }) {
@@ -11,8 +11,7 @@ export default function PerfilSeletor({ cliente }: { cliente: SupabaseClient }) 
   const [erro, setErro] = useState(false)
   const [escolhido, setEscolhido] = useState('')
   const [confirmando, setConfirmando] = useState(false)
-  const [enviando, setEnviando] = useState(false)
-  const [resultado, setResultado] = useState<Resultado>(null)
+  const [enviado, setEnviado] = useState(false)
 
   useEffect(() => {
     let ativo = true
@@ -20,8 +19,14 @@ export default function PerfilSeletor({ cliente }: { cliente: SupabaseClient }) 
       .then(({ data, error }) => {
         if (!ativo) return
         if (error) return setErro(true)
-        const linha = data as { perfil_ativo?: string | null; perfis_disponiveis?: string[] | null } | null
-        setPerfis({ ativo: linha?.perfil_ativo ?? '', disponiveis: linha?.perfis_disponiveis ?? [] })
+        const linha = data as {
+          perfil_ativo?: string | null
+          perfis_disponiveis?: string[] | null
+        } | null
+        setPerfis({
+          ativo: linha?.perfil_ativo ?? '',
+          disponiveis: linha?.perfis_disponiveis ?? [],
+        })
       })
       .catch(() => {
         if (ativo) setErro(true)
@@ -37,22 +42,9 @@ export default function PerfilSeletor({ cliente }: { cliente: SupabaseClient }) 
     setTentativa((n) => n + 1)
   }
 
-  async function confirmar() {
-    setEnviando(true)
-    try {
-      const { error } = await cliente.from('comandos').insert({ comando: 'trocar_perfil', args: { perfil: escolhido } })
-      setResultado(error ? 'erro' : 'ok')
-    } catch {
-      setResultado('erro')
-    } finally {
-      setEnviando(false)
-      setConfirmando(false)
-    }
-  }
-
   if (erro) {
     return (
-      <div className="grupo-botoes">
+      <div className="perfil">
         <p role="alert" className="selo selo-erro">
           Não foi possível carregar o perfil.
         </p>
@@ -64,33 +56,34 @@ export default function PerfilSeletor({ cliente }: { cliente: SupabaseClient }) 
   }
   if (!perfis) return <p className="suave pequeno">Carregando perfil…</p>
 
-  const outros = perfis.disponiveis.filter((p) => p !== perfis.ativo)
   return (
-    <div className="grupo-botoes">
+    <div className="perfil">
       <span className="selo">{perfis.ativo || 'sem perfil'}</span>
-      <select
-        aria-label="Perfil de modelos"
-        value={escolhido}
-        disabled={confirmando}
-        onChange={(e) => {
-          setEscolhido(e.target.value)
-          setResultado(null)
-        }}
-      >
-        <option value="" disabled>
-          Escolher perfil
-        </option>
-        {perfis.disponiveis.map((p) => (
-          <option key={p} value={p}>
-            {p}
+      <span className="campo">
+        <select
+          aria-label="Perfil de modelos"
+          value={escolhido}
+          disabled={confirmando}
+          onChange={(e) => {
+            setEscolhido(e.target.value)
+            setEnviado(false)
+          }}
+        >
+          <option value="" disabled>
+            Escolher perfil
           </option>
-        ))}
-      </select>
+          {perfis.disponiveis.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+      </span>
       {!confirmando && (
         <button
           type="button"
           className="botao"
-          disabled={!escolhido || escolhido === perfis.ativo || !outros.includes(escolhido)}
+          disabled={!escolhido || escolhido === perfis.ativo}
           onClick={() => setConfirmando(true)}
         >
           Trocar perfil
@@ -98,24 +91,31 @@ export default function PerfilSeletor({ cliente }: { cliente: SupabaseClient }) 
       )}
       {confirmando && (
         <>
-          <span className="suave pequeno">O agente passa a usar o perfil {escolhido} a partir da próxima tarefa.</span>
-          <button type="button" className="botao botao-primario" disabled={enviando} onClick={() => void confirmar()}>
-            Confirmar
-          </button>
-          <button type="button" className="botao botao-quieto" disabled={enviando} onClick={() => setConfirmando(false)}>
-            Cancelar
+          <span className="suave pequeno linha-cheia">
+            O agente passa a usar o perfil {escolhido} a partir da próxima tarefa.
+          </span>
+          {
+            <BotaoComando
+              cliente={cliente}
+              comando="trocar_perfil"
+              args={{ perfil: escolhido }}
+              grupo="perfil-acao"
+              rotulo="Confirmar"
+              variante="botao-primario"
+              ok="Pedido enviado. O perfil muda na próxima sincronização."
+              falha="Não foi possível enviar o pedido."
+              onConcluido={(r) => {
+                if (r === 'ok') {
+                  setEnviado(true)
+                  setTentativa((n) => n + 1)
+                }
+              }}
+            />
+          }
+          <button type="button" className="botao botao-quieto" onClick={() => setConfirmando(false)}>
+            {enviado ? 'Fechar' : 'Cancelar'}
           </button>
         </>
-      )}
-      {resultado === 'ok' && (
-        <p role="status" className="selo selo-ok">
-          Pedido enviado. O perfil muda na próxima sincronização.
-        </p>
-      )}
-      {resultado === 'erro' && (
-        <p role="alert" className="selo selo-erro">
-          Não foi possível enviar o pedido.
-        </p>
       )}
     </div>
   )
