@@ -52,9 +52,10 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
 - [ ] **P-013 — Painel: performance do agente**
   - nível: padrao
   - repo: portal · superfícies: ui
-  - arquivos: `apps/painel/src/features/performance/`
-  - aceite: PRs por noite, taxa de aprovação nos portões, tokens por tarefa, fila de difíceis e acionamentos do fallback, por período
-  - testes: componente com dados de uma semana
+  - arquivos: `apps/painel/src/features/performance/`, `apps/painel/src/App.tsx` (abas "Visão geral" e "Performance" com `.abas` do design system)
+  - dados: **só os eventos de `docs/eventos.md`** (`tarefa_metricas`, `noite_resumo`, `fallback_acionado`); não inventar tipo novo
+  - aceite: depois do login, a aba Performance mostra PRs por noite, taxa de aprovação nos portões, tokens por tarefa, fila de difíceis (valor do `noite_resumo` mais recente, não do período) e acionamentos do fallback, por período (7 ou 30 dias); consulta com limite explícito; `null` não entra na média; estados vazio, erro (com "Tentar de novo" que volta para carregando) e carregando
+  - testes: componente com dados de uma semana; a aba aparece no App e troca a visão; o cliente falso confere o filtro de período usado na consulta
 - [ ] **P-004 — Autenticação e workspaces**
   - nível: dificil (decompor: login com biblioteca pronta · modelo de workspace · filtro por workspace)
   - repo: portal · superfícies: api, ui, dados
