@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import PausarAgente from './PausarAgente.tsx'
 import { useVisaoGeral, type Tarefa } from './useVisaoGeral.ts'
@@ -10,6 +10,7 @@ const ROTULO_ESTADO: Record<string, string> = {
 
 const numero = new Intl.NumberFormat('pt-BR')
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' })
+const dia = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' })
 const diaHora = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 function formatarTokens(n: number): string {
@@ -23,35 +24,52 @@ function formatarHora(iso: string, formato = hora): string {
 export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
   const estado = useVisaoGeral(cliente)
 
+  const cabecalho = (conteudo: ReactNode) => (
+    <div className="cabecalho">
+      {conteudo}
+      <PausarAgente cliente={cliente} />
+    </div>
+  )
+
   if (estado.situacao === 'carregando') {
     return (
-      <p className="suave" aria-busy="true">
-        Carregando…
-      </p>
+      <div className="grade">
+        {cabecalho(
+          <p className="suave" aria-busy="true">
+            Carregando…
+          </p>,
+        )}
+      </div>
     )
   }
   if (estado.situacao === 'erro') {
     return (
-      <p role="alert" className="selo selo-erro">
-        Não foi possível carregar a visão geral. Tente novamente em instantes.
-      </p>
+      <div className="grade">
+        {cabecalho(
+          <p role="alert" className="selo selo-erro">
+            Não foi possível carregar a visão geral. Tente novamente em instantes.
+          </p>,
+        )}
+      </div>
     )
   }
 
-  const { tarefas, proximoPost, precisaDeVoce, gastoNoMes, sincronizadoEm } = estado.dados
+  const { tarefas, proximoPost, precisaDeVoce, dataDaNoite, gastoNoMes, sincronizadoEm } = estado.dados
 
   return (
-    <div className="pilha">
-      <div className="cabecalho">
-        {sincronizadoEm ? (
+    <div className="grade">
+      {cabecalho(
+        sincronizadoEm ? (
           <p className="suave pequeno">
             <span>Última sincronização</span> <time dateTime={sincronizadoEm}>{formatarHora(sincronizadoEm, diaHora)}</time>
           </p>
         ) : (
           <p className="suave pequeno">Ainda não houve sincronização.</p>
-        )}
-        <PausarAgente cliente={cliente} />
-      </div>
+        ),
+      )}
+      {dataDaNoite && tarefas.length > 0 && (
+        <p className="suave pequeno">Noite de {dia.format(new Date(dataDaNoite))}</p>
+      )}
 
       {tarefas.length === 0 ? (
         <p className="vazio">Nenhuma atividade do agente na última noite.</p>
@@ -102,8 +120,8 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
           <p className="vazio">Nada precisa de você agora.</p>
         ) : (
           <ul className="lista">
-            {precisaDeVoce.map((texto) => (
-              <li key={texto}>{texto}</li>
+            {precisaDeVoce.map((p) => (
+              <li key={p.id}>{p.texto}</li>
             ))}
           </ul>
         )}
