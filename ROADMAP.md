@@ -79,7 +79,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: migrations aplicam do zero; índices por workspace e por data; nenhuma coluna duplicada
   - testes: integração com Testcontainers aplicando as migrations
 
-- [ ] **P-006 — API de deploys**
+- [x] **P-006 — API de deploys**
   - nível: padrao
   - repo: portal · superfícies: api
   - arquivos: `apps/api/Deploys/DeploysController.cs`, `apps/api/Deploys/DeploysService.cs`

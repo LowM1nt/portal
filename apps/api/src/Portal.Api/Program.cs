@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Portal.Api.Auth;
 using Portal.Api.Dados;
+using Portal.Api.Deploys;
 using Portal.Api.Workspaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<PortalDbContext>((sp, o) =>
     o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Portal")));
 builder.Services.AddScoped<WorkspaceAtual>();
 builder.Services.AddScoped<WorkspaceService>();
+builder.Services.AddScoped<DeploysService>();
 builder.Services.AddAutenticacaoSupabase();
 
 // CORS: só a origem do web (Cors:Origem; padrão = Vite local).
@@ -36,6 +38,7 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapWorkspaces();
+app.MapDeploys();
 
 app.Run();
 
