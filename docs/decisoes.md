@@ -44,3 +44,13 @@ Decididas na implementação (técnicas):
 | `GET /api/workspaces/{id}` | Bearer | `{ id, nome, papel }` | 401, 404 (não existe **ou** não é membro) |
 
 Qualquer rota de negócio futura (deploys, PRs) exige Bearer **e** `X-Workspace-Id`.
+
+## D-003 — Demos públicas e dependências · 20/11/2026
+
+Decididas pelo dono:
+
+- **Demos na nuvem grátis** (pendência P4): front no Cloudflare Pages; API .NET num free tier com
+  Docker (escolher no P-010 entre os que estiverem grátis na hora, ex.: Render ou Koyeb); banco
+  num projeto Supabase separado do painel, só com dados fictícios. A demo fica no ar com o notebook desligado.
+- **TypeScript 7 fica de fora por enquanto:** o Dependabot ignora majors do TypeScript; a migração vira
+  item do roadmap quando o ecossistema (ESLint, Vite) acompanhar.
