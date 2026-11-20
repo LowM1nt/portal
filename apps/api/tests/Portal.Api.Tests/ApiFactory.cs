@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.PostgreSql;
 using Npgsql;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Portal.Api.Dados;
 
 namespace Portal.Api.Tests;
 
@@ -35,6 +38,13 @@ public class ApiFactory : WebApplicationFactory<Program>
 
     protected virtual void ConfigurarServicos(IWebHostBuilder builder)
     {
+    }
+
+    /// <summary>Aplica as migrations pela fábrica (fora de Development a API não migra sozinha).</summary>
+    public async Task MigrarAsync()
+    {
+        using var escopo = Services.CreateScope();
+        await escopo.ServiceProvider.GetRequiredService<PortalDbContext>().Database.MigrateAsync();
     }
 
     public HttpClient ClienteCom(Guid usuario, string? email = null, Guid? workspace = null)

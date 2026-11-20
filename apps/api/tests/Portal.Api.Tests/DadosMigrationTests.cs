@@ -13,9 +13,8 @@ public class DadosMigrationTests
         var conexao = await _pg.NovoBancoAsync();
         Assert.Empty(await _pg.TabelasAsync(conexao));
 
-        // Em Development a API aplica as migrations no startup.
-        await using var api = new ApiFactory("Development", conexao);
-        using var client = api.CreateClient();
+        await using var api = new ApiFactory("Testing", conexao);
+        await api.MigrarAsync();
 
         var tabelas = await _pg.TabelasAsync(conexao);
         Assert.Contains("workspaces", tabelas);

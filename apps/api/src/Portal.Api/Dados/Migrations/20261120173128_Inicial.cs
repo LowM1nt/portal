@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Portal.Api.Dados.Migrations.Migrations
+namespace Portal.Api.Dados.Migrations
 {
     /// <inheritdoc />
     public partial class Inicial : Migration

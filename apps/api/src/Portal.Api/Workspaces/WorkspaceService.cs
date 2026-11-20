@@ -34,8 +34,8 @@ public class WorkspaceService
     }
 
     /// <summary>Devolve null tanto para id inexistente quanto para quem não é membro (404 nos dois casos).</summary>
-    public Task<WorkspaceDto?> ObterAsync(Guid id, CancellationToken ct) =>
-        Meus(id).FirstOrDefaultAsync(ct)!;
+    public async Task<WorkspaceDto?> ObterAsync(Guid id, CancellationToken ct) =>
+        await Meus(id).Cast<WorkspaceDto?>().FirstOrDefaultAsync(ct);
 
     // Sempre parte dos vínculos do usuário atual: nunca lê workspace sem filtrar pelo membro.
     private IQueryable<WorkspaceDto> Meus(Guid? id = null) =>

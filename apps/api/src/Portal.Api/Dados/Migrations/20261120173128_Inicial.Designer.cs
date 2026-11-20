@@ -9,7 +9,7 @@ using Portal.Api.Dados;
 
 #nullable disable
 
-namespace Portal.Api.Dados.Migrations.Migrations
+namespace Portal.Api.Dados.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
     [Migration("20261120173128_Inicial")]

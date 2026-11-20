@@ -9,7 +9,7 @@ public static class AuthExtensions
 {
     /// <summary>
     /// Valida o JWT do Supabase (JWKS do projeto, aud = authenticated). A API só valida: não guarda senha nem emite token.
-    /// Fora de Production, se Jwt:ChaveTeste existir, usa essa chave simétrica (testes). A configuração é lida
+    /// Só no ambiente Testing, se Jwt:ChaveTeste existir, usa essa chave simétrica (testes). A configuração é lida
     /// de forma tardia para enxergar o que a fábrica de testes define.
     /// </summary>
     public static IServiceCollection AddAutenticacaoSupabase(this IServiceCollection services)
@@ -37,7 +37,7 @@ public static class AuthExtensions
 
                 var chaveTeste = config["Jwt:ChaveTeste"];
                 var url = config["Supabase:Url"]?.TrimEnd('/');
-                if (!env.IsProduction() && !string.IsNullOrEmpty(chaveTeste))
+                if (env.IsEnvironment("Testing") && !string.IsNullOrEmpty(chaveTeste))
                 {
                     o.TokenValidationParameters.ValidateIssuer = false;
                     o.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chaveTeste));

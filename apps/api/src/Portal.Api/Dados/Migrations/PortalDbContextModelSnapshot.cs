@@ -8,7 +8,7 @@ using Portal.Api.Dados;
 
 #nullable disable
 
-namespace Portal.Api.Dados.Migrations.Migrations
+namespace Portal.Api.Dados.Migrations
 {
     [DbContext(typeof(PortalDbContext))]
     partial class PortalDbContextModelSnapshot : ModelSnapshot

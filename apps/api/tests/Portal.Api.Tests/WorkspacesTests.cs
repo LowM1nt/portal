@@ -11,7 +11,12 @@ public class WorkspacesTests
 
     public WorkspacesTests(PostgresFixture pg) => _pg = pg;
 
-    private async Task<ApiFactory> NovaApiAsync() => new ApiFactory("Development", await _pg.NovoBancoAsync());
+    private async Task<ApiFactory> NovaApiAsync()
+    {
+        var api = new ApiFactory("Testing", await _pg.NovoBancoAsync());
+        await api.MigrarAsync();
+        return api;
+    }
 
     private static async Task<JsonElement> Json(HttpResponseMessage r) =>
         (await r.Content.ReadFromJsonAsync<JsonElement>());
@@ -70,14 +75,25 @@ public class WorkspacesTests
     }
 
     [Fact]
-    public async Task Post_workspaces_com_nome_longo_devolve_400()
+    public async Task Post_workspaces_com_nome_de_101_caracteres_devolve_400()
     {
         await using var api = await NovaApiAsync();
         using var client = api.ClienteCom(Guid.NewGuid());
 
-        using var resp = await client.PostAsJsonAsync("/api/workspaces", new { nome = new string('a', 1000) });
+        using var resp = await client.PostAsJsonAsync("/api/workspaces", new { nome = new string('a', 101) });
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_workspaces_com_nome_de_100_caracteres_devolve_201()
+    {
+        await using var api = await NovaApiAsync();
+        using var client = api.ClienteCom(Guid.NewGuid());
+
+        using var resp = await client.PostAsJsonAsync("/api/workspaces", new { nome = new string('a', 100) });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
     }
 
     [Fact]
