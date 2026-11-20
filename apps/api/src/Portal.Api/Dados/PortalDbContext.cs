@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Portal.Api.Dados.Entidades;
 using Portal.Api.Workspaces;
 
 namespace Portal.Api.Dados;
@@ -16,6 +17,12 @@ public class PortalDbContext : DbContext
     public DbSet<Workspace> Workspaces => Set<Workspace>();
 
     public DbSet<WorkspaceMembro> WorkspaceMembros => Set<WorkspaceMembro>();
+
+    public DbSet<Repositorio> Repositorios => Set<Repositorio>();
+
+    public DbSet<Deploy> Deploys => Set<Deploy>();
+
+    public DbSet<PullRequest> PullRequests => Set<PullRequest>();
 
     // Lido pelo query filter a cada consulta (o EF o trata como parâmetro, não como constante).
     private Guid WorkspaceIdAtual => _workspaceAtual.Id;
@@ -42,6 +49,54 @@ public class PortalDbContext : DbContext
             e.Property(m => m.Papel).HasColumnName("papel").HasMaxLength(20).IsRequired();
             e.HasOne<Workspace>().WithMany().HasForeignKey(m => m.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(m => m.UsuarioId);
+        });
+
+        modelBuilder.Entity<Repositorio>(e =>
+        {
+            e.ToTable("repositorios");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Id).HasColumnName("id");
+            e.Property(r => r.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(r => r.Nome).HasColumnName("nome").HasMaxLength(200).IsRequired();
+            e.Property(r => r.CriadoEm).HasColumnName("criado_em");
+            e.HasIndex(r => r.WorkspaceId);
+        });
+
+        modelBuilder.Entity<Deploy>(e =>
+        {
+            e.ToTable("deploys");
+            e.HasKey(d => d.Id);
+            e.Property(d => d.Id).HasColumnName("id");
+            e.Property(d => d.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(d => d.RepositorioId).HasColumnName("repositorio_id");
+            e.Property(d => d.Titulo).HasColumnName("titulo").HasMaxLength(200).IsRequired();
+            e.Property(d => d.Ambiente).HasColumnName("ambiente").HasMaxLength(50).IsRequired();
+            e.Property(d => d.Status).HasColumnName("status").HasMaxLength(50).IsRequired();
+            e.Property(d => d.AgendadoPara).HasColumnName("agendado_para");
+            e.Property(d => d.CriadoEm).HasColumnName("criado_em");
+            e.HasOne<Repositorio>().WithMany().HasForeignKey(d => d.RepositorioId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(d => d.WorkspaceId);
+            e.HasIndex(d => new { d.WorkspaceId, d.AgendadoPara });
+            e.HasIndex(d => d.RepositorioId);
+        });
+
+        modelBuilder.Entity<PullRequest>(e =>
+        {
+            e.ToTable("pull_requests");
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Id).HasColumnName("id");
+            e.Property(p => p.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(p => p.RepositorioId).HasColumnName("repositorio_id");
+            e.Property(p => p.Numero).HasColumnName("numero");
+            e.Property(p => p.Titulo).HasColumnName("titulo").HasMaxLength(300).IsRequired();
+            e.Property(p => p.Autor).HasColumnName("autor").HasMaxLength(100).IsRequired();
+            e.Property(p => p.Estado).HasColumnName("estado").HasMaxLength(50).IsRequired();
+            e.Property(p => p.CriadoEm).HasColumnName("criado_em");
+            e.HasOne<Repositorio>().WithMany().HasForeignKey(p => p.RepositorioId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(p => p.WorkspaceId);
+            e.HasIndex(p => new { p.WorkspaceId, p.CriadoEm });
+            e.HasIndex(p => new { p.WorkspaceId, p.RepositorioId, p.Numero }).IsUnique();
+            e.HasIndex(p => p.RepositorioId);
         });
 
         AplicarFiltroPorWorkspace(modelBuilder);

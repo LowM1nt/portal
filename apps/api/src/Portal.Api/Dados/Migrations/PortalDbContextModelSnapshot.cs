@@ -22,6 +22,141 @@ namespace Portal.Api.Dados.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Portal.Api.Dados.Entidades.Deploy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AgendadoPara")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("agendado_para");
+
+                    b.Property<string>("Ambiente")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ambiente");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<Guid>("RepositorioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("repositorio_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("titulo");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepositorioId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.HasIndex("WorkspaceId", "AgendadoPara");
+
+                    b.ToTable("deploys", (string)null);
+                });
+
+            modelBuilder.Entity("Portal.Api.Dados.Entidades.PullRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Autor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("autor");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("estado");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer")
+                        .HasColumnName("numero");
+
+                    b.Property<Guid>("RepositorioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("repositorio_id");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("titulo");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepositorioId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.HasIndex("WorkspaceId", "CriadoEm");
+
+                    b.HasIndex("WorkspaceId", "RepositorioId", "Numero")
+                        .IsUnique();
+
+                    b.ToTable("pull_requests", (string)null);
+                });
+
+            modelBuilder.Entity("Portal.Api.Dados.Entidades.Repositorio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("nome");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("repositorios", (string)null);
+                });
+
             modelBuilder.Entity("Portal.Api.Workspaces.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -72,6 +207,24 @@ namespace Portal.Api.Dados.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("workspace_membros", (string)null);
+                });
+
+            modelBuilder.Entity("Portal.Api.Dados.Entidades.Deploy", b =>
+                {
+                    b.HasOne("Portal.Api.Dados.Entidades.Repositorio", null)
+                        .WithMany()
+                        .HasForeignKey("RepositorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Dados.Entidades.PullRequest", b =>
+                {
+                    b.HasOne("Portal.Api.Dados.Entidades.Repositorio", null)
+                        .WithMany()
+                        .HasForeignKey("RepositorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Portal.Api.Workspaces.WorkspaceMembro", b =>
