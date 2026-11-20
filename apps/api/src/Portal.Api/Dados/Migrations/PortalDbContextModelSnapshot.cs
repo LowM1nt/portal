@@ -81,6 +81,9 @@ namespace Portal.Api.Dados.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("AtualizadaEm")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Autor")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -110,6 +113,10 @@ namespace Portal.Api.Dados.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)")
                         .HasColumnName("titulo");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("WorkspaceId")
                         .HasColumnType("uuid")

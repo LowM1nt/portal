@@ -17,6 +17,9 @@ builder.Services.AddScoped<WorkspaceAtual>();
 builder.Services.AddScoped<WorkspaceService>();
 builder.Services.AddScoped<DeploysService>();
 builder.Services.AddScoped<GitHubConfigService>();
+builder.Services.AddHttpClient<ClienteGitHub>();
+builder.Services.AddSingleton<EtagsGitHub>();
+builder.Services.AddScoped<ImportadorDePrs>();
 // Chaves do Data Protection persistidas: sem isso, cada reinício do container gera chaves novas e os
 // tokens já salvos (GitHub) ficam ilegíveis. Pasta vem de DataProtection:PastaDasChaves (volume no compose).
 var protecaoDeDados = builder.Services.AddDataProtection().SetApplicationName("portal");

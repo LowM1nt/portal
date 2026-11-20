@@ -9,5 +9,7 @@ public class PullRequest
     public string Titulo { get; set; } = "";
     public string Autor { get; set; } = "";
     public string Estado { get; set; } = "";
+    public string Url { get; set; } = "";
+    public DateTimeOffset? AtualizadaEm { get; set; }
     public DateTimeOffset CriadoEm { get; set; } = DateTimeOffset.UtcNow;
 }
