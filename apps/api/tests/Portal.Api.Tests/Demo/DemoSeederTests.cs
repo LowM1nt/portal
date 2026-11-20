@@ -70,7 +70,10 @@ public class DemoSeederTests
         await SemearAsync(api);
         var segunda = await FotoDoDemoAsync(api);
 
-        Assert.Equal(primeira, segunda);
+        Assert.Equal(primeira.Workspaces, segunda.Workspaces);
+        Assert.Equal(primeira.Repositorios, segunda.Repositorios);
+        Assert.Equal(primeira.Deploys, segunda.Deploys);
+        Assert.Equal(primeira.Titulos, segunda.Titulos);
         using var escopo = api.Services.CreateScope();
         var db = escopo.ServiceProvider.GetRequiredService<PortalDbContext>();
         Assert.Equal(primeira.Workspaces, await db.Workspaces.CountAsync());

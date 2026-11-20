@@ -1,14 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { chaveDia, chaveDiaUtc, diasDaSemana, proximaSemana, rotuloSemana, semanaAnterior } from './semana.ts'
-import { useDeploysDaSemana, type Deploy } from './useDeploysDaSemana.ts'
+import { useAuth } from '../auth/AuthProvider.tsx'
+import { useDeploysDaSemana, type Deploy, type Fonte } from './useDeploysDaSemana.ts'
 import './calendario.css'
 
 const diaMes = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' })
 
 export function Calendario() {
+  const { api, workspaceAtivo } = useAuth()
+  const fonte = useMemo<Fonte>(
+    () => ({ buscar: api, caminho: '/api/deploys', escopo: workspaceAtivo?.id ?? '' }),
+    [api, workspaceAtivo?.id],
+  )
+  return <CalendarioDaFonte fonte={fonte} />
+}
+
+/** Calendário somente leitura de uma fonte de dados (usado também pela demo, sem sessão). */
+export function CalendarioDaFonte({ fonte }: { fonte: Fonte }) {
   const [semana, setSemana] = useState(() => rotuloSemana(new Date()))
-  const { carregando, erro, vazio, dados, recarregar } = useDeploysDaSemana(semana)
+  const { carregando, erro, vazio, dados, recarregar } = useDeploysDaSemana(semana, fonte)
   const dias = diasDaSemana(semana)
 
   const porDia = new Map<string, Deploy[]>()

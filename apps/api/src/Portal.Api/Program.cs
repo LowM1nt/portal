@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Portal.Api.Auth;
 using Portal.Api.Dados;
+using Portal.Api.Demo;
 using Portal.Api.Deploys;
 using Portal.Api.Workspaces;
 
@@ -32,6 +33,13 @@ if (app.Environment.IsDevelopment() && !string.IsNullOrWhiteSpace(app.Configurat
     escopo.ServiceProvider.GetRequiredService<PortalDbContext>().Database.Migrate();
 }
 
+var demoLigada = app.Configuration.GetValue<bool>("Demo:Habilitada");
+if (demoLigada && !string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("Portal")))
+{
+    using var escopo = app.Services.CreateScope();
+    await DemoSeeder.SemearAsync(escopo.ServiceProvider.GetRequiredService<PortalDbContext>());
+}
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -39,6 +47,7 @@ app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapWorkspaces();
 app.MapDeploys();
+if (demoLigada) app.MapDemo();
 
 app.Run();
 

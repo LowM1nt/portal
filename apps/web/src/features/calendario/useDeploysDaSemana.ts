@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useAuth } from '../auth/AuthProvider.tsx'
-
 export type Deploy = {
   id: string
   repositorioId: string
@@ -10,20 +8,28 @@ export type Deploy = {
   agendadoPara: string
 }
 
+export type Fonte = {
+  /** Chama a API (com ou sem sessão). */
+  buscar: (caminho: string) => Promise<Response>
+  /** Rota de listagem por semana, sem a query. */
+  caminho: string
+  /** Identifica a origem dos dados (workspace ativo, ou 'demo'). */
+  escopo: string
+}
+
 type Resultado = { chave: string; deploys: Deploy[] | null }
 
-export function useDeploysDaSemana(semana: string) {
-  const { api, workspaceAtivo } = useAuth()
+export function useDeploysDaSemana(semana: string, { buscar, caminho, escopo }: Fonte) {
   const [tentativa, setTentativa] = useState(0)
   const [resultado, setResultado] = useState<Resultado | null>(null)
-  const chave = `${workspaceAtivo?.id ?? ''}#${semana}#${tentativa}`
+  const chave = `${escopo}#${semana}#${tentativa}`
 
   useEffect(() => {
     let ativo = true
     const terminar = (deploys: Deploy[] | null) => {
       if (ativo) setResultado({ chave, deploys })
     }
-    api(`/api/deploys?semana=${encodeURIComponent(semana)}`)
+    buscar(`${caminho}?semana=${encodeURIComponent(semana)}`)
       .then(async (r) => {
         const corpo: unknown = r.ok ? await r.json() : null
         terminar(Array.isArray(corpo) ? (corpo as Deploy[]) : null)
@@ -32,7 +38,7 @@ export function useDeploysDaSemana(semana: string) {
     return () => {
       ativo = false
     }
-  }, [api, semana, chave])
+  }, [buscar, caminho, semana, chave])
 
   const recarregar = useCallback(() => setTentativa((n) => n + 1), [])
   const pronto = resultado?.chave === chave

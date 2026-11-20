@@ -1,11 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider.tsx'
+import { DemoPage } from './features/demo/DemoPage.tsx'
 import { Calendario } from './features/calendario/Calendario.tsx'
 
 type Props = { cliente?: SupabaseClient | null }
 
 function App({ cliente = clientePadrao }: Props) {
+  // A demo é pública: não passa pelo AuthProvider nem exige a configuração do Supabase.
+  if (window.location.pathname.replace(/\/+$/, '') === '/demo') return <DemoPage />
   if (!cliente) {
     return (
       <main className="conteudo">

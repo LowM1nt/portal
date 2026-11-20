@@ -162,7 +162,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: lista as PRs aguardando revisão, com filtro por repositório e por quem revisa; estados vazio, erro e carregando
   - testes: integração da API e componente da lista
 
-- [ ] **P-010 — Demo pública com dados fictícios**
+- [x] **P-010 — Demo pública com dados fictícios**
   - nível: padrao
   - repo: portal · superfícies: api, ui, dados
   - arquivos: `apps/api/Demo/`, script de dados fictícios
