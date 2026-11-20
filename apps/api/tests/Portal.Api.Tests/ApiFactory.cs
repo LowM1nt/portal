@@ -47,6 +47,14 @@ public class ApiFactory : WebApplicationFactory<Program>
     }
 }
 
+/// <summary>Fixture de classe (o xUnit exige um único construtor público, sem parâmetros).</summary>
+public class ApiTesting : ApiFactory
+{
+    public ApiTesting() : base("Testing")
+    {
+    }
+}
+
 /// <summary>Um Postgres descartável (D-002) por execução; cada teste pega um banco novo dentro dele.</summary>
 public class PostgresFixture : IAsyncLifetime
 {

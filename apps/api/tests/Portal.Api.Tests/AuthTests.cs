@@ -4,11 +4,11 @@ using System.Net.Http.Json;
 
 namespace Portal.Api.Tests;
 
-public class AuthTests : IClassFixture<ApiFactory>
+public class AuthTests : IClassFixture<ApiTesting>
 {
-    private readonly ApiFactory _factory;
+    private readonly ApiTesting _factory;
 
-    public AuthTests(ApiFactory factory) => _factory = factory;
+    public AuthTests(ApiTesting factory) => _factory = factory;
 
     private static readonly (HttpMethod Metodo, string Rota)[] Rotas =
     {

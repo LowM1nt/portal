@@ -56,7 +56,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - dados: **só os eventos de `docs/eventos.md`** (`tarefa_metricas`, `noite_resumo`, `fallback_acionado`); não inventar tipo novo
   - aceite: depois do login, a aba Performance mostra PRs por noite, taxa de aprovação nos portões, tokens por tarefa, fila de difíceis (valor do `noite_resumo` mais recente, não do período) e acionamentos do fallback, por período (7 ou 30 dias); consulta com limite explícito; `null` não entra na média; estados vazio, erro (com "Tentar de novo" que volta para carregando) e carregando
   - testes: componente com dados de uma semana; a aba aparece no App e troca a visão; o cliente falso confere o filtro de período usado na consulta
-- [ ] **P-004 — API: autenticação e workspaces**
+- [x] **P-004 — API: autenticação e workspaces**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - decisões: `docs/decisoes.md` (D-001) e o contrato da API de lá — não reabrir
