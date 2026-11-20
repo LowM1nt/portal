@@ -173,7 +173,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: cada PR importada tem o status de CI (`sucesso` · `falhou` · `rodando` · `sem CI`) do último commit; erro do GitHub numa PR não impede as outras
   - testes: respostas gravadas para cada estado
 
-- [ ] **P-022 — GitHub: sincronização a cada 10 minutos**
+- [x] **P-022 — GitHub: sincronização a cada 10 minutos**
   - nível: padrao
   - repo: portal · superfícies: api
   - pré-requisito: P-021
