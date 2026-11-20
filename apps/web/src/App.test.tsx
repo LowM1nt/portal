@@ -118,7 +118,8 @@ describe('App — autenticação e workspace ativo', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }))
     expect(await screen.findByText('Meu workspace')).toBeInTheDocument()
-    expect(fetchFalso).toHaveBeenCalledTimes(3)
+    // o calendário (P-007) também chama /api/deploys; aqui só contam as chamadas de /api/me
+    expect(fetchFalso.mock.calls.filter(([url]) => String(url).includes('/api/me'))).toHaveLength(3)
   })
 
   it('401 de /api/me faz signOut e volta para o login', async () => {

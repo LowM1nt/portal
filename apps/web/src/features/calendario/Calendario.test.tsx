@@ -188,7 +188,7 @@ describe('Calendario', () => {
   })
 
   it('celular: o CSS tem media query e usa só tokens (sem cor, tamanho ou vão soltos)', () => {
-    const css = readFileSync(new URL('./calendario.css', import.meta.url), 'utf8')
+    const css = readFileSync('src/features/calendario/calendario.css', 'utf8')
     expect(css).toMatch(/@media/)
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(css).not.toMatch(/\brgba?\(|\bhsla?\(/)
