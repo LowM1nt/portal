@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
+import VisaoGeral from './features/visao-geral/VisaoGeral.tsx'
 
 type Props = { cliente?: SupabaseClient | null }
 
@@ -57,7 +58,7 @@ function App({ cliente = clientePadrao }: Props) {
           </button>
         </div>
       </header>
-      <p className="vazio">A visão geral da noite chega no próximo item do roadmap (P-012).</p>
+      <VisaoGeral cliente={cliente} />
     </main>
   )
 }
