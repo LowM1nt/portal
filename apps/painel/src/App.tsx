@@ -1,15 +1,16 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import VisaoGeral from './features/visao-geral/VisaoGeral.tsx'
 import Performance from './features/performance/Performance.tsx'
 
+type Aba = 'visao-geral' | 'performance'
 type Props = { cliente?: SupabaseClient | null }
 
 function App({ cliente = clientePadrao }: Props) {
   const [sessao, setSessao] = useState<Session | null>(null)
   const [carregando, setCarregando] = useState(cliente !== null)
-  const [aba, setAba] = useState<'visao-geral' | 'performance'>('visao-geral')
+  const [aba, setAba] = useState<Aba>('visao-geral')
 
   useEffect(() => {
     if (!cliente) return
@@ -49,27 +50,54 @@ function App({ cliente = clientePadrao }: Props) {
 
   if (!sessao) return <Entrar cliente={cliente} />
 
+  const destinos = [
+    { id: 'visao-geral', rotulo: 'Visão geral' },
+    { id: 'performance', rotulo: 'Performance' },
+  ] as const
+
+  function ir(id: Aba) {
+    return (e: MouseEvent) => {
+      e.preventDefault()
+      setAba(id)
+    }
+  }
+
   return (
-    <main className="conteudo">
-      <header className="cabecalho">
-        <h1>Painel do agente</h1>
-        <div className="grupo-botoes">
-          <span className="suave">{sessao.user.email}</span>
+    <div className="app">
+      <nav className="trilho" aria-label="Principal">
+        <div className="marca">
+          <span className="lua" aria-hidden="true" />
+          Madrugada
+        </div>
+        {destinos.map((d) => (
+          <a
+            key={d.id}
+            href={`#${d.id}`}
+            className="nav-item"
+            aria-current={aba === d.id ? 'page' : undefined}
+            onClick={ir(d.id)}
+          >
+            {d.rotulo}
+          </a>
+        ))}
+      </nav>
+      <main className="conteudo">
+        <div className="cabecalho">
+          <span className="suave pequeno">{sessao.user.email}</span>
           <button type="button" className="botao botao-quieto" onClick={() => void cliente.auth.signOut()}>
             Sair
           </button>
         </div>
-      </header>
-      <div className="abas" role="tablist" aria-label="Seções do painel">
-        <button type="button" role="tab" className="aba" aria-selected={aba === 'visao-geral'} onClick={() => setAba('visao-geral')}>
-          Visão geral
-        </button>
-        <button type="button" role="tab" className="aba" aria-selected={aba === 'performance'} onClick={() => setAba('performance')}>
-          Performance
-        </button>
-      </div>
-      {aba === 'visao-geral' ? <VisaoGeral cliente={cliente} /> : <Performance cliente={cliente} />}
-    </main>
+        {aba === 'visao-geral' ? <VisaoGeral cliente={cliente} /> : <Performance cliente={cliente} />}
+      </main>
+      <nav className="barra" aria-label="Principal no celular">
+        {destinos.map((d) => (
+          <a key={d.id} href={`#${d.id}`} aria-current={aba === d.id ? 'page' : undefined} onClick={ir(d.id)}>
+            {d.rotulo}
+          </a>
+        ))}
+      </nav>
+    </div>
   )
 }
 

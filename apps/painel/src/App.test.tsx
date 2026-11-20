@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it, vi } from 'vitest'
@@ -84,16 +84,16 @@ describe('App — abas', () => {
     const usuario = userEvent.setup()
     render(<App cliente={clienteComTabelas({ user: { email: 'dono@exemplo.com' } } as Session)} />)
 
-    expect(await screen.findByText('Visão geral')).toBeInTheDocument()
+    const lateral = await screen.findByRole('navigation', { name: 'Principal' })
+    expect(within(lateral).getByRole('link', { name: 'Visão geral' })).toBeInTheDocument()
     expect(screen.queryByText(/7 dias/)).not.toBeInTheDocument()
-    await usuario.click(screen.getByText('Performance'))
+    await usuario.click(within(lateral).getByRole('link', { name: 'Performance' }))
     expect(await screen.findByText(/7 dias/)).toBeInTheDocument()
   })
 
   it('sem login, as abas não aparecem', async () => {
     render(<App cliente={clienteComTabelas(null)} />)
     await screen.findByRole('form', { name: 'Entrar no painel' })
-    expect(screen.queryByText('Visão geral')).not.toBeInTheDocument()
-    expect(screen.queryByText('Performance')).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 })
