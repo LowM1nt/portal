@@ -68,7 +68,8 @@ public class ImportadorDePrs
             return new(repo, StatusImportacao.Erro, e.Message);
         }
 
-        if (lista.Tipo == TipoListagem.SemMudanca) return new(repo, StatusImportacao.SemMudanca);
+        var ci = new EstadoCi { LimiteAtingido = lista.LimiteRestante is { } cota && cota <= ClienteGitHub.LimiteMinimo };
+        if (lista.Tipo == TipoListagem.SemMudanca) return await ReconsultarCiAsync(workspaceId, repo, token, ci, ct);
         if (lista.Tipo == TipoListagem.LimiteAtingido) return new(repo, StatusImportacao.LimiteAtingido);
 
         // ETag só vale para listagem de página única; com mais de uma página, descartar.
@@ -92,6 +93,10 @@ public class ImportadorDePrs
         foreach (var pr in lista.Prs)
         {
             if (!vistas.Add(pr.Numero)) continue;
+
+            // Erro numa PR não interrompe as outras: ela mantém o status anterior.
+            var statusCi = pr.Sha is { Length: > 0 } sha ? await ConsultarCiAsync(repo, sha, token, ci, ct) : null;
+
             if (existentes.Remove(pr.Numero, out var atual))
             {
                 atual.Titulo = pr.Titulo;
@@ -99,6 +104,11 @@ public class ImportadorDePrs
                 atual.Estado = "open";
                 atual.Url = pr.Url;
                 atual.AtualizadaEm = pr.AtualizadaEm;
+                // O SHA vem sempre da listagem. Se o commit mudou e o CI dele não pôde ser lido agora,
+                // o status do commit antigo não vale mais: fica "rodando" até a próxima consulta.
+                if (statusCi is not null) atual.StatusCi = statusCi;
+                else if (pr.Sha is { Length: > 0 } && pr.Sha != atual.ShaUltimoCommit) atual.StatusCi = StatusCi.Rodando;
+                if (pr.Sha is { Length: > 0 }) atual.ShaUltimoCommit = pr.Sha;
             }
             else
             {
@@ -107,6 +117,7 @@ public class ImportadorDePrs
                     WorkspaceId = workspaceId, RepositorioId = rep.Id, Numero = pr.Numero,
                     Titulo = pr.Titulo, Autor = pr.Autor, Estado = "open",
                     Url = pr.Url, AtualizadaEm = pr.AtualizadaEm,
+                    StatusCi = statusCi ?? (pr.Sha is { Length: > 0 } ? StatusCi.Rodando : StatusCi.SemCi), ShaUltimoCommit = pr.Sha,
                 });
             }
         }
@@ -114,6 +125,53 @@ public class ImportadorDePrs
         // O que sobrou não veio numa listagem completa: foi fechada.
         _db.PullRequests.RemoveRange(existentes.Values);
         await _db.SaveChangesAsync(ct);
-        return new(repo, StatusImportacao.Importado);
+        if (ci.TokenInvalido) return new(repo, StatusImportacao.TokenInvalido, new TokenInvalidoException().Message);
+        return new(repo, ci.LimiteAtingido ? StatusImportacao.LimiteAtingido : StatusImportacao.Importado);
+    }
+
+    private sealed class EstadoCi
+    {
+        public bool TokenInvalido { get; set; }
+        public bool LimiteAtingido { get; set; }
+    }
+
+    /// <summary>Status de CI do commit, ou null se não deu para consultar (erro, token inválido ou cota no fim).</summary>
+    private async Task<string?> ConsultarCiAsync(string repo, string sha, string token, EstadoCi estado, CancellationToken ct)
+    {
+        if (estado.TokenInvalido || estado.LimiteAtingido) return null;
+        try
+        {
+            var ci = await _cliente.ConsultarStatusCiAsync(repo, sha, token, ct);
+            if (ci.LimiteRestante is { } r && r <= ClienteGitHub.LimiteMinimo) estado.LimiteAtingido = true;
+            return ci.Status;
+        }
+        catch (TokenInvalidoException)
+        {
+            estado.TokenInvalido = true;
+            return null;
+        }
+        catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException
+            or InvalidOperationException or OperationCanceledException && !ct.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>A lista de PRs não mudou (304), mas o CI pode ter mudado: reconsulta pelo SHA gravado.</summary>
+    private async Task<ResultadoImportacao> ReconsultarCiAsync(Guid workspaceId, string repo, string token, EstadoCi ci, CancellationToken ct)
+    {
+        var prs = await _db.PullRequests.IgnoreQueryFilters()
+            .Where(p => p.WorkspaceId == workspaceId && p.ShaUltimoCommit != null
+                && _db.Repositorios.IgnoreQueryFilters().Any(r => r.Id == p.RepositorioId && r.WorkspaceId == workspaceId && r.Nome == repo))
+            .ToListAsync(ct);
+        foreach (var pr in prs)
+        {
+            var status = await ConsultarCiAsync(repo, pr.ShaUltimoCommit!, token, ci, ct);
+            if (status is not null) pr.StatusCi = status;
+        }
+
+        await _db.SaveChangesAsync(ct);
+        if (ci.TokenInvalido) return new(repo, StatusImportacao.TokenInvalido, new TokenInvalidoException().Message);
+        return new(repo, ci.LimiteAtingido ? StatusImportacao.LimiteAtingido : StatusImportacao.SemMudanca);
     }
 }

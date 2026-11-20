@@ -95,6 +95,8 @@ public class PortalDbContext : DbContext
             e.Property(p => p.Autor).HasColumnName("autor").HasMaxLength(100).IsRequired();
             e.Property(p => p.Estado).HasColumnName("estado").HasMaxLength(50).IsRequired();
             e.Property(p => p.CriadoEm).HasColumnName("criado_em");
+            e.Property(p => p.StatusCi).HasColumnName("status_ci").HasMaxLength(20).IsRequired();
+            e.Property(p => p.ShaUltimoCommit).HasColumnName("sha_ultimo_commit").HasMaxLength(40);
             e.HasOne<Repositorio>().WithMany().HasForeignKey(p => p.RepositorioId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(p => p.WorkspaceId);
             e.HasIndex(p => new { p.WorkspaceId, p.CriadoEm });

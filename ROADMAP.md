@@ -165,7 +165,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: para cada repositório configurado, importa as PRs abertas (número, título, autor, url, atualizada em) no workspace certo; reimportar não duplica; PR fechada no GitHub sai da lista; com `X-RateLimit-Remaining` baixo, para antes de zerar; nenhuma chamada real ao GitHub nos testes
   - testes: contrato com respostas gravadas (lista de PRs, 304 com ETag, 401 de token inválido, limite baixo)
 
-- [ ] **P-021 — GitHub: status de CI das PRs**
+- [x] **P-021 — GitHub: status de CI das PRs**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - pré-requisito: P-020

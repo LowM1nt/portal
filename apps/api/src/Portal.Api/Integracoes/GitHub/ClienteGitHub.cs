@@ -5,7 +5,18 @@ using System.Text.RegularExpressions;
 
 namespace Portal.Api.Integracoes.GitHub;
 
-public record PrGitHub(int Numero, string Titulo, string Autor, string Url, DateTimeOffset? AtualizadaEm);
+public record PrGitHub(int Numero, string Titulo, string Autor, string Url, DateTimeOffset? AtualizadaEm, string? Sha = null);
+
+public static class StatusCi
+{
+    public const string Sucesso = "sucesso";
+    public const string Falhou = "falhou";
+    public const string Rodando = "rodando";
+    public const string SemCi = "sem CI";
+}
+
+/// <summary>Status de CI de um commit e a cota restante da API depois da consulta.</summary>
+public record ResultadoCi(string Status, int? LimiteRestante);
 
 public enum TipoListagem { Completa, SemMudanca, LimiteAtingido }
 
@@ -86,7 +97,60 @@ public partial class ClienteGitHub
         p.TryGetProperty("user", out var u) && u.ValueKind == JsonValueKind.Object
             ? u.GetProperty("login").GetString() ?? "" : "",
         p.TryGetProperty("html_url", out var h) ? h.GetString() ?? "" : "",
-        p.TryGetProperty("updated_at", out var a) && a.TryGetDateTimeOffset(out var d) ? d : null);
+        p.TryGetProperty("updated_at", out var a) && a.TryGetDateTimeOffset(out var d) ? d : null,
+        p.TryGetProperty("head", out var hd) && hd.ValueKind == JsonValueKind.Object
+            && hd.TryGetProperty("sha", out var sh) ? sh.GetString() : null);
+
+    private static readonly string[] ConclusoesDeFalha = ["failure", "timed_out", "cancelled", "action_required", "startup_failure"]; // "stale" é check marcado como velho, não falha
+
+    /// <summary>Status combinado (commit statuses + check runs) do commit, nos 4 estados do portal.</summary>
+    public async Task<ResultadoCi> ConsultarStatusCiAsync(string repo, string sha, string token, CancellationToken ct)
+    {
+        var (statuses, restante, _) = await LerArrayAsync($"repos/{repo}/commits/{sha}/status", "statuses", token, null, ct);
+        var (checks, restante2, total) = await LerArrayAsync($"repos/{repo}/commits/{sha}/check-runs?per_page=100", "check_runs", token, restante, ct);
+        // Mais de 100 checks: busca as demais páginas para não ignorar uma falha do 101º em diante.
+        for (var pagina = 2; pagina <= 10 && checks.Count < total; pagina++)
+        {
+            var (mais, r, _) = await LerArrayAsync($"repos/{repo}/commits/{sha}/check-runs?per_page=100&page={pagina}", "check_runs", token, restante2, ct);
+            restante2 = r;
+            if (mais.Count == 0) break;
+            checks.AddRange(mais);
+        }
+
+        if (statuses.Count == 0 && checks.Count == 0) return new(StatusCi.SemCi, restante2);
+
+        var falhou = statuses.Any(s => s.state is "failure" or "error")
+            || checks.Any(c => c.state == "completed" && c.conclusao is { } k && ConclusoesDeFalha.Contains(k));
+        if (falhou) return new(StatusCi.Falhou, restante2);
+
+        var rodando = statuses.Any(s => s.state == "pending") || checks.Any(c => c.state != "completed");
+        return new(rodando ? StatusCi.Rodando : StatusCi.Sucesso, restante2);
+    }
+
+    private async Task<(List<(string? state, string? conclusao)> Itens, int? Restante, int Total)> LerArrayAsync(
+        string caminho, string propriedade, string token, int? restanteAnterior, CancellationToken ct)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, caminho);
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        using var resp = await _http.SendAsync(req, ct);
+        var restante = LerInteiro(resp, "X-RateLimit-Remaining") ?? restanteAnterior;
+        if (resp.StatusCode == HttpStatusCode.Unauthorized) throw new TokenInvalidoException();
+        resp.EnsureSuccessStatusCode();
+
+        await using var corpo = await resp.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(corpo, cancellationToken: ct);
+        var itens = new List<(string?, string?)>();
+        if (doc.RootElement.TryGetProperty(propriedade, out var arr) && arr.ValueKind == JsonValueKind.Array)
+            foreach (var i in arr.EnumerateArray())
+            {
+                var estado = (i.TryGetProperty("state", out var st) ? st.GetString() : null)
+                    ?? (i.TryGetProperty("status", out var s2) ? s2.GetString() : null);
+                var concl = i.TryGetProperty("conclusion", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() : null;
+                itens.Add((estado, concl));
+            }
+        var total = doc.RootElement.TryGetProperty("total_count", out var tc) && tc.TryGetInt32(out var n) ? n : itens.Count;
+        return (itens, restante, total);
+    }
 
     private static int? LerInteiro(HttpResponseMessage r, string cabecalho) =>
         r.Headers.TryGetValues(cabecalho, out var v) && long.TryParse(v.FirstOrDefault(), out var n) ? (int)Math.Min(n, int.MaxValue) : null;
