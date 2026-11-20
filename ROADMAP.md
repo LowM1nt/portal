@@ -93,6 +93,17 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: semana com um cartão por deploy; navegar entre semanas; estados vazio, erro e carregando; no celular vira lista
   - testes: componente nos quatro estados
 
+- [ ] **P-015 — Painel: visão geral pelo contrato e layout da prévia**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - por quê: a visão geral (P-012) foi feita antes do contrato e consulta colunas que não existem (`eventos.criado_em`, `sincronizacao.sincronizado_em`, `eventos.tokens`); em produção mostra "Não foi possível carregar a visão geral". E o app não segue o layout da prévia do design system.
+  - dados: **só** tabelas e colunas de `docs/eventos.md` (`eventos.ts/tipo/dados`, `sincronizacao.ultima_vez`, `posts`, `comandos`); a "noite" vem do `noite_resumo` mais recente e das `tarefa_metricas`
+  - arquivos: `apps/painel/src/contrato.ts` (nomes de tabela e coluna permitidos, num lugar só), `apps/painel/src/features/visao-geral/`, `apps/painel/src/App.tsx` (casca do app)
+  - layout: igual a `docs/design-system/capturas/painel-escuro.png` e `docs/design-system/previa.html` — barra lateral (`.app`, `.nav-item`) com Visão geral e Performance; cabeçalho com o título da noite e o botão "Pausar agente" (`.botao-perigo`); linha da noite (`.noite`); 4 números (`.painel.numero` em `.grade-4`); tabela de tarefas (`.tabela`); "Próximo post" com "Cancelar post" (grava `cancelar_post` em `comandos`); "Precisa de você"; no celular a barra vira `.barra`. Itens da prévia de fases futuras (Vagas, Loja, Currículo) ficam de fora.
+  - responsivo (relato do dono: botões feios e "Pausar agente"/"Sair" saindo da tela): botões só com as classes do design system (`.botao` + variante, altura de controle dos tokens), cabeçalho que quebra linha em vez de vazar; **nada passa da largura da tela em 360 px, 768 px e 1280 px**
+  - aceite: depois do login, a visão geral carrega com os dados reais do Supabase (sem erro), mostra "última sincronização: há X min", e o layout segue a prévia nos dois temas; estados vazio, erro com "Tentar de novo" e carregando
+  - testes: **teste de contrato** — o cliente falso recusa (lança erro) qualquer tabela ou coluna fora de `contrato.ts`, e `contrato.ts` bate com `docs/eventos.md`; componente com uma noite real (`noite_resumo` + `tarefa_metricas`) e com noite vazia; "Cancelar post" grava o comando certo
+
 - [ ] **P-008 — Integração com GitHub: PRs e status de CI**
   - nível: dificil (decompor: cliente da API · importação de PRs · status de CI · agendamento)
   - repo: portal · superfícies: api, dados
