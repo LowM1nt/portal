@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<title>Madrugada — visão geral</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- A fonte de título é opcional: sem internet, usa a fonte do sistema. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+</head>
+<body>
+<div class="app">
+
+  <nav class="trilho" aria-label="Principal">
+    <div class="marca"><span class="lua" aria-hidden="true"></span>Madrugada</div>
+    <a class="nav-item" href="previa.html" aria-current="page">Visão geral</a>
+    <a class="nav-item" href="#">Performance</a>
+    <a class="nav-item" href="#">Projetos</a>
+    <a class="nav-item" href="#">LinkedIn <span class="conta">1</span></a>
+    <a class="nav-item" href="#">Vagas <span class="conta">5</span></a>
+    <a class="nav-item" href="#">Currículo</a>
+    <a class="nav-item" href="#">Loja</a>
+    <a class="nav-item" href="#">Publicar <span class="conta">2</span></a>
+    <a class="nav-item" href="#">Aprendizado</a>
+    <a class="nav-item" href="componentes.html" >Componentes</a>
+    <div class="fim"><button class="botao botao-quieto" id="tema" type="button">Usar tema claro</button></div>
+  </nav>
+
+  <main class="conteudo">
+
+    <div class="cabecalho">
+      <div class="titulo">
+        <h1>Noite de 18 para 19 de novembro</h1>
+        <p class="suave pequeno">2 PRs com merge. A internet caiu por 12 minutos e o agente retomou de onde parou.</p>
+      </div>
+      <button class="botao botao-perigo" type="button">Pausar agente</button>
+    </div>
+
+    <section class="noite" aria-label="Linha da noite">
+      <div class="noite-barra" role="img" aria-label="Das 01h05 às 04h12: planejamento, duas tarefas e uma queda de internet de 12 minutos às 02h41">
+        <span class="t-livre"    style="--min:5"></span>
+        <span class="t-apoio"    style="--min:14" title="01h05 Planejamento"></span>
+        <span class="t-codigo"   style="--min:52" title="01h19 P-012 implementando"></span>
+        <span class="t-checagem" style="--min:20" title="02h11 P-012 portões e revisão"></span>
+        <span class="t-codigo"   style="--min:10" title="02h31 P-013 implementando"></span>
+        <span class="t-queda"    style="--min:12" title="02h41 Internet fora"></span>
+        <span class="t-codigo"   style="--min:41" title="02h53 P-013 implementando"></span>
+        <span class="t-checagem" style="--min:23" title="03h34 P-013 portões e revisão"></span>
+        <span class="t-apoio"    style="--min:15" title="03h57 README, post e lições"></span>
+        <span class="t-livre"    style="--min:48"></span>
+      </div>
+      <div class="noite-horas" aria-hidden="true"><span>01h</span><span>02h</span><span>03h</span><span>04h</span><span>05h</span></div>
+      <div class="noite-pe">
+        <div class="legenda">
+          <span><i class="t-codigo"></i>Implementando</span>
+          <span><i class="t-checagem"></i>Portões e revisão</span>
+          <span><i class="t-apoio"></i>Planejamento e conteúdo</span>
+          <span><i class="t-queda"></i>Internet fora</span>
+        </div>
+        <span>Próxima execução às 01h05</span>
+      </div>
+    </section>
+
+    <div class="grade grade-4">
+      <div class="painel numero"><b>2</b><span>PRs com merge</span></div>
+      <div class="painel numero"><b>11 de 12</b><span>Portões de primeira</span></div>
+      <div class="painel numero"><b>412 mil</b><span>Tokens na noite</span></div>
+      <div class="painel numero"><b>R$ 0</b><span>Gasto no mês</span></div>
+    </div>
+
+    <div class="grade grade-3">
+
+      <section class="painel ocupa-2">
+        <header><h2>Tarefas da noite</h2><a class="pequeno" href="#">Ver no GitHub</a></header>
+        <div class="rolagem">
+          <table class="tabela">
+            <thead><tr><th>Item</th><th class="so-computador">Projeto</th><th>Estado</th><th class="num">Tokens</th></tr></thead>
+            <tbody>
+              <tr><td><strong>P-012</strong> Listar deploys da semana</td><td class="so-computador">Portal</td><td><span class="selo selo-ok">Merge feito</span></td><td class="num">187 mil</td></tr>
+              <tr><td><strong>P-013</strong> Estado vazio do calendário</td><td class="so-computador">Portal</td><td><span class="selo selo-ok">Merge feito</span></td><td class="num">203 mil</td></tr>
+              <tr><td><strong>P-019</strong> Status de CI em tempo real</td><td class="so-computador">Portal</td><td><span class="selo selo-roxo">Fila de difíceis</span></td><td class="num">22 mil</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="pequeno fraco pe">O comitê planeja o P-019 no sábado.</p>
+      </section>
+
+      <div class="pilha">
+        <section class="painel">
+          <header><h2>Próximo post</h2><span class="selo selo-atencao">Publica às 09h00</span></header>
+          <p class="pequeno suave">Meu agente implementou o calendário de deploys do portal esta noite. Ele pausou quando a internet caiu e continuou do mesmo ponto.</p>
+          <div class="grupo-botoes pe">
+            <button class="botao botao-quieto" type="button">Ler inteiro</button>
+            <button class="botao botao-quieto" type="button">Cancelar post</button>
+          </div>
+        </section>
+
+        <section class="painel">
+          <header><h2>Precisa de você</h2><span class="selo">3 itens</span></header>
+          <ul class="lista">
+            <li><span>Token do LinkedIn vence em 9 dias</span><a href="#">Renovar</a></li>
+            <li><span>2 produtos prontos para marketplace</span><a href="#">Publicar</a></li>
+            <li><span>5 vagas novas, a melhor com 86%</span><a href="#">Ver vagas</a></li>
+          </ul>
+        </section>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<nav class="barra" aria-label="Principal no celular">
+  <a href="previa.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>Noite</a>
+  <a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Projetos</a>
+  <a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>Vagas</a>
+  <a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>Publicar</a>
+  <a href="componentes.html" ><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Mais</a>
+</nav>
+<script>
+  // Tema: o escuro é o padrão; o claro só entra por escolha e fica gravado.
+  const raiz = document.documentElement, botao = document.getElementById('tema');
+  const ler = () => { try { return localStorage.getItem('tema'); } catch { return null; } };
+  const gravar = (t) => { try { localStorage.setItem('tema', t); } catch {} };
+  const aplicar = (t) => {
+    if (t === 'light') raiz.dataset.theme = 'light'; else delete raiz.dataset.theme;
+    botao.textContent = t === 'light' ? 'Usar tema escuro' : 'Usar tema claro';
+  };
+  aplicar(new URLSearchParams(location.search).get('tema') === 'claro' ? 'light' : ler());
+  botao.addEventListener('click', () => {
+    const novo = raiz.dataset.theme === 'light' ? 'dark' : 'light';
+    gravar(novo); aplicar(novo);
+  });
+</script>
+</body>
+</html>

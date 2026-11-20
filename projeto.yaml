@@ -1,0 +1,63 @@
+# projeto.yaml — tudo que muda de um projeto para outro.
+# As skills nunca citam caminhos, comandos ou ferramentas direto: elas leem daqui.
+# Caminhos relativos à raiz do repositório; cada comando roda dentro do `caminho` do app.
+
+nome: portal
+descricao: "Portal open source e self-hosted para times pequenos de dev"
+idioma_ui: pt-BR            # idioma dos textos que o usuário final vê
+idioma_docs: pt-BR          # idioma de PRD/SPEC/PLAN
+
+repos:
+  - nome: web
+    caminho: ./apps/web
+    stack: "React + TypeScript (Vite)"
+    testar: "npm test -- --run"
+    tipos: "npx tsc --noEmit"
+    lint: "npm run lint"
+    build: "npm run build"
+    rodar: "npm run dev"     # http://localhost:5173
+  - nome: painel
+    caminho: ./apps/painel
+    stack: "React + TypeScript (Vite)"
+    testar: "npm test -- --run"
+    tipos: "npx tsc --noEmit"
+    lint: "npm run lint"
+    build: "npm run build"
+    rodar: "npm run dev"     # http://localhost:5173 (ou a próxima porta livre)
+  - nome: api
+    caminho: ./apps/api
+    stack: ".NET 8 (ASP.NET Core) + Postgres"
+    testar: "dotnet test"
+    tipos: "dotnet build -warnaserror"   # nulidade e avisos como erro
+    lint: "dotnet build -warnaserror"
+    build: "dotnet build -warnaserror"
+    rodar: "dotnet run --project src/Portal.Api"   # porta mostrada no console; GET /health
+    rodar_com_banco: "docker compose up --build"    # na raiz; API em http://127.0.0.1:8080
+
+branch_base: main
+padrao_branch: "feature/<slug>"
+docs_features: "docs/features/<slug>/"      # onde ficam PRD.md, SPEC.md, PLAN.md de cada feature
+docs_produto: "docs/spec/"                  # PRD/SPEC/PLAN do produto (escritos pelo dono)
+roadmap: "ROADMAP.md"
+
+registro_de_tarefas:        # skill registro-de-trabalho
+  ferramenta: github-issues # github-issues | clickup | linear | arquivo
+  destino: "LowM1nt/portal"
+  backlog_label: backlog
+
+design_system:              # skill reuso-primeiro
+  pasta: "apps/web/src/styles/"
+  componentes: "apps/web/src/styles/components.css"   # Madrugada (fonte: docs/design-system/)
+  tokens: "apps/web/src/styles/tokens.css"            # Madrugada (fonte: docs/design-system/)
+  fonte: "docs/design-system/"                        # ainda não aplicado nos apps (item P-003)
+  storybook: false
+
+invariantes:                # regras do projeto que valem sempre (curtas)
+  - "Toda query de escrita filtra pelo workspace do usuário (multi-tenant)."
+  - "Atualização em tempo real aplica o evento no cache; nunca refetch geral."
+  - "Textos da interface em pt-BR, frase com inicial maiúscula só no começo."
+
+verificacao:                # superfícies da verificação final (feature-workflow, etapa 6)
+  ui: "abrir {rodar} e testar no navegador"
+  dados: "consultar o banco de dev (docker compose up postgres)"
+  api: "curl nos endpoints alterados"
