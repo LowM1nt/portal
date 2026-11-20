@@ -168,3 +168,4 @@ code { font: 0.9em var(--fonte-codigo); background: var(--veu-alto); padding: 1p
 .entrada-cartao { width: 100%; max-width: var(--largura-cartao); }
 .entrada-cartao .marca { margin-bottom: 0; padding: 0; }
 .entrada-botao { width: 100%; }
+.texto-limitado { display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }

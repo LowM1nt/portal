@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { formatarNumero } from '../../formatar.ts'
 import BotaoComando from './BotaoComando.tsx'
 import { buscarVisaoGeral, type DadosVisaoGeral, type TarefaDaNoite } from './dados.ts'
 
@@ -10,7 +11,6 @@ type Estado =
   | { situacao: 'pronto'; dados: DadosVisaoGeral }
 
 const FUSO = 'America/Sao_Paulo'
-const numero = new Intl.NumberFormat('pt-BR')
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: FUSO })
 const diaHora = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -23,19 +23,12 @@ const diaMes = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long',
 const soDia = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', timeZone: FUSO })
 
 const reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
 
 const SELO: Record<TarefaDaNoite['estado'], { rotulo: string; classe: string }> = {
   merge: { rotulo: 'Merge feito', classe: 'selo selo-ok' },
   pr_aberta: { rotulo: 'PR aberta', classe: 'selo selo-roxo' },
   reprovada: { rotulo: 'Reprovada', classe: 'selo selo-erro' },
   fila_dificeis: { rotulo: 'Fila de difíceis', classe: 'selo selo-atencao' },
-}
-
-function formatarTokens(n: number): string {
-  const mil = Math.round(n / 1000)
-  if (n >= 1_000_000 || mil >= 1000) return `${decimal.format(n / 1_000_000)} mi`
-  return n >= 1000 ? `${numero.format(mil)} mil` : numero.format(n)
 }
 
 function formatarHora(iso: string): string {
@@ -152,7 +145,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
         tituloDaNoite(d.noiteTs ?? ''),
         <>
           <p className="suave pequeno">
-            {d.prs} {d.prs === 1 ? 'PR aberta' : 'PRs abertas'}.
+            Resultado: {d.prsComMerge} {d.prsComMerge === 1 ? 'PR com merge' : 'PRs com merge'}.
             {d.minutosFora > 0 && ` A internet caiu por ${d.minutosFora} min.`}
           </p>
           <Sincronizacao em={d.sincronizadoEm} />
@@ -164,7 +157,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
       <div className="grade grade-4">
         <Numero rotulo="PRs com merge" valor={String(d.prsComMerge)} />
         <Numero rotulo="Portões de primeira" valor={`${portoesDePrimeira} de ${d.tarefas.length}`} />
-        <Numero rotulo="Tokens na noite" valor={formatarTokens(d.tokensDaNoite)} />
+        <Numero rotulo="Tokens na noite" valor={formatarNumero(d.tokensDaNoite)} />
         <Numero rotulo="Gasto no mês" valor={reais.format(d.gastoNoMes)} />
       </div>
 
@@ -190,12 +183,12 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
                 <tr key={t.id}>
                   <td>
                     <b>{t.item}</b>
-                    {t.titulo && <> {t.titulo}</>} <span className="suave pequeno">· {formatarHora(t.ts)}</span>
+                    {t.titulo && <> {t.titulo}</>}
                   </td>
                   <td>
                     <span className={SELO[t.estado].classe}>{SELO[t.estado].rotulo}</span>
                   </td>
-                  <td className="num">{formatarTokens(t.tokens)}</td>
+                  <td className="num">{formatarNumero(t.tokens)}</td>
                 </tr>
               ))}
             </tbody>
@@ -281,7 +274,11 @@ function Sincronizacao({ em }: { em: string | null }) {
   )
 }
 
+const LIMITE_TEXTO_CURTO = 300
+
 function ProximoPost({ cliente, post }: { cliente: SupabaseClient; post: DadosVisaoGeral['proximoPost'] }) {
+  const [aberto, setAberto] = useState(false)
+  const longo = (post?.texto.length ?? 0) > LIMITE_TEXTO_CURTO
   return (
     <section className="painel" aria-label="Próximo post">
       <header>
@@ -289,7 +286,12 @@ function ProximoPost({ cliente, post }: { cliente: SupabaseClient; post: DadosVi
       </header>
       {post ? (
         <>
-          <p className="pequeno suave">{post.texto}</p>
+          <p className={longo && !aberto ? 'pequeno suave texto-limitado' : 'pequeno suave'}>{post.texto}</p>
+          {longo && !aberto && (
+            <button type="button" className="botao botao-quieto" onClick={() => setAberto(true)}>
+              Ler inteiro
+            </button>
+          )}
           {post.publicaEm && (
             <p className="suave pequeno">Publica em {diaHora.format(new Date(post.publicaEm)).replace(':', 'h')}</p>
           )}
@@ -298,6 +300,7 @@ function ProximoPost({ cliente, post }: { cliente: SupabaseClient; post: DadosVi
               cliente={cliente}
               comando="cancelar_post"
               rotulo="Cancelar post"
+              variante="botao-perigo"
               ok="Pedido de cancelamento enviado."
               falha="Não foi possível cancelar o post."
             />

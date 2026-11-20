@@ -148,7 +148,7 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
       tentativas: numero(l.dados?.tentativas),
       tokens: tokensDe(l.dados),
       segundos: numero(l.dados?.segundos_modelo),
-      titulo: typeof plano?.titulo === 'string' && plano.titulo !== '' ? plano.titulo : null,
+      titulo: [l.dados?.titulo, plano?.titulo].find((v): v is string => typeof v === 'string' && v !== '') ?? null,
       estado,
     }
   })
