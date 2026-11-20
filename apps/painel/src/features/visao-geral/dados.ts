@@ -19,7 +19,8 @@ export type DadosVisaoGeral = {
   filaDificeis: number
   reprovadas: number
   minutosFora: number
-  tarefas: TarefaDaNoite[]
+  tarefas: TarefaDaNoite[] // todas as tentativas da noite (linha do tempo)
+  itensDaNoite: TarefaDaNoite[] // uma por item, a tentativa mais recente (tabela)
   tokensDaNoite: number
   gastoNoMes: number // em R$
   sincronizadoEm: string | null
@@ -86,6 +87,7 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
       reprovadas: 0,
       minutosFora: 0,
       tarefas: [],
+      itensDaNoite: [],
       tokensDaNoite: 0,
       gastoNoMes,
       sincronizadoEm: ultimaVez,
@@ -104,25 +106,27 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
       .order('ts', { ascending: true })
       .limit(LIMITE_TAREFAS),
   )
-  const eventosDaNoite = lancar<Linha[]>(
-    await cliente
-      .from('eventos')
-      .select('id, ts, tipo, dados')
-      .in('tipo', ['tarefa_mergeada', 'tarefa_planejada'])
-      .gte('ts', inicioDaNoite)
-      .lte('ts', resumo.ts)
-      .order('ts', { ascending: true })
-      .limit(LIMITE_TAREFAS),
+  // Merge acontece quando o dono aprova a PR, depois do fim da noite: sem teto em resumo.ts.
+  const [mergeadas, planejadasDaNoite] = await Promise.all(
+    (['tarefa_mergeada', 'tarefa_planejada'] as const).map(async (tipo) =>
+      lancar<Linha[]>(
+        await cliente
+          .from('eventos')
+          .select('id, ts, tipo, dados')
+          .eq('tipo', tipo)
+          .gte('ts', inicioDaNoite)
+          .order('ts', { ascending: true })
+          .limit(LIMITE_TAREFAS),
+      ),
+    ),
   )
+  const eventosDaNoite = [...mergeadas, ...planejadasDaNoite]
   const itemDe = (l: Linha) => (typeof l.dados?.item === 'string' ? l.dados.item : '')
   const mergeados = new Set(eventosDaNoite.filter((l) => l.tipo === 'tarefa_mergeada').map(itemDe))
   const planejadas = new Map<string, Record<string, unknown>>()
   for (const l of eventosDaNoite) if (l.tipo === 'tarefa_planejada' && l.dados) planejadas.set(itemDe(l), l.dados)
 
-  // Uma linha por item: a tentativa mais recente (as métricas vêm em ordem crescente de ts).
-  const maisRecentes = new Map<string, Linha>()
-  for (const l of metricas) maisRecentes.set(itemDe(l) || `#${l.id}`, l)
-  const tarefas: TarefaDaNoite[] = [...maisRecentes.values()].map((l) => {
+  const tarefas: TarefaDaNoite[] = metricas.map((l) => {
     const item = itemDe(l)
     const plano = planejadas.get(item)
     const resultado = typeof l.dados?.resultado === 'string' ? l.dados.resultado : ''
@@ -146,6 +150,10 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
     }
   })
 
+  // Uma linha por item: a tentativa mais recente (as métricas vêm em ordem crescente de ts).
+  const maisRecentes = new Map<string, TarefaDaNoite>()
+  for (const t of tarefas) maisRecentes.set(t.item || `#${t.id}`, t)
+
   return {
     noiteTs: resumo.ts,
     prs: numero(resumo.dados?.prs),
@@ -154,6 +162,7 @@ export async function buscarVisaoGeral(cliente: SupabaseClient): Promise<Resulta
     reprovadas: numero(resumo.dados?.reprovadas),
     minutosFora: numero(resumo.dados?.minutos_fora),
     tarefas,
+    itensDaNoite: [...maisRecentes.values()],
     tokensDaNoite: metricas.reduce((s, l) => s + tokensDe(l.dados), 0),
     gastoNoMes,
     sincronizadoEm: ultimaVez,

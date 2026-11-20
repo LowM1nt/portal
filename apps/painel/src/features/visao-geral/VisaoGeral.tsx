@@ -33,8 +33,9 @@ const SELO: Record<TarefaDaNoite['estado'], { rotulo: string; classe: string }> 
 }
 
 function formatarTokens(n: number): string {
-  if (n >= 1_000_000) return `${decimal.format(n / 1_000_000)} mi`
-  return n >= 1000 ? `${numero.format(Math.round(n / 1000))} mil` : numero.format(n)
+  const mil = Math.round(n / 1000)
+  if (n >= 1_000_000 || mil >= 1000) return `${decimal.format(n / 1_000_000)} mi`
+  return n >= 1000 ? `${numero.format(mil)} mil` : numero.format(n)
 }
 
 function formatarHora(iso: string): string {
@@ -171,7 +172,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
         <header>
           <h2>Tarefas da noite</h2>
         </header>
-        {d.tarefas.length === 0 ? (
+        {d.itensDaNoite.length === 0 ? (
           <p className="vazio">Nenhuma tarefa registrada nesta noite.</p>
         ) : (
           <table className="tabela">
@@ -185,7 +186,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
               </tr>
             </thead>
             <tbody>
-              {d.tarefas.map((t) => (
+              {d.itensDaNoite.map((t) => (
                 <tr key={t.id}>
                   <td>
                     <b>{t.item}</b>

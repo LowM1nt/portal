@@ -28,7 +28,7 @@ Como calcular, no período escolhido:
 | tipo | `dados` |
 | --- | --- |
 | `noite_iniciada` / `noite_encerrada` | `perfil` |
-| `tarefa_planejada` | `item`, `estado` |
+| `tarefa_planejada` | `item`, `estado`, `titulo` (opcional; o painel mostra só o código se faltar) |
 | `tarefa_estado` | `estado` |
 | `tarefa_concluida` | `item` |
 | `portao_reprovado` | `motivo` |
