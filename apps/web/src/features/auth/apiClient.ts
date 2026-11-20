@@ -5,7 +5,7 @@ export type OpcoesApi = {
   init?: RequestInit
 }
 
-const base = import.meta.env.VITE_API_URL ?? ''
+export const base = import.meta.env.VITE_API_URL ?? ''
 
 export async function chamarApi(caminho: string, opcoes: OpcoesApi): Promise<Response> {
   const cabecalhos = new Headers(opcoes.init?.headers)

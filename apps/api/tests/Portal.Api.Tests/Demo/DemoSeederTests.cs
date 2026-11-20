@@ -115,4 +115,32 @@ public class DemoSeederTests
         Assert.Equal(1, await db2.Workspaces.CountAsync(w => w.Id == outro));
         Assert.Equal("Time real", (await db2.Workspaces.SingleAsync(w => w.Id == outro)).Nome);
     }
+
+    private sealed class RelogioFixo(DateTimeOffset agora) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => agora;
+    }
+
+    [Fact]
+    public async Task Seeder_reaproveita_a_demo_envelhecida_e_a_semana_atual_tem_deploys()
+    {
+        await using var api = await NovaApiAsync();
+        using (var escopo = api.Services.CreateScope())
+        {
+            var passado = new RelogioFixo(DateTimeOffset.UtcNow.AddDays(-40));
+            await DemoSeeder.SemearAsync(escopo.ServiceProvider.GetRequiredService<PortalDbContext>(), default, passado);
+        }
+
+        await SemearAsync(api);
+
+        using var verif = api.Services.CreateScope();
+        var db = verif.ServiceProvider.GetRequiredService<PortalDbContext>();
+        var agora = DateTime.UtcNow;
+        var ano = ISOWeek.GetYear(agora);
+        var semana = ISOWeek.GetWeekOfYear(agora);
+        var datas = await db.Deploys.IgnoreQueryFilters().Where(d => d.WorkspaceId == DemoWorkspace.Id)
+            .Select(d => d.AgendadoPara).ToListAsync();
+        Assert.Contains(datas, d => ISOWeek.GetYear(d.UtcDateTime) == ano && ISOWeek.GetWeekOfYear(d.UtcDateTime) == semana);
+        Assert.Equal(1, await db.Workspaces.CountAsync(w => w.Id == DemoWorkspace.Id));
+    }
 }

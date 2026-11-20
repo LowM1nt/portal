@@ -1,7 +1,6 @@
+import { base } from '../auth/apiClient.ts'
 import { CalendarioDaFonte } from '../calendario/Calendario.tsx'
 import type { Fonte } from '../calendario/useDeploysDaSemana.ts'
-
-const base = import.meta.env.VITE_API_URL ?? ''
 
 // Fora do componente: a referência é estável e não refaz a busca a cada render.
 const fonteDaDemo: Fonte = {
