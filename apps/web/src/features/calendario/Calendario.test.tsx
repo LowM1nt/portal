@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
@@ -31,7 +32,7 @@ function deploy(id: string, titulo: string, dia: number, hora: number, minuto = 
     titulo,
     ambiente: 'producao',
     status: 'agendado',
-    agendadoPara: new Date(2026, 10, dia, hora, minuto).toISOString(),
+    agendadoPara: new Date(Date.UTC(2026, 10, dia, hora, minuto)).toISOString(),
   }
 }
 
@@ -60,26 +61,9 @@ function montar() {
   )
 }
 
-function definirLargura(estreita: boolean) {
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn((query: string) => ({
-      matches: estreita,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      onchange: null,
-      dispatchEvent: vi.fn(),
-    })),
-  )
-}
-
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date(2026, 10, 20, 10, 0))
-  definirLargura(false)
 })
 
 afterEach(() => {
@@ -175,8 +159,7 @@ describe('Calendario', () => {
     expect(h.get('X-Workspace-Id')).toBe('w1')
   })
 
-  it('celular: em viewport estreita a mesma lista de deploys aparece como lista, com os mesmos cartões', async () => {
-    definirLargura(true)
+  it('celular: a mesma lista (o jsdom não aplica media query; o layout de celular é garantido pelo CSS, testado abaixo) de deploys aparece como lista, com os mesmos cartões', async () => {
     stubFetch(() => resposta([deploy('d1', 'Release API', 17, 9, 30), deploy('d2', 'Hotfix', 18, 10)]))
     montar()
     const lista = await screen.findByRole('list', { name: 'Deploys da semana' })
@@ -197,6 +180,23 @@ describe('Calendario', () => {
       const valor = d.split(':')[1]
       expect(valor, d).toMatch(/var\(--|^\s*(0|auto|inherit|transparent|currentColor)\b/)
       expect(valor, d).not.toMatch(/\b\d+(\.\d+)?(px|rem|em)\b/)
+    }
+  })
+
+  it('fuso: deploy de domingo à noite no horário de Brasília cai na coluna do dia UTC da semana pedida', async () => {
+    const tzAntes = process.env.TZ
+    process.env.TZ = 'America/Sao_Paulo'
+    try {
+      stubFetch(() =>
+        resposta([{ id: 'd9', repositorioId: 'r1', titulo: 'Noturno', ambiente: 'producao', status: 'agendado', agendadoPara: '2026-11-23T01:00:00Z' }]),
+      )
+      const { container } = montar()
+      fireEvent.click(await screen.findByRole('button', { name: 'Próxima semana' }))
+      expect(await screen.findAllByTestId('cartao-deploy')).toHaveLength(1)
+      expect(within(container.querySelector<HTMLElement>('[data-dia="2026-11-23"]')!).getByText('Noturno')).toBeInTheDocument()
+    } finally {
+      if (tzAntes === undefined) delete process.env.TZ
+      else process.env.TZ = tzAntes
     }
   })
 })

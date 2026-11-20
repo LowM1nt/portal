@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { chaveDia, diasDaSemana, proximaSemana, rotuloSemana, semanaAnterior } from './semana.ts'
+import { chaveDia, chaveDiaUtc, diasDaSemana, proximaSemana, rotuloSemana, semanaAnterior } from './semana.ts'
 import { useDeploysDaSemana, type Deploy } from './useDeploysDaSemana.ts'
 import './calendario.css'
 
 const diaMes = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
-const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false })
+const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' })
 
 export function Calendario() {
   const [semana, setSemana] = useState(() => rotuloSemana(new Date()))
@@ -13,7 +13,7 @@ export function Calendario() {
 
   const porDia = new Map<string, Deploy[]>()
   for (const d of dados) {
-    const chave = chaveDia(new Date(d.agendadoPara))
+    const chave = chaveDiaUtc(new Date(d.agendadoPara))
     porDia.set(chave, [...(porDia.get(chave) ?? []), d])
   }
 

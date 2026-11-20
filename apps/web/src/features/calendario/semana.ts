@@ -48,3 +48,8 @@ export function chaveDia(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
+
+/** Chave 'AAAA-MM-DD' do dia UTC de um instante (mesmo recorte de semana da API). */
+export function chaveDiaUtc(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}

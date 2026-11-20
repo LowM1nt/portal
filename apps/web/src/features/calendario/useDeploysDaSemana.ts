@@ -13,10 +13,10 @@ export type Deploy = {
 type Resultado = { chave: string; deploys: Deploy[] | null }
 
 export function useDeploysDaSemana(semana: string) {
-  const { api } = useAuth()
+  const { api, workspaceAtivo } = useAuth()
   const [tentativa, setTentativa] = useState(0)
   const [resultado, setResultado] = useState<Resultado | null>(null)
-  const chave = `${semana}#${tentativa}`
+  const chave = `${workspaceAtivo?.id ?? ''}#${semana}#${tentativa}`
 
   useEffect(() => {
     let ativo = true
