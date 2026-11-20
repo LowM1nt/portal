@@ -56,14 +56,22 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - dados: **só os eventos de `docs/eventos.md`** (`tarefa_metricas`, `noite_resumo`, `fallback_acionado`); não inventar tipo novo
   - aceite: depois do login, a aba Performance mostra PRs por noite, taxa de aprovação nos portões, tokens por tarefa, fila de difíceis (valor do `noite_resumo` mais recente, não do período) e acionamentos do fallback, por período (7 ou 30 dias); consulta com limite explícito; `null` não entra na média; estados vazio, erro (com "Tentar de novo" que volta para carregando) e carregando
   - testes: componente com dados de uma semana; a aba aparece no App e troca a visão; o cliente falso confere o filtro de período usado na consulta
-- [ ] **P-004 — Autenticação e workspaces**
-  - nível: dificil (decompor: login com biblioteca pronta · modelo de workspace · filtro por workspace)
-  - repo: portal · superfícies: api, ui, dados
-  - decisões: `docs/decisoes.md` (D-001: Supabase Auth, N:N com workspace ativo, workspace pessoal no 1º login, 404 para outro dono) e o contrato da API de lá
-  - arquivos: `apps/api/Auth/`, `apps/api/Workspaces/`, `apps/web/src/features/auth/`
-  - aceite: usuário entra, vê só o próprio workspace; toda consulta filtra pelo workspace; sem sessão, a API responde 401
-  - testes: integração com dois workspaces — os dados de um nunca aparecem no outro
+- [ ] **P-004 — API: autenticação e workspaces**
+  - nível: padrao
+  - repo: portal · superfícies: api, dados
+  - decisões: `docs/decisoes.md` (D-001) e o contrato da API de lá — não reabrir
+  - arquivos: `apps/api/src/Portal.Api/Auth/` (validação do JWT do Supabase, `UsuarioAtual` scoped), `apps/api/src/Portal.Api/Workspaces/` (entidades, `WorkspaceAtual` scoped, endpoints), `apps/api/src/Portal.Api/Dados/` (DbContext, query filter global, migration), `apps/api/tests/Portal.Api.Tests/` (testes de integração)
+  - aceite: `GET /api/me` cria o workspace pessoal no 1º acesso e lista os workspaces do usuário; `POST /api/workspaces` cria; `GET /api/workspaces/{id}` devolve 404 para quem não é membro; sem token → 401; CORS só para a origem do web; migrations só em Development
+  - testes: integração com `WebApplicationFactory` e tokens assinados no teste (chave de teste no lugar do JWKS): dois usuários, dois workspaces — os dados de um nunca aparecem no outro; 401 sem token; 404 para outro dono
+  - fora do escopo: qualquer arquivo em `apps/web/` (é o P-014)
 
+- [ ] **P-014 — Web: login e workspace ativo**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - pré-requisito: P-004 (contrato da API em `docs/decisoes.md`)
+  - arquivos: `apps/web/src/supabase.ts`, `apps/web/src/features/auth/` (`AuthProvider.tsx`, `apiClient.ts` que envia `Authorization` e `X-Workspace-Id`), `apps/web/src/App.tsx`
+  - aceite: entrar com Supabase Auth (mesmo padrão do painel); depois do login, `GET /api/me` define o workspace ativo (o primeiro da lista), com seletor quando houver mais de um; sair limpa a sessão; estados carregando, erro com "Tentar de novo" e sem sessão
+  - testes: componente com cliente do Supabase e `fetch` falsos: sem sessão mostra o login; com sessão chama `/api/me` com o Bearer; o `apiClient` envia `X-Workspace-Id` do workspace ativo; 401 da API volta para o login
 - [ ] **P-005 — Modelo de dados: repositório, deploy e PR**
   - nível: padrao
   - repo: portal · superfícies: dados
