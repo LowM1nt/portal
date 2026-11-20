@@ -40,9 +40,9 @@ describe('buscarVisaoGeral', () => {
       linhas: {
         eventos: [],
         posts: [
-          { id: 1, texto: 'passado', publica_em: h(-24) },
-          { id: 2, texto: 'longe', publica_em: h(48) },
-          { id: 3, texto: 'perto', publica_em: h(2) },
+          { id: 1, texto: 'passado', publicar_em: h(-24) },
+          { id: 2, texto: 'longe', publicar_em: h(48) },
+          { id: 3, texto: 'perto', publicar_em: h(2) },
         ],
       },
     })

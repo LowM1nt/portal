@@ -39,8 +39,15 @@ Como calcular, no período escolhido:
 | `comite_aprovou` / `comite_sem_plano` | `item`, `partes`, `ciclos` |
 | `infra_falhou` | `etapa`, `erro` |
 
-Além de `eventos`, o painel lê `public.sincronizacao` (`ultima_vez`, `perfil_ativo`, `perfis_disponiveis` — lista de texto), `public.posts` e grava em
-`public.comandos` (`pausar`, `retomar`, `trocar_perfil`, `cancelar_post`).
+Além de `eventos`, o painel usa estas tabelas (colunas **exatas** — não há outras):
+
+| Tabela | Colunas | Painel pode |
+| --- | --- | --- |
+| `public.sincronizacao` | `id` (sempre 1), `ultima_vez`, `perfil_ativo`, `perfis_disponiveis` (lista de texto) | ler |
+| `public.posts` | `id`, `criado_em`, `texto`, `formato`, `autor`, `estado` (`agendado` · `publicado` · `cancelado` · `ensaio` · `falhou`), `publicar_em`, `publicado_em` | ler |
+| `public.comandos` | `id`, `ts`, `comando` (`pausar` · `retomar` · `trocar_perfil` · `cancelar_post` · …), `args` (jsonb), `estado` (`pendente` · `executado` · `recusado`), `executado_em` | ler e inserir (`comando`, `args`) |
+
+O "próximo post" é o `posts` com `estado = agendado` e o menor `publicar_em`.
 
 ## Regras para o front
 
