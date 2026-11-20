@@ -106,8 +106,16 @@ public partial class ClienteGitHub
     /// <summary>Status combinado (commit statuses + check runs) do commit, nos 4 estados do portal.</summary>
     public async Task<ResultadoCi> ConsultarStatusCiAsync(string repo, string sha, string token, CancellationToken ct)
     {
-        var (statuses, restante) = await LerArrayAsync($"repos/{repo}/commits/{sha}/status", "statuses", token, null, ct);
-        var (checks, restante2) = await LerArrayAsync($"repos/{repo}/commits/{sha}/check-runs?per_page=100", "check_runs", token, restante, ct);
+        var (statuses, restante, _) = await LerArrayAsync($"repos/{repo}/commits/{sha}/status", "statuses", token, null, ct);
+        var (checks, restante2, total) = await LerArrayAsync($"repos/{repo}/commits/{sha}/check-runs?per_page=100", "check_runs", token, restante, ct);
+        // Mais de 100 checks: busca as demais páginas para não ignorar uma falha do 101º em diante.
+        for (var pagina = 2; pagina <= 10 && checks.Count < total; pagina++)
+        {
+            var (mais, r, _) = await LerArrayAsync($"repos/{repo}/commits/{sha}/check-runs?per_page=100&page={pagina}", "check_runs", token, restante2, ct);
+            restante2 = r;
+            if (mais.Count == 0) break;
+            checks.AddRange(mais);
+        }
 
         if (statuses.Count == 0 && checks.Count == 0) return new(StatusCi.SemCi, restante2);
 
@@ -119,7 +127,7 @@ public partial class ClienteGitHub
         return new(rodando ? StatusCi.Rodando : StatusCi.Sucesso, restante2);
     }
 
-    private async Task<(List<(string? state, string? conclusao)> Itens, int? Restante)> LerArrayAsync(
+    private async Task<(List<(string? state, string? conclusao)> Itens, int? Restante, int Total)> LerArrayAsync(
         string caminho, string propriedade, string token, int? restanteAnterior, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, caminho);
@@ -140,7 +148,8 @@ public partial class ClienteGitHub
                 var concl = i.TryGetProperty("conclusion", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() : null;
                 itens.Add((estado, concl));
             }
-        return (itens, restante);
+        var total = doc.RootElement.TryGetProperty("total_count", out var tc) && tc.TryGetInt32(out var n) ? n : itens.Count;
+        return (itens, restante, total);
     }
 
     private static int? LerInteiro(HttpResponseMessage r, string cabecalho) =>

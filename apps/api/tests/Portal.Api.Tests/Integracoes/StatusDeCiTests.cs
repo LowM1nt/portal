@@ -25,7 +25,13 @@ public sealed class GitHubFalsoDeCi : HttpMessageHandler
         {
             var uri = req.RequestUri!;
             if (uri.Host.Equals("api.github.com", StringComparison.OrdinalIgnoreCase) && Rotas.TryGetValue(uri.AbsolutePath, out var rota))
-                return Task.FromResult(rota());
+            {
+                var resposta = rota();
+                // Como o GitHub: pedido condicional com o ETag atual → 304 sem corpo.
+                if (resposta.Headers.ETag is { } etag && req.Headers.IfNoneMatch.Any(e => e.Tag == etag.Tag))
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotModified));
+                return Task.FromResult(resposta);
+            }
             Inesperadas.Add(uri.ToString());
             return Task.FromResult(new HttpResponseMessage((HttpStatusCode)599));
         }
@@ -59,7 +65,12 @@ public class StatusDeCiTests
     private static GitHubFalsoDeCi NovoGitHub()
     {
         var gh = new GitHubFalsoDeCi();
-        gh.Rotas[$"/repos/{Repo}/pulls"] = () => Json(Gravacao("prs-ci.json"));
+        gh.Rotas[$"/repos/{Repo}/pulls"] = () =>
+        {
+            var resposta = Json(Gravacao("prs-ci.json"));
+            resposta.Headers.ETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"prs-ci-v1\"");
+            return resposta;
+        };
         return gh;
     }
 

@@ -11,15 +11,17 @@ namespace Portal.Api.Dados.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "ShaUltimoCommit",
+                name: "sha_ultimo_commit",
                 table: "pull_requests",
-                type: "text",
+                type: "character varying(40)",
+                maxLength: 40,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "StatusCi",
+                name: "status_ci",
                 table: "pull_requests",
-                type: "text",
+                type: "character varying(20)",
+                maxLength: 20,
                 nullable: false,
                 defaultValue: "sem CI");
         }
@@ -28,11 +30,11 @@ namespace Portal.Api.Dados.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ShaUltimoCommit",
+                name: "sha_ultimo_commit",
                 table: "pull_requests");
 
             migrationBuilder.DropColumn(
-                name: "StatusCi",
+                name: "status_ci",
                 table: "pull_requests");
         }
     }
