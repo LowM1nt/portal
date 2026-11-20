@@ -1,0 +1,12 @@
+.calendario { display: grid; gap: var(--vao); }
+.calendario-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--e-3); }
+.calendario-semana { margin: 0; }
+.calendario-aviso { display: grid; gap: var(--e-3); justify-items: start; }
+.calendario-dias { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--e-3); }
+.calendario-dia { display: grid; gap: var(--e-2); align-content: start; min-width: 0; }
+.calendario-dia-titulo { margin: 0; color: var(--texto-suave); }
+.calendario-cartao { display: grid; gap: var(--e-1); padding: var(--e-3); border-radius: var(--raio-controle); background: var(--veu-alto); color: var(--texto); overflow-wrap: anywhere; }
+
+@media (max-width: 720px) {
+  .calendario-dias { grid-template-columns: minmax(0, 1fr); }
+}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider.tsx'
+import { Calendario } from './features/calendario/Calendario.tsx'
 
 type Props = { cliente?: SupabaseClient | null }
 
@@ -74,6 +75,7 @@ export function Telas() {
           </button>
         </div>
       </header>
+      {workspaceAtivo && <Calendario />}
     </main>
   )
 }

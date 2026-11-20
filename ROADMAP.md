@@ -86,7 +86,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: criar, listar por semana (`GET /api/deploys?semana=AAAA-Www`), editar e cancelar; tudo filtrado pelo workspace; validação com mensagem clara
   - testes: integração do caminho feliz, das bordas e de "outro workspace deve ser recusado"
 
-- [ ] **P-007 — Tela do calendário**
+- [x] **P-007 — Tela do calendário**
   - nível: padrao
   - repo: portal · superfícies: ui
   - arquivos: `apps/web/src/features/calendario/`
