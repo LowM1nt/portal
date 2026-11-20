@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { chamarApi } from './apiClient.ts'
 
@@ -13,6 +13,7 @@ type Contexto = {
   trocarWorkspace: (id: string) => void
   sair: () => Promise<void>
   tentarDeNovo: () => void
+  api: (caminho: string, init?: RequestInit) => Promise<Response>
   cliente: SupabaseClient
 }
 
@@ -40,18 +41,24 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
     }
   }, [cliente])
 
-  const token = sessao?.access_token ?? null
+  // O token é lido na hora de cada chamada: renovar o token não recarrega nada.
+  const tokenRef = useRef<string | null>(null)
+  const tokenAtual = sessao?.access_token ?? null
+  useEffect(() => {
+    tokenRef.current = tokenAtual
+  }, [tokenAtual])
 
-  const chave = `${token ?? ''}#${tentativa}`
+  const usuarioId = sessao ? String(sessao.user?.id ?? '') : null
+  const chave = `${usuarioId ?? ''}#${tentativa}`
 
   useEffect(() => {
-    if (!token) return
+    if (usuarioId === null) return
     let ativo = true
     const guardar = (workspaces: Workspace[] | null) => {
       if (ativo) setResultado({ chave, workspaces })
     }
     chamarApi('/api/me', {
-      token,
+      token: tokenRef.current ?? '',
       workspaceId: null,
       onNaoAutorizado: () => {
         void cliente.auth.signOut()
@@ -67,12 +74,16 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
     return () => {
       ativo = false
     }
-  }, [cliente, token, chave])
+  }, [cliente, usuarioId, chave])
 
   const sair = useCallback(async () => {
-    await cliente.auth.signOut()
-    setResultado(null)
-    setEscolhaId(null)
+    try {
+      await cliente.auth.signOut()
+    } finally {
+      setSessao(null)
+      setResultado(null)
+      setEscolhaId(null)
+    }
   }, [cliente])
 
   const tentarDeNovo = useCallback(() => setTentativa((n) => n + 1), [])
@@ -81,16 +92,30 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   const workspaces = useMemo(() => atual?.workspaces ?? [], [atual])
   const workspaceAtivo = workspaces.find((w) => w.id === escolhaId) ?? workspaces[0] ?? null
 
+  const workspaceAtivoId = workspaceAtivo?.id ?? null
+  const api = useCallback(
+    (caminho: string, init?: RequestInit) =>
+      chamarApi(caminho, {
+        token: tokenRef.current ?? '',
+        workspaceId: workspaceAtivoId,
+        onNaoAutorizado: () => {
+          void cliente.auth.signOut()
+        },
+        init,
+      }),
+    [cliente, workspaceAtivoId],
+  )
+
   let estado: Estado
   if (!sessaoLida) estado = 'carregando'
   else if (!sessao) estado = 'sem-sessao'
-  else if (atual && atual.workspaces === null) estado = 'erro'
-  else if (workspaceAtivo) estado = 'pronto'
-  else estado = 'carregando'
+  else if (!atual) estado = 'carregando'
+  else if (atual.workspaces === null) estado = 'erro'
+  else estado = 'pronto'
 
   const valor = useMemo(
-    () => ({ estado, workspaces, workspaceAtivo, trocarWorkspace: setEscolhaId, sair, tentarDeNovo, cliente }),
-    [estado, workspaces, workspaceAtivo, sair, tentarDeNovo, cliente],
+    () => ({ estado, workspaces, workspaceAtivo, trocarWorkspace: setEscolhaId, sair, tentarDeNovo, api, cliente }),
+    [estado, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
   )
 
   return <AuthContexto.Provider value={valor}>{children}</AuthContexto.Provider>

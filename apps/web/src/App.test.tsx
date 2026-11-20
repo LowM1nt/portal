@@ -1,7 +1,8 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import App from './App.tsx'
+import App, { Telas } from './App.tsx'
+import { AuthProvider, useAuth } from './features/auth/AuthProvider.tsx'
 
 const sessao = { access_token: 'tok-sessao', user: { email: 'a@exemplo.com' } } as Session
 
@@ -68,12 +69,26 @@ describe('App — autenticação e workspace ativo', () => {
   it('com mais de um workspace mostra o seletor e trocar muda o X-Workspace-Id das chamadas seguintes', async () => {
     const fetchFalso = vi.fn(async () => respostaMe())
     vi.stubGlobal('fetch', fetchFalso)
-    render(<App cliente={clienteFalso(sessao).cliente} />)
+    let chamar: ((caminho: string) => Promise<Response>) | undefined
+    function Sonda() {
+      chamar = useAuth().api
+      return null
+    }
+    render(
+      <AuthProvider cliente={clienteFalso(sessao).cliente}>
+        <Sonda />
+        <Telas />
+      </AuthProvider>,
+    )
     const seletor = await screen.findByRole('combobox')
-    expect(seletor).toBeInTheDocument()
+    await chamar!('/api/outra')
+    expect(cabecalho(fetchFalso.mock.calls.at(-1) as unknown as Chamada, 'X-Workspace-Id')).toBe('w1')
     fireEvent.change(seletor, { target: { value: 'w2' } })
     expect(await screen.findByText('Time Beta', { selector: ':not(option)' })).toBeInTheDocument()
     await waitFor(() => expect(seletor).toHaveValue('w2'))
+    await chamar!('/api/outra')
+    expect(cabecalho(fetchFalso.mock.calls.at(-1) as unknown as Chamada, 'X-Workspace-Id')).toBe('w2')
+    expect(cabecalho(fetchFalso.mock.calls.at(-1) as unknown as Chamada, 'Authorization')).toBe('Bearer tok-sessao')
   })
 
   it('com um só workspace o seletor não aparece', async () => {

@@ -23,7 +23,7 @@ function App({ cliente = clientePadrao }: Props) {
   )
 }
 
-function Telas() {
+export function Telas() {
   const { estado, workspaces, workspaceAtivo, trocarWorkspace, sair, tentarDeNovo, cliente } = useAuth()
 
   if (estado === 'carregando') {
@@ -68,8 +68,8 @@ function Telas() {
               </select>
             </label>
           )}
-          <span className="suave">{workspaceAtivo?.nome}</span>
-          <button type="button" className="botao botao-quieto" onClick={() => void sair()}>
+          <span className="suave">{workspaceAtivo?.nome ?? 'Nenhum workspace'}</span>
+          <button type="button" className="botao botao-quieto" onClick={() => void sair().catch(() => undefined)}>
             Sair
           </button>
         </div>
