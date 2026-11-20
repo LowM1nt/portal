@@ -23,7 +23,14 @@ function clienteFalso(sessaoInicial: Session | null, loginOk = true) {
       return { error: null }
     }),
   }
-  return { auth } as unknown as SupabaseClient
+  const resposta = Promise.resolve({ data: [], error: null })
+  const construtor: unknown = new Proxy(() => {}, {
+    get(_alvo, prop) {
+      if (prop === 'then') return (ok: (v: unknown) => unknown, ko?: (e: unknown) => unknown) => resposta.then(ok, ko)
+      return () => construtor
+    },
+  })
+  return { auth, from: vi.fn(() => construtor) } as unknown as SupabaseClient
 }
 
 describe('App', () => {

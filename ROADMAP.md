@@ -113,7 +113,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: nos dois apps, sem sessão, aparece só o cartão central (sem a barra lateral); nada vaza da tela em 360, 768 e 1280 px; temas claro e escuro; Enter envia; foco inicial no e-mail
   - testes: componente — sem sessão renderiza o cartão de entrada e não a navegação; foco inicial no campo de e-mail; erro de login aparece dentro do cartão
 
-- [ ] **P-017 — Painel: trocar o perfil de modelos**
+- [x] **P-017 — Painel: trocar o perfil de modelos**
   - nível: barato
   - repo: portal · superfícies: ui
   - pedido do dono: trocar de plano (assinatura, grátis, barato, qualidade) sem abrir o terminal
