@@ -2,12 +2,14 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import VisaoGeral from './features/visao-geral/VisaoGeral.tsx'
+import Performance from './features/performance/Performance.tsx'
 
 type Props = { cliente?: SupabaseClient | null }
 
 function App({ cliente = clientePadrao }: Props) {
   const [sessao, setSessao] = useState<Session | null>(null)
   const [carregando, setCarregando] = useState(cliente !== null)
+  const [aba, setAba] = useState<'visao-geral' | 'performance'>('visao-geral')
 
   useEffect(() => {
     if (!cliente) return
@@ -58,7 +60,15 @@ function App({ cliente = clientePadrao }: Props) {
           </button>
         </div>
       </header>
-      <VisaoGeral cliente={cliente} />
+      <div className="abas" role="tablist" aria-label="Seções do painel">
+        <button type="button" role="tab" className="aba" aria-selected={aba === 'visao-geral'} onClick={() => setAba('visao-geral')}>
+          Visão geral
+        </button>
+        <button type="button" role="tab" className="aba" aria-selected={aba === 'performance'} onClick={() => setAba('performance')}>
+          Performance
+        </button>
+      </div>
+      {aba === 'visao-geral' ? <VisaoGeral cliente={cliente} /> : <Performance cliente={cliente} />}
     </main>
   )
 }

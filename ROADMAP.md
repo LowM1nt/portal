@@ -49,7 +49,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: a linha da noite, os 4 números, as tarefas da noite, o próximo post e "precisa de você", como na prévia do design system; mostra "última sincronização"; o botão "Pausar agente" grava o comando
   - testes: componente com dados de uma noite e com noite vazia
 
-- [ ] **P-013 — Painel: performance do agente**
+- [x] **P-013 — Painel: performance do agente**
   - nível: padrao
   - repo: portal · superfícies: ui
   - arquivos: `apps/painel/src/features/performance/`, `apps/painel/src/App.tsx` (abas "Visão geral" e "Performance" com `.abas` do design system)
