@@ -20,6 +20,10 @@ builder.Services.AddScoped<GitHubConfigService>();
 builder.Services.AddHttpClient<ClienteGitHub>();
 builder.Services.AddSingleton<EtagsGitHub>();
 builder.Services.AddScoped<ImportadorDePrs>();
+builder.Services.AddSingleton(TimeProvider.System);
+// Fora do ambiente Testing, para não rodar nos testes de integração.
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddHostedService<SincronizacaoGitHub>();
 // Chaves do Data Protection persistidas: sem isso, cada reinício do container gera chaves novas e os
 // tokens já salvos (GitHub) ficam ilegíveis. Pasta vem de DataProtection:PastaDasChaves (volume no compose).
 var protecaoDeDados = builder.Services.AddDataProtection().SetApplicationName("portal");
