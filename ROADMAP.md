@@ -31,7 +31,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: uma PR de teste mostra todos os checks; a branch `main` exige os checks para o merge
   - testes: a própria execução do CI
 
-- [ ] **P-003 — Design system no front**
+- [x] **P-003 — Design system no front**
   - nível: barato
   - repo: portal · superfícies: ui
   - arquivos: `apps/web/src/styles/tokens.css`, `apps/web/src/styles/components.css`, o mesmo em `apps/painel/`

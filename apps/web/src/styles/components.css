@@ -1,0 +1,161 @@
+/* Madrugada — componentes. CSS puro, sem dependências. Requer tokens.css.
+   Regras de alinhamento: toda grade usa colunas iguais e o mesmo vão (--vao);
+   todo controle tem a mesma altura (--altura-controle); painéis da mesma linha
+   têm a mesma altura. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--noite); color: var(--texto);
+  font: 400 var(--t-16)/1.55 var(--fonte-texto);
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3 { font-family: var(--fonte-titulo); font-weight: 650; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: var(--t-25); } h2 { font-size: var(--t-16); } h3 { font-size: var(--t-14); }
+p { margin: 0; max-width: var(--largura-leitura); }
+a { color: var(--roxo-texto); text-underline-offset: 3px; }
+code { font: 0.9em var(--fonte-codigo); background: var(--veu-alto); padding: 1px 6px; border-radius: 6px; }
+:focus-visible { outline: none; box-shadow: var(--foco); border-radius: var(--raio-controle); }
+.suave { color: var(--texto-suave); } .fraco { color: var(--texto-fraco); }
+.pequeno { font-size: var(--t-14); }
+
+/* estrutura: menu + conteúdo */
+.app { display: grid; grid-template-columns: 216px minmax(0, 1fr); min-height: 100dvh; }
+.trilho { background: var(--veu); padding: var(--vao) var(--e-3); display: flex; flex-direction: column; gap: var(--e-1); position: sticky; top: 0; height: 100dvh; }
+.marca { font: 650 var(--t-16)/1 var(--fonte-titulo); height: var(--altura-controle); padding: 0 var(--e-3); margin-bottom: var(--e-4); display: flex; align-items: center; gap: var(--e-2); }
+.marca .lua { width: 16px; height: 16px; border-radius: 50%; background: var(--roxo-forte); box-shadow: inset -5px -2px 0 var(--veu); }
+.nav-item { height: var(--altura-controle); display: flex; align-items: center; justify-content: space-between; gap: var(--e-2); padding: 0 var(--e-3); border-radius: var(--raio-controle); color: var(--texto-suave); text-decoration: none; font-size: var(--t-14); transition: background var(--rapido) var(--curva), color var(--rapido) var(--curva); }
+.nav-item:hover { background: var(--veu-alto); color: var(--texto); }
+.nav-item[aria-current="page"] { background: var(--roxo); color: var(--sobre-roxo); font-weight: 600; }
+.nav-item .conta { font-size: var(--t-12); color: var(--texto-fraco); }
+.nav-item[aria-current="page"] .conta { color: var(--sobre-roxo); }
+.trilho .fim { margin-top: auto; display: grid; }
+.conteudo { width: 100%; max-width: 1200px; padding: var(--vao) clamp(var(--e-4), 3vw, var(--e-6)) var(--e-8); display: grid; gap: var(--vao); align-content: start; }
+.cabecalho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--e-4); min-height: var(--altura-controle); }
+.cabecalho .titulo { display: grid; gap: var(--e-1); }
+
+/* grades: sempre colunas iguais, sempre o mesmo vão, itens esticados na mesma altura */
+.grade { display: grid; gap: var(--vao); align-items: stretch; }
+.grade-2 { grid-template-columns: repeat(2, var(--coluna)); }
+.grade-3 { grid-template-columns: repeat(3, var(--coluna)); }
+.grade-4 { grid-template-columns: repeat(4, var(--coluna)); }
+.ocupa-2 { grid-column: span 2; }
+.pilha { display: grid; gap: var(--vao); align-content: stretch; grid-auto-rows: 1fr; }
+
+/* painel: um tom abaixo do fundo, sem borda e sem sombra */
+.painel { background: var(--veu); border-radius: var(--raio-painel); padding: var(--vao); display: flex; flex-direction: column; gap: var(--e-4); min-width: 0; }
+.painel > header { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); min-height: var(--altura-selo); }
+.painel > .pe { margin-top: auto; }   /* ações sempre na base do painel */
+
+/* botões: mesma altura; num grupo, mesma largura */
+.botao { height: var(--altura-controle); padding: 0 var(--e-4); font: 600 var(--t-14)/1 var(--fonte-texto); border-radius: var(--raio-controle); border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: var(--e-2); white-space: nowrap; transition: background var(--rapido) var(--curva); }
+.botao-primario { background: var(--roxo); color: var(--sobre-roxo); }
+.botao-primario:hover { background: var(--roxo-forte); }
+.botao-quieto { background: var(--veu-alto); color: var(--texto); }
+.botao-quieto:hover { background: var(--linha); }
+.botao-perigo { background: var(--veu-alto); color: var(--erro); }
+.botao-perigo:hover { background: var(--erro-veu); }
+.botao:disabled { opacity: .5; cursor: not-allowed; }
+.grupo-botoes { display: grid; grid-auto-flow: column; grid-auto-columns: var(--coluna); gap: var(--e-2); }
+
+/* campos: mesma altura dos botões; rótulo em cima, ajuda embaixo */
+.campo { display: grid; gap: var(--e-2); font-size: var(--t-14); align-content: start; }
+.campo input, .campo select { height: var(--altura-controle); width: 100%; }
+.campo input, .campo select, .campo textarea { font: inherit; color: var(--texto); background: var(--veu-alto); border: 1px solid transparent; border-radius: var(--raio-controle); padding: 0 var(--e-3); }
+.campo textarea { padding: var(--e-3); min-height: 96px; }
+.campo input:focus-visible, .campo select:focus-visible, .campo textarea:focus-visible { border-color: var(--roxo-forte); box-shadow: var(--foco); }
+.campo .ajuda { color: var(--texto-fraco); font-size: var(--t-12); min-height: 18px; }
+.campo .erro-msg { color: var(--erro); font-size: var(--t-12); min-height: 18px; }
+
+/* selos: mesma altura; ponto + palavra, a cor nunca vai sozinha */
+.selo { height: var(--altura-selo); display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-12); font-weight: 600; padding: 0 10px; border-radius: var(--raio-pilula); background: var(--veu-alto); color: var(--texto-suave); white-space: nowrap; }
+.selo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.selo-ok { color: var(--ok); }
+.selo-atencao { color: var(--atencao); }
+.selo-erro { color: var(--erro); }
+.selo-roxo { color: var(--roxo-texto); }
+
+/* números: células iguais, alinhadas à grade */
+.numero { display: grid; gap: var(--e-1); align-content: start; }
+.numero b { font: 650 var(--t-25)/1.1 var(--fonte-titulo); }
+.numero span { font-size: var(--t-14); color: var(--texto-suave); }
+
+/* linha da noite: a assinatura do sistema. Só tons de roxo, mais um padrão para a queda */
+.noite { display: grid; gap: var(--e-2); }
+.noite-barra { display: flex; height: var(--altura-controle); border-radius: var(--raio-controle); overflow: hidden; background: var(--veu-alto); }
+.noite-barra > span { flex: var(--min) 1 0; min-width: 2px; }
+.t-apoio { background: color-mix(in srgb, var(--roxo) 40%, var(--veu-alto)); }   /* planejamento e conteúdo */
+.t-codigo { background: var(--roxo); }                                           /* implementando */
+.t-checagem { background: var(--roxo-texto); }                                   /* portões e revisão */
+.t-queda { background: repeating-linear-gradient(135deg, var(--erro-veu) 0 6px, var(--erro) 6px 9px); }
+.t-livre { background: transparent; }
+.noite-pe { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--e-2) var(--e-4); font-size: var(--t-12); color: var(--texto-fraco); }
+.noite-horas { display: flex; justify-content: space-between; font-size: var(--t-12); color: var(--texto-fraco); }
+.legenda { display: flex; flex-wrap: wrap; gap: var(--e-2) var(--e-4); }
+.legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* tabela: linhas da mesma altura, colunas alinhadas */
+.tabela { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+.tabela th { text-align: left; font-weight: 600; color: var(--texto-fraco); height: var(--altura-controle); padding: 0 var(--e-3) 0 0; border-bottom: 1px solid var(--linha); }
+.tabela td { height: 56px; padding: 0 var(--e-3) 0 0; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela th:last-child, .tabela td:last-child { padding-right: 0; }
+.tabela .num { text-align: right; }
+.rolagem { overflow-x: auto; }
+
+/* lista: linhas da mesma altura, ação sempre à direita */
+.lista { list-style: none; margin: 0; padding: 0; display: grid; }
+.lista li { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); border-bottom: 1px solid var(--linha); font-size: var(--t-14); }
+.lista li:last-child { border-bottom: 0; }
+.vazio { color: var(--texto-suave); padding: var(--vao) 0; }
+
+/* abas e cartão de kanban */
+.abas { display: flex; gap: var(--e-4); border-bottom: 1px solid var(--linha); }
+.aba { height: var(--altura-controle); display: inline-flex; align-items: center; color: var(--texto-suave); text-decoration: none; font-size: var(--t-14); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.aba[aria-selected="true"] { color: var(--texto); border-color: var(--roxo-forte); font-weight: 600; }
+.cartao { background: var(--veu-alto); border-radius: var(--raio-controle); padding: var(--e-4); display: grid; gap: var(--e-2); font-size: var(--t-14); align-content: start; }
+
+/* medidor (aderência, cota): ocupa a altura de um controle, para alinhar com campos */
+.medidor { height: var(--altura-controle); display: flex; align-items: center; }
+.medidor > span { display: block; width: 100%; height: 6px; border-radius: var(--raio-pilula); background: linear-gradient(to right, var(--roxo-forte) var(--valor), var(--veu-alto) var(--valor)); }
+
+/* barra do celular: 5 destinos, colunas iguais, ícone + nome. Escondida no computador */
+.barra { display: none; }
+.barra a { display: grid; justify-items: center; align-content: center; gap: 2px; height: 56px; color: var(--texto-fraco); text-decoration: none; font-size: 11px; font-weight: 600; border-radius: var(--raio-controle); }
+.barra a[aria-current="page"] { color: var(--roxo-texto); }
+.barra svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.so-celular { display: none; }
+
+/* telas médias: as grades de 4 viram 2 */
+@media (max-width: 1000px) {
+  .grade-4 { grid-template-columns: repeat(2, var(--coluna)); }
+  .grade-3 { grid-template-columns: var(--coluna); }
+  .ocupa-2 { grid-column: auto; }
+  .pilha { grid-auto-rows: auto; }
+}
+
+/* celular: uma coluna, vão menor, barra inferior fixa, tabela vira lista */
+@media (max-width: 860px) {
+  :root { --vao: var(--e-4); }
+  .app { grid-template-columns: 1fr; }
+  .trilho { display: none; }
+  .barra { display: grid; grid-template-columns: repeat(5, var(--coluna)); position: fixed; inset: auto 0 0 0; z-index: 10; background: var(--veu); border-top: 1px solid var(--linha); padding: 0 var(--e-2) env(safe-area-inset-bottom); }
+  .conteudo { padding: var(--e-4) var(--e-4) 88px; }
+  .so-celular { display: revert; } .so-computador { display: none; }
+  h1 { font-size: var(--t-20); }
+  .cabecalho { display: grid; gap: var(--e-3); }
+  .cabecalho .botao { width: 100%; }
+  .grade-2 { grid-template-columns: var(--coluna); }
+  .painel { padding: var(--e-4); }
+  .numero b { font-size: var(--t-20); }
+  .legenda { display: grid; grid-template-columns: repeat(2, var(--coluna)); width: 100%; }
+
+  /* tabela vira lista: título em cima, estado e número embaixo, nada rola de lado */
+  .tabela thead { display: none; }
+  .tabela, .tabela tbody { display: block; }
+  .tabela tr { display: grid; grid-template-columns: var(--coluna) auto; align-items: center; gap: var(--e-2) var(--e-3); padding: var(--e-3) 0; border-bottom: 1px solid var(--linha); }
+  .tabela tr:last-child { border-bottom: 0; }
+  .tabela td { height: auto; padding: 0; border: 0; }
+  .tabela td:first-child { grid-column: 1 / -1; }
+  .tabela .num { color: var(--texto-suave); }
+}
