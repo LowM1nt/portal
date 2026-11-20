@@ -72,7 +72,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - arquivos: `apps/web/src/supabase.ts`, `apps/web/src/features/auth/` (`AuthProvider.tsx`, `apiClient.ts` que envia `Authorization` e `X-Workspace-Id`), `apps/web/src/App.tsx`
   - aceite: entrar com Supabase Auth (mesmo padrão do painel); depois do login, `GET /api/me` define o workspace ativo (o primeiro da lista), com seletor quando houver mais de um; sair limpa a sessão; estados carregando, erro com "Tentar de novo" e sem sessão
   - testes: componente com cliente do Supabase e `fetch` falsos: sem sessão mostra o login; com sessão chama `/api/me` com o Bearer; o `apiClient` envia `X-Workspace-Id` do workspace ativo; 401 da API volta para o login
-- [ ] **P-005 — Modelo de dados: repositório, deploy e PR**
+- [x] **P-005 — Modelo de dados: repositório, deploy e PR**
   - nível: padrao
   - repo: portal · superfícies: dados
   - arquivos: `apps/api/Dados/`, migrations do EF Core
