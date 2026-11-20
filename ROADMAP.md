@@ -122,6 +122,20 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: o painel mostra o perfil ativo (`.selo`); um seletor lista os perfis disponíveis; escolher outro pede confirmação ("O agente passa a usar o perfil X a partir da próxima tarefa") e grava o comando; depois da próxima sincronização, o perfil exibido muda; estados carregando e erro
   - testes: componente — mostra o perfil ativo; troca grava o comando certo; cancelar a confirmação não grava nada
 
+- [ ] **P-018 — Painel: acabamento fiel à prévia**
+  - nível: barato
+  - repo: portal · superfícies: ui
+  - por quê: comparação por captura de tela (20/11) entre o painel publicado e `docs/design-system/capturas/painel-escuro.png`
+  - arquivos: `apps/painel/src/App.tsx`, `apps/painel/src/features/visao-geral/`
+  - aceite (cada linha é uma diferença medida):
+    - a barra lateral (`.app`) ocupa a altura toda da janela, mesmo com a página rolando
+    - 1º cartão: "PRs com merge" = eventos `tarefa_mergeada` da noite (não "PRs abertas")
+    - "Gasto no mês" em **R$** (soma de `custo_usd` das `tarefa_metricas` × câmbio fixo 5,40; R$ 0 no perfil assinatura), nunca em tokens
+    - "Tokens na noite" com unidade legível ("12 mi", "412 mil")
+    - tabela "Tarefas da noite": código **e título** do item (de `tarefa_metricas.dados.item` + título via `tarefa_planejada`, ou só o código se faltar), uma linha por item (a tentativa mais recente), estado com o selo certo (`Merge feito` · `PR aberta` · `Reprovada` · `Fila de difíceis`)
+    - títulos e números com a fonte e o peso do design system (a fonte já é carregada no index.html)
+  - testes: componente — cartão de merge conta `tarefa_mergeada`; gasto mostra "R$"; item repetido aparece uma vez com o estado mais recente
+
 - [ ] **P-008 — Integração com GitHub: PRs e status de CI**
   - nível: dificil (decompor: cliente da API · importação de PRs · status de CI · agendamento)
   - repo: portal · superfícies: api, dados
