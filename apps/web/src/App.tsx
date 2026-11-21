@@ -2,7 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase as clientePadrao } from './supabase.ts'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider.tsx'
 import { DemoPage } from './features/demo/DemoPage.tsx'
+import { useState } from 'react'
 import { Calendario } from './features/calendario/Calendario.tsx'
+import { FilaRevisao } from './features/revisoes/FilaRevisao.tsx'
 
 type Props = { cliente?: SupabaseClient | null }
 
@@ -27,6 +29,7 @@ function App({ cliente = clientePadrao }: Props) {
 }
 
 export function Telas() {
+  const [visao, setVisao] = useState<'calendario' | 'fila'>('calendario')
   const { estado, workspaces, workspaceAtivo, trocarWorkspace, sair, tentarDeNovo } = useAuth()
 
   if (estado === 'carregando') {
@@ -75,7 +78,29 @@ export function Telas() {
           </button>
         </div>
       </header>
-      {workspaceAtivo && <Calendario />}
+      {workspaceAtivo && (
+        <>
+          <nav className="grupo-botoes" aria-label="Telas">
+            <button
+              type="button"
+              className={`botao ${visao === 'calendario' ? 'botao-primario' : 'botao-quieto'}`}
+              aria-pressed={visao === 'calendario'}
+              onClick={() => setVisao('calendario')}
+            >
+              Calendário
+            </button>
+            <button
+              type="button"
+              className={`botao ${visao === 'fila' ? 'botao-primario' : 'botao-quieto'}`}
+              aria-pressed={visao === 'fila'}
+              onClick={() => setVisao('fila')}
+            >
+              Fila de revisão
+            </button>
+          </nav>
+          {visao === 'fila' ? <FilaRevisao /> : <Calendario />}
+        </>
+      )}
     </main>
   )
 }

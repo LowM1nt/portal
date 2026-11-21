@@ -188,7 +188,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: o contrato da D-005 funciona; filtros por repositório e por revisor; só PRs do workspace; rascunho e PR sem revisor pendente não aparecem; ordem: mais antigas primeiro
   - testes: importação com respostas gravadas contendo `draft` e `requested_reviewers`; integração do endpoint (filtros, outro workspace recusado, rascunho fora)
 
-- [ ] **P-023 — Web: tela da fila de revisão**
+- [x] **P-023 — Web: tela da fila de revisão**
   - nível: padrao
   - repo: portal · superfícies: ui
   - pré-requisito: P-009
