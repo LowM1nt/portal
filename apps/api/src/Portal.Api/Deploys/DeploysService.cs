@@ -8,6 +8,8 @@ namespace Portal.Api.Deploys;
 
 public record DeployPedido(Guid? RepositorioId, string? Titulo, string? Ambiente, DateTimeOffset? AgendadoPara);
 
+public record StatusPedido(string? Status);
+
 public record DeployResposta(Guid Id, Guid RepositorioId, string Titulo, string Ambiente, string Status, DateTimeOffset AgendadoPara);
 
 public enum ResultadoTipo { Ok, Invalido, NaoEncontrado, Conflito }
@@ -104,6 +106,26 @@ public partial class DeploysService
             return new(ResultadoTipo.Conflito, Erro: "Este deploy já foi cancelado.");
 
         deploy.Status = StatusCancelado;
+        await _db.SaveChangesAsync(ct);
+        return new(ResultadoTipo.Ok, Mapear(deploy));
+    }
+
+    /// <summary>
+    /// Marca como foi o deploy: concluido ou falhou (entra nas métricas, D-010), ou volta para agendado
+    /// se foi marcado por engano. Deploy cancelado não muda (409).
+    /// </summary>
+    public async Task<Resultado<DeployResposta>> MudarStatusAsync(Guid id, StatusPedido pedido, CancellationToken ct)
+    {
+        var status = pedido.Status?.Trim().ToLowerInvariant();
+        if (status is not (StatusAgendado or StatusConcluido or StatusFalhou))
+            return new(ResultadoTipo.Invalido, Erro: "Status inválido. Use concluido, falhou ou agendado.");
+
+        var deploy = await _db.Deploys.FirstOrDefaultAsync(d => d.Id == id, ct);
+        if (deploy is null) return new(ResultadoTipo.NaoEncontrado);
+        if (deploy.Status == StatusCancelado)
+            return new(ResultadoTipo.Conflito, Erro: "Este deploy foi cancelado e não muda mais de status.");
+
+        deploy.Status = status;
         await _db.SaveChangesAsync(ct);
         return new(ResultadoTipo.Ok, Mapear(deploy));
     }

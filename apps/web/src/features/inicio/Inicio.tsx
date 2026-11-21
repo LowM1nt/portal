@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider.tsx'
 import { SEVERIDADES } from '../bugs/api.ts'
+import { pedeRevisaoDe } from '../conta/github.ts'
 import { chaveDia, chaveDiaUtc, diasDaSemana, proximaSemana, rotuloSemana } from '../calendario/semana.ts'
 import type { Deploy } from '../calendario/useDeploysDaSemana.ts'
 import { usePendencias } from '../pendencias/pendencias.ts'
@@ -41,7 +42,7 @@ const urlSegura = (url: string) => (/^https:\/\//i.test(url) ? url : undefined)
 
 /** Visão geral da semana: números, próximos deploys, fila de revisão e bugs a triar. */
 export function Inicio() {
-  const { api, workspaceAtivo } = useAuth()
+  const { api, workspaceAtivo, githubLogin } = useAuth()
   const { bugs, revisoes } = usePendencias()
   const [semana] = useState(() => rotuloSemana(new Date()))
   const carregarDeploys = useCallback(async () => {
@@ -116,7 +117,10 @@ export function Inicio() {
     .filter((d) => d.status !== 'cancelado' && new Date(d.agendadoPara).getTime() >= agora.getTime())
     .sort((a, b) => a.agendadoPara.localeCompare(b.agendadoPara))
     .slice(0, 4)
-  const velhas = fila.filter((p) => agora.getTime() - new Date(p.atualizadaEm).getTime() > DIA).length
+  // Com o login do GitHub, só o que pede a sua revisão; sem ele, a fila do time (com dica pra configurar).
+  const minhas = githubLogin ? fila.filter((p) => pedeRevisaoDe(p.revisores, githubLogin)) : fila
+  const rotuloFila = githubLogin ? 'Esperando você' : 'Esperando revisão'
+  const velhas = minhas.filter((p) => agora.getTime() - new Date(p.atualizadaEm).getTime() > DIA).length
   const aTriar = listaBugs.filter((b) => b.status === 'a_triar')
   const graves = aTriar.filter((b) => b.severidade === 'critica' || b.severidade === 'alta').length
   const resolvidos = listaBugs.filter((b) => b.status === 'resolvido' && new Date(b.atualizadoEm).getTime() >= segunda).length
@@ -131,8 +135,8 @@ export function Inicio() {
           <em>{aindaVem ? `${aindaVem} ainda por vir` : 'Nenhum por vir'}</em>
         </div>
         <div className="cartao numero" role="listitem">
-          <small>Esperando revisão</small>
-          <strong>{fila.length}</strong>
+          <small>{rotuloFila}</small>
+          <strong>{minhas.length}</strong>
           <em className={velhas ? 'atencao' : undefined}>{velhas ? `${velhas} há mais de 24 h` : 'Tudo fresquinho'}</em>
         </div>
         <div className="cartao numero" role="listitem">
@@ -176,16 +180,16 @@ export function Inicio() {
 
         <section className="cartao bloco" aria-labelledby="inicio-revisoes">
           <div className="bloco-cab">
-            <h2 id="inicio-revisoes">Esperando revisão</h2>
+            <h2 id="inicio-revisoes">{rotuloFila}</h2>
             <a className="botao botao-secundario botao-p" href="#/revisoes">
               Ver fila
             </a>
           </div>
-          {fila.length === 0 ? (
-            <p className="bloco-vazio">Nada pra revisar. Aproveita!</p>
+          {minhas.length === 0 ? (
+            <p className="bloco-vazio">{githubLogin ? 'Nada esperando você. Aproveita!' : 'Nada pra revisar. Aproveita!'}</p>
           ) : (
             <ul className="lista-itens">
-              {fila.slice(0, 4).map((p) => {
+              {minhas.slice(0, 4).map((p) => {
                 const ci = CI[p.statusCi] ?? CI['sem CI']
                 const velha = agora.getTime() - new Date(p.atualizadaEm).getTime() > DIA
                 return (
@@ -205,6 +209,11 @@ export function Inicio() {
                 )
               })}
             </ul>
+          )}
+          {!githubLogin && (
+            <p className="bloco-dica">
+              Quer ver só o que espera você? <a href="#/conta">Configure seu login do GitHub</a>.
+            </p>
           )}
         </section>
 

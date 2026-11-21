@@ -1,0 +1,20 @@
+/* Minha conta: perfil, GitHub, aparência e segurança empilhados. */
+
+.tela-conta { display: grid; gap: var(--e4); min-width: 0; }
+.perfil { padding: var(--e5); display: flex; align-items: center; gap: var(--e4); min-width: 0; }
+.perfil-txt { display: grid; gap: var(--e1); min-width: 0; }
+.perfil-txt b { font: var(--t-subtitulo); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.perfil-txt span { font: var(--t-pequeno); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.avatar-xg { width: 56px; height: 56px; font-size: 22px; }
+
+/* QR code sempre em fundo branco (os apps leitores precisam de contraste) */
+.qr { justify-self: center; padding: var(--e3); border-radius: var(--raio-cartao); background: #ffffff; }
+.qr img { display: block; width: 176px; height: 176px; }
+.segredo {
+  display: block; padding: var(--e3); border: 1px solid var(--borda); border-radius: var(--raio-campo); background: var(--campo);
+  font: 600 13px/1.5 var(--fonte-mono); overflow-wrap: anywhere; user-select: all;
+}
+
+@media (max-width: 767px) {
+  .perfil { padding: var(--e4); }
+}

@@ -26,6 +26,15 @@ public static class MembrosEndpoints
             return r.Tipo == ResultadoTipo.Ok ? Results.Created($"/api/workspace/convites/{r.Valor!.Id}", r.Valor) : Converter(r);
         }).RequerPapel(Papeis.Dono);
 
+        ws.MapGet("/convites", async (WorkspaceAtual atual, MembrosService servico, CancellationToken ct) =>
+            Results.Ok(await servico.ListarConvitesAsync(atual.Id, ct))).RequerPapel(Papeis.Dono);
+
+        ws.MapDelete("/convites/{id:guid}", async (Guid id, WorkspaceAtual atual, MembrosService servico, CancellationToken ct) =>
+        {
+            var r = await servico.RevogarConviteAsync(atual.Id, id, ct);
+            return r.Tipo == ResultadoTipo.Ok ? Results.NoContent() : Converter(r);
+        }).RequerPapel(Papeis.Dono);
+
         // Quem aceita ainda não é membro: só exige login, sem X-Workspace-Id.
         app.MapPost("/api/convites/aceitar", async (AceitarConvitePedido pedido, MembrosService servico, CancellationToken ct) =>
             Converter(await servico.AceitarAsync(pedido, ct))).RequireAuthorization();

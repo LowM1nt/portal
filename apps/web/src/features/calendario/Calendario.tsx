@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { chaveDia, chaveDiaUtc, diasDaSemana, periodo, proximaSemana, rotuloSemana, semanaAnterior } from './semana.ts'
 import { useAuth } from '../auth/AuthProvider.tsx'
 import { useDeploysDaSemana, type Deploy, type Fonte } from './useDeploysDaSemana.ts'
 import { useAvisoDeErro } from '../../ui/avisos.ts'
 import { Carregando, EstadoErro, EstadoVazio } from '../../ui/Estados.tsx'
 import { IconeAvancar, IconeDeploys, IconeVoltar } from '../../ui/icones.tsx'
+import { STATUS_DEPLOY } from '../deploys/api.ts'
 import './calendario.css'
 
 const diaSemana = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' })
@@ -16,19 +17,28 @@ const AMBIENTES: Record<string, string> = { producao: 'produção', homologacao:
 
 const semPonto = (texto: string) => texto.replace('.', '')
 
-export function Calendario() {
+type Props = {
+  /** Abre o detalhe do deploy (marcar como foi). */
+  aoAbrir?: (id: string) => void
+  /** Ação do estado vazio (ex.: "Novo deploy"). */
+  acaoVazio?: ReactNode
+  /** Muda depois de criar ou marcar um deploy: o calendário busca de novo sem piscar. */
+  versao?: number
+}
+
+export function Calendario(props: Props) {
   const { api, workspaceAtivo } = useAuth()
   const fonte = useMemo<Fonte>(
     () => ({ buscar: api, caminho: '/api/deploys', escopo: workspaceAtivo?.id ?? '' }),
     [api, workspaceAtivo?.id],
   )
-  return <CalendarioDaFonte fonte={fonte} />
+  return <CalendarioDaFonte fonte={fonte} {...props} />
 }
 
-/** Calendário somente leitura de uma fonte de dados (usado também pela demo, sem sessão). */
-export function CalendarioDaFonte({ fonte }: { fonte: Fonte }) {
+/** Calendário de uma fonte de dados; sem `aoAbrir` é somente leitura (a demo, sem sessão). */
+export function CalendarioDaFonte({ fonte, aoAbrir, acaoVazio, versao = 0 }: Props & { fonte: Fonte }) {
   const [semana, setSemana] = useState(() => rotuloSemana(new Date()))
-  const { carregando, erro, vazio, dados, recarregar } = useDeploysDaSemana(semana, fonte)
+  const { carregando, erro, vazio, dados, recarregar } = useDeploysDaSemana(semana, fonte, versao)
   const dias = diasDaSemana(semana)
   const hoje = chaveDia(new Date())
   useAvisoDeErro(erro, 'Os deploys não vieram', 'Pode ser a conexão. O botão "Tentar de novo" está logo ali.')
@@ -70,6 +80,7 @@ export function CalendarioDaFonte({ fonte }: { fonte: Fonte }) {
           icone={<IconeDeploys />}
           titulo="Nenhum deploy nesta semana"
           texto="Semana tranquila por aqui. Quando o time agendar um deploy, ele aparece neste calendário."
+          acao={acaoVazio}
         />
       </div>
     )
@@ -97,17 +108,33 @@ export function CalendarioDaFonte({ fonte }: { fonte: Fonte }) {
               {doDia.map((d) => (
                 <article
                   key={d.id}
-                  className={`dep${d.status === 'cancelado' ? ' dep-cancelado' : ''}`}
+                  className={`dep${d.status === 'cancelado' ? ' dep-cancelado' : ''}${aoAbrir ? ' dep-clicavel' : ''}`}
                   data-testid="cartao-deploy"
                 >
-                  <b className="dep-titulo" title={d.titulo}>
-                    {d.titulo}
-                  </b>
+                  {aoAbrir ? (
+                    <a
+                      className="dep-titulo link-esticado"
+                      title={d.titulo}
+                      href={`#/deploys/${encodeURIComponent(d.id)}`}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        aoAbrir(d.id)
+                      }}
+                    >
+                      {d.titulo}
+                    </a>
+                  ) : (
+                    <b className="dep-titulo" title={d.titulo}>
+                      {d.titulo}
+                    </b>
+                  )}
                   <span className="dep-linha">
                     <span className="dep-hora">{hora.format(new Date(d.agendadoPara))}</span>
                     <span className="dep-ambiente">{AMBIENTES[d.ambiente] ?? d.ambiente}</span>
                   </span>
-                  {d.status === 'cancelado' && <span className="selo selo-neutro">Cancelado</span>}
+                  {d.status !== 'agendado' && STATUS_DEPLOY[d.status] && (
+                    <span className={`selo ${STATUS_DEPLOY[d.status].classe}`}>{STATUS_DEPLOY[d.status].nome}</span>
+                  )}
                 </article>
               ))}
               {doDia.length === 0 && <span className="dia-vazio">Livre</span>}

@@ -1,3 +1,6 @@
+using Portal.Api.Deploys;
+using Portal.Api.Perfil;
+
 namespace Portal.Api.Workspaces;
 
 public record CriarWorkspaceRequest(string? Nome);
@@ -10,6 +13,13 @@ public static class WorkspaceEndpoints
 
         api.MapGet("/me", async (WorkspaceService servico, CancellationToken ct) =>
             Results.Ok(await servico.ObterMeAsync(ct)));
+
+        // Login do GitHub de quem está logado (filtra "Esperando você"). Vale para a pessoa, em todos os workspaces.
+        api.MapPut("/me/github", async (GithubLoginPedido pedido, PerfilService servico, CancellationToken ct) =>
+        {
+            var r = await servico.SalvarGithubLoginAsync(pedido, ct);
+            return r.Tipo == ResultadoTipo.Ok ? Results.Ok(r.Valor) : Results.BadRequest(new { erro = r.Erro });
+        });
 
         api.MapPost("/workspaces", async (CriarWorkspaceRequest pedido, WorkspaceService servico, CancellationToken ct) =>
         {

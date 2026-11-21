@@ -280,4 +280,67 @@ public class GitHubConfigTests
         Assert.NotEmpty(api.Logs.Linhas);
         Assert.DoesNotContain(api.Logs.Linhas, l => l.Contains(Token) || l.Contains("SEGREDO-unico"));
     }
+
+    [Fact]
+    public async Task Put_sem_token_com_configuracao_existente_troca_so_os_repositorios()
+    {
+        await using var api = await NovaApiAsync();
+        var (c, _) = await NovoUsuario(api);
+        using var _c = c;
+        var configurado = await Json(await Salvar(c));
+
+        using var resp = await c.PutAsJsonAsync(Rota, new { repositorios = new[] { "acme/web" } });
+
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await Json(resp);
+        Assert.Equal("wxyz", json.GetProperty("finalToken").GetString());
+        Assert.Equal(new[] { "acme/web" }, json.GetProperty("repositorios").EnumerateArray().Select(e => e.GetString()).ToArray());
+        // Sem token novo, a data de configuração não muda (o banco guarda em microssegundos).
+        var antes = configurado.GetProperty("configuradoEm").GetDateTimeOffset();
+        Assert.True((json.GetProperty("configuradoEm").GetDateTimeOffset() - antes).Duration() < TimeSpan.FromMilliseconds(1));
+        using var escopo = api.Services.CreateScope();
+        var db = escopo.ServiceProvider.GetRequiredService<PortalDbContext>();
+        var linha = await db.Set<ConfiguracaoGitHub>().IgnoreQueryFilters().SingleAsync();
+        var protetor = escopo.ServiceProvider.GetRequiredService<IDataProtectionProvider>().CreateProtector(GitHubConfigService.Proposito);
+        Assert.Equal(Token, protetor.Unprotect(linha.TokenCriptografado));
+    }
+
+    [Fact]
+    public async Task Put_cria_os_repositorios_do_workspace_para_o_formulario_de_deploy()
+    {
+        await using var api = await NovaApiAsync();
+        var (c, _) = await NovoUsuario(api);
+        var (outro, _) = await NovoUsuario(api);
+        using var _c = c;
+        using var _o = outro;
+
+        (await Salvar(c)).Dispose();
+        (await Salvar(c, repos: new[] { "acme/api", "acme/web" })).Dispose();
+
+        var nomes = (await Json(await c.GetAsync("/api/repositorios"))).EnumerateArray()
+            .Select(r => r.GetProperty("nome").GetString()).ToArray();
+        // Tirar da lista não apaga (os deploys do repositório continuam); cada nome aparece uma vez.
+        Assert.Equal(new[] { "acme/api", "acme/portal", "acme/web" }, nomes);
+        Assert.Equal(0, (await Json(await outro.GetAsync("/api/repositorios"))).GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Membro_que_nao_e_dono_recebe_403_ao_salvar_e_apagar()
+    {
+        await using var api = await NovaApiAsync();
+        var (c, ws) = await NovoUsuario(api);
+        using var _c = c;
+        var membro = Guid.NewGuid();
+        using (var escopo = api.Services.CreateScope())
+        {
+            var db = escopo.ServiceProvider.GetRequiredService<PortalDbContext>();
+            db.WorkspaceMembros.Add(new Portal.Api.Workspaces.WorkspaceMembro { WorkspaceId = ws, UsuarioId = membro, Papel = "membro" });
+            await db.SaveChangesAsync();
+        }
+        using var cm = api.ClienteCom(membro, workspace: ws);
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await Salvar(cm)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await cm.DeleteAsync(Rota)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await cm.GetAsync(Rota)).StatusCode);
+    }
 }

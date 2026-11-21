@@ -21,13 +21,25 @@ export function clienteFalso(s: Session | null = sessao) {
       return { data: { subscription: { unsubscribe: vi.fn() } } }
     }),
     signInWithPassword: vi.fn(async () => ({ error: null })),
-    signOut: vi.fn(async () => {
-      ouvinte?.('SIGNED_OUT', null)
+    // "Sair das outras sessões" (scope: 'others') não desloga este aparelho.
+    signOut: vi.fn(async (opcoes?: { scope?: string }) => {
+      if (opcoes?.scope !== 'others') ouvinte?.('SIGNED_OUT', null)
       return { error: null }
     }),
     signUp: vi.fn(async () => ({ data: { user: null, session: null }, error: null })),
     resetPasswordForEmail: vi.fn(async () => ({ data: {}, error: null })),
     updateUser: vi.fn(async () => ({ data: { user: null }, error: null })),
+    // Verificação em duas etapas: por padrão, sem fator cadastrado (aal1 → aal1, nada a pedir).
+    mfa: {
+      getAuthenticatorAssuranceLevel: vi.fn(async () => ({ data: { currentLevel: 'aal1', nextLevel: 'aal1' }, error: null })),
+      listFactors: vi.fn(async () => ({ data: { all: [], totp: [] }, error: null })),
+      enroll: vi.fn(async () => ({
+        data: { id: 'f1', type: 'totp', totp: { qr_code: 'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg"/>', secret: 'SEGREDO123', uri: 'otpauth://x' } },
+        error: null,
+      })),
+      challengeAndVerify: vi.fn(async () => ({ data: {}, error: null })),
+      unenroll: vi.fn(async () => ({ data: {}, error: null })),
+    },
   }
   return { auth, cliente: { auth } as unknown as SupabaseClient, emitir: (evento: string, nova: Session | null) => ouvinte?.(evento, nova) }
 }

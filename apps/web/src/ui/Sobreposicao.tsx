@@ -51,7 +51,7 @@ type Props = {
 }
 
 /** Modal central: para coisas curtas (confirmar, até ~5 campos). */
-export function Modal({ titulo, descricao, aoFechar, children }: Props) {
+export function Modal({ titulo, descricao, aoFechar, children, icone }: Props & { icone?: ReactNode }) {
   const caixa = useRef<HTMLDivElement>(null)
   const id = useId()
   useFocoPreso(caixa)
@@ -71,6 +71,11 @@ export function Modal({ titulo, descricao, aoFechar, children }: Props) {
         <button type="button" className="botao-fechar" aria-label="Fechar" onClick={aoFechar}>
           <IconeX />
         </button>
+        {icone && (
+          <span className="modal-icone" aria-hidden="true">
+            {icone}
+          </span>
+        )}
         <h2 id={`${id}-t`} className="sobre-titulo">
           {titulo}
         </h2>

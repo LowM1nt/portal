@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Portal.Api.Bugs;
 using Portal.Api.Dados.Entidades;
 using Portal.Api.Integracoes.GitHub;
+using Portal.Api.Perfil;
 using Portal.Api.Roadmap;
 using Portal.Api.Workspaces;
 
@@ -32,6 +33,9 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
 
     public DbSet<ItemRoadmap> ItensRoadmap => Set<ItemRoadmap>();
     public DbSet<Bug> Bugs => Set<Bug>();
+
+    /// <summary>Dados da pessoa (login do GitHub). Sem workspace: sempre consultado pelo usuário atual.</summary>
+    public DbSet<PerfilUsuario> PerfisUsuario => Set<PerfilUsuario>();
 
     public DbSet<ConfiguracaoGitHub> ConfiguracoesGitHub => Set<ConfiguracaoGitHub>();
 
@@ -207,6 +211,15 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
             e.Property(b => b.AtualizadoEm).HasColumnName("atualizado_em");
             e.HasOne<Workspace>().WithMany().HasForeignKey(b => b.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(b => new { b.WorkspaceId, b.Status });
+        });
+
+        modelBuilder.Entity<PerfilUsuario>(e =>
+        {
+            e.ToTable("perfis_usuario");
+            e.HasKey(p => p.UsuarioId);
+            e.Property(p => p.UsuarioId).HasColumnName("usuario_id").ValueGeneratedNever();
+            e.Property(p => p.GithubLogin).HasColumnName("github_login").HasMaxLength(PerfilUsuario.GithubLoginMaximo);
+            e.Property(p => p.AtualizadoEm).HasColumnName("atualizado_em");
         });
 
         AplicarFiltroPorWorkspace(modelBuilder);
