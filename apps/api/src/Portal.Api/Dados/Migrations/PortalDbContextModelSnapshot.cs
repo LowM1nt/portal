@@ -259,6 +259,68 @@ namespace Portal.Api.Dados.Migrations
                     b.ToTable("configuracoes_github", (string)null);
                 });
 
+            modelBuilder.Entity("Portal.Api.Roadmap.ItemRoadmap", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizado_em");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<Guid?>("DeployId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deploy_id");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("text")
+                        .HasColumnName("descricao");
+
+                    b.Property<DateOnly?>("Prazo")
+                        .HasColumnType("date")
+                        .HasColumnName("prazo");
+
+                    b.Property<int>("Progresso")
+                        .HasColumnType("integer")
+                        .HasColumnName("progresso");
+
+                    b.Property<Guid?>("PullRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pull_request_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("titulo");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeployId");
+
+                    b.HasIndex("PullRequestId");
+
+                    b.HasIndex("WorkspaceId", "Status");
+
+                    b.ToTable("itens_roadmap", (string)null);
+                });
+
             modelBuilder.Entity("Portal.Api.Workspaces.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -331,6 +393,25 @@ namespace Portal.Api.Dados.Migrations
 
             modelBuilder.Entity("Portal.Api.Integracoes.GitHub.ConfiguracaoGitHub", b =>
                 {
+                    b.HasOne("Portal.Api.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Roadmap.ItemRoadmap", b =>
+                {
+                    b.HasOne("Portal.Api.Dados.Entidades.Deploy", null)
+                        .WithMany()
+                        .HasForeignKey("DeployId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Portal.Api.Dados.Entidades.PullRequest", null)
+                        .WithMany()
+                        .HasForeignKey("PullRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Portal.Api.Workspaces.Workspace", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
