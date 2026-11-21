@@ -59,7 +59,7 @@ describe('DemoPage', () => {
     render(<DemoPage />)
 
     await screen.findAllByTestId('cartao-deploy')
-    expect(screen.getByText('Demonstração com dados fictícios')).toBeInTheDocument()
+    expect(screen.getByText('Você está na demo: tudo aqui é fictício.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /criar|novo|agendar|adicionar|editar|cancelar|excluir|remover/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /criar|novo|agendar|editar|cancelar/i })).not.toBeInTheDocument()
     // Só a navegação de semanas continua disponível.
@@ -80,7 +80,7 @@ describe('DemoPage', () => {
     render(<DemoPage />)
 
     expect(await screen.findByText('Nenhum deploy nesta semana')).toBeInTheDocument()
-    expect(screen.getByText('Demonstração com dados fictícios')).toBeInTheDocument()
+    expect(screen.getByText('Você está na demo: tudo aqui é fictício.')).toBeInTheDocument()
   })
 
   it('erro: status 500 mostra a mensagem e "Tentar de novo"; clicar refaz a chamada', async () => {
@@ -91,7 +91,7 @@ describe('DemoPage', () => {
     })
     render(<DemoPage />)
 
-    expect(await screen.findByText('Não foi possível carregar os deploys.')).toBeInTheDocument()
+    expect(await screen.findByText('Ops, não deu pra carregar os deploys.')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }))
 
     expect(await screen.findAllByTestId('cartao-deploy')).toHaveLength(1)
@@ -127,6 +127,6 @@ describe('App — rota /demo', () => {
     render(<App cliente={null} />)
 
     expect(await screen.findByText('Nenhum deploy nesta semana')).toBeInTheDocument()
-    expect(screen.getByText('Demonstração com dados fictícios')).toBeInTheDocument()
+    expect(screen.getByText('Você está na demo: tudo aqui é fictício.')).toBeInTheDocument()
   })
 })

@@ -1,0 +1,58 @@
+/* Fila de revisão: tabela de linhas de 52 px no computador, cartões no celular.
+   A lista é uma <ul> (cada PR um item) desenhada como tabela, para não duplicar marcação. */
+
+.fila-revisao { display: grid; gap: var(--e4); min-width: 0; }
+
+.fila-filtros { display: grid; grid-template-columns: repeat(2, minmax(0, 240px)); gap: var(--e4); }
+
+.fila { --fila-colunas: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1.2fr) 112px 96px; overflow: hidden; }
+.fila-cab, .fila-linha {
+  display: grid; grid-template-columns: var(--fila-colunas); align-items: center; gap: var(--e4);
+  padding: 0 var(--e5);
+}
+.fila-cab { height: var(--altura-controle); font: var(--t-legenda); color: var(--texto-apagado); white-space: nowrap; }
+.fila-dir { text-align: right; }
+
+.fila-lista { list-style: none; margin: 0; padding: 0; }
+.fila-linha { height: var(--altura-linha); border-top: 1px solid var(--borda); transition: background var(--rapido) var(--curva); }
+.fila-linha:hover { background: color-mix(in srgb, var(--roxo) 6%, transparent); }
+.fila-linha > span { min-width: 0; }
+.fila-autor, .fila-revisores, .fila-tempo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.fila-pr { display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; }
+.fila-titulo {
+  color: var(--texto); font-weight: 600; text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: var(--e1);
+}
+.fila-titulo:hover { color: var(--roxo-claro); text-decoration: underline; text-underline-offset: 3px; }
+.fila-repo { font: var(--t-legenda); font-family: var(--fonte-mono); color: var(--texto-apagado); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fila-autor, .fila-revisores { color: var(--texto-suave); }
+.fila-ci { display: flex; }
+.fila-tempo { text-align: right; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+
+.fila-carregando { display: grid; gap: var(--e3); padding: var(--e5); }
+.osso-fila { height: 36px; }
+
+@media (max-width: 1023px) {
+  .fila { --fila-colunas: minmax(0, 2fr) minmax(0, 1fr) 112px 88px; }
+  .fila-cab span:nth-child(3), .fila-revisores { display: none; }
+}
+
+@media (max-width: 767px) {
+  .fila-filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e3); }
+  .fila { overflow: visible; }
+  .fila-cab { display: none; }
+  .fila-lista { display: grid; gap: var(--e2); padding: var(--e3); }
+  .fila-linha {
+    height: auto; grid-template-columns: minmax(0, 1fr) auto; gap: var(--e2) var(--e3);
+    grid-template-areas: "pr ci" "autor tempo" "rev rev";
+    padding: var(--e3) var(--e4); border: 1px solid var(--borda); border-radius: var(--raio-campo);
+    background: var(--superficie-2);
+  }
+  .fila-pr { grid-area: pr; }
+  .fila-ci { grid-area: ci; align-self: start; }
+  .fila-autor { grid-area: autor; font: var(--t-pequeno); color: var(--texto-suave); }
+  .fila-tempo { grid-area: tempo; font: var(--t-pequeno); }
+  .fila-revisores { display: block; grid-area: rev; font: var(--t-pequeno); color: var(--texto-apagado); }
+  .fila-revisores::before { content: "Revisores · "; }
+}

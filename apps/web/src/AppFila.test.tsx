@@ -31,10 +31,10 @@ function stub() {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('App — fila de revisão', () => {
-  it('com sessão e workspace ativo, o item "Fila de revisão" aparece e trocar para ele renderiza a tela', async () => {
+  it('com sessão e workspace ativo, o item "Revisões" aparece e trocar para ele renderiza a tela', async () => {
     const f = stub()
     render(<App cliente={cliente(sessao).cliente} />)
-    const item = await screen.findByRole('button', { name: 'Fila de revisão' }).catch(() => screen.findByRole('link', { name: 'Fila de revisão' }))
+    const item = await screen.findByRole('link', { name: 'Revisões' })
     fireEvent.click(item)
     expect(await screen.findByText('Nenhuma PR esperando revisão')).toBeInTheDocument()
     const c = f.mock.calls.find(([u]) => String(u).includes('/api/revisoes')) as unknown as [string, RequestInit]
@@ -59,7 +59,7 @@ describe('App — fila de revisão', () => {
     )
     const { auth, cliente: c } = cliente(sessao)
     render(<App cliente={c} />)
-    const item = await screen.findByRole('button', { name: 'Fila de revisão' }).catch(() => screen.findByRole('link', { name: 'Fila de revisão' }))
+    const item = await screen.findByRole('link', { name: 'Revisões' })
     fireEvent.click(item)
     await waitFor(() => expect(auth.signOut).toHaveBeenCalled())
   })
