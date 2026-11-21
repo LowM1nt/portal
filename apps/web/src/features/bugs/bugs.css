@@ -3,7 +3,7 @@
 
 .tela-bugs { display: grid; gap: var(--e4); min-width: 0; }
 
-.bugs { --bugs-colunas: minmax(0, 2.6fr) 104px 128px 104px 96px; overflow: hidden; }
+.bugs { --bugs-colunas: minmax(0, 2.6fr) 104px 128px 144px 96px; overflow: hidden; }
 .bugs-cab, .bugs-linha {
   display: grid; grid-template-columns: var(--bugs-colunas); align-items: center; gap: var(--e4);
   padding: 0 var(--e5);
@@ -27,7 +27,8 @@
 .bugs-relato { font: var(--t-legenda); font-weight: 500; color: var(--texto-apagado); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bugs-sev, .bugs-status { display: flex; }
 .bugs-origem { display: flex; align-items: center; gap: var(--e2); color: var(--texto-suave); white-space: nowrap; }
-.bugs-origem svg { width: 16px; height: 16px; }
+.bugs-origem svg { width: 16px; height: 16px; flex: none; }
+.bugs-origem-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .bugs-quando { text-align: right; color: var(--texto-suave); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .bugs-carregando { display: grid; gap: var(--e3); padding: var(--e5); }

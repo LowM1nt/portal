@@ -142,6 +142,14 @@ export const IconeRoadmap = () => (
   </Icone>
 )
 
+/** Brilhos: a triagem com IA. */
+export const IconeTriagem = () => (
+  <Icone>
+    <path d="M10 3l1.8 4.2L16 9l-4.2 1.8L10 15l-1.8-4.2L4 9l4.2-1.8z" />
+    <path d="M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z" />
+  </Icone>
+)
+
 /** Três pontos: a aba "Mais" do celular. */
 export const IconeMais = () => (
   <Icone>

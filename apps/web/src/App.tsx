@@ -27,6 +27,7 @@ import { contadores, usePendencias } from './features/pendencias/pendencias.ts'
 import { PendenciasProvider } from './features/pendencias/PendenciasProvider.tsx'
 import { FilaRevisao } from './features/revisoes/FilaRevisao.tsx'
 import { Roadmap } from './features/roadmap/Roadmap.tsx'
+import { Triagem } from './features/triagem/Triagem.tsx'
 import { hrefRoadmap, visaoDaRota } from './features/roadmap/visao.ts'
 import { useAvisoDeErro, useAvisos } from './ui/avisos.ts'
 import { Casca, type Fab, type ItemNav } from './ui/Casca.tsx'
@@ -44,6 +45,7 @@ import {
   IconeRoadmap,
   IconeSetaBaixo,
   IconeTime,
+  IconeTriagem,
 } from './ui/icones.tsx'
 import { Aurora, Logo } from './ui/Marca.tsx'
 import type { Comando } from './ui/Paleta.tsx'
@@ -103,6 +105,8 @@ function titulos(destino: Destino): { titulo: string; texto: string } {
       return { titulo: 'Fila de revisão', texto: 'PRs esperando revisão nos repositórios do workspace.' }
     case 'bugs':
       return { titulo: 'Bugs', texto: 'Relatados pelo time e pelo Discord.' }
+    case 'triagem':
+      return { titulo: 'Triagem com IA', texto: 'A IA sugere; você decide. Nada muda sem a sua aprovação.' }
     case 'roadmap':
       return { titulo: 'Roadmap', texto: 'O que vem por aí, da ideia à entrega.' }
     case 'metricas':
@@ -175,6 +179,11 @@ function TelasDoWorkspace() {
     ir('#/bugs?f=a_triar')
   }
 
+  // A fila da triagem são os bugs "a triar": mesma contagem da bolinha de Bugs, vinda dos mesmos dados.
+  const contadorTriagem = c.bugsATriar
+    ? { valor: c.bugsATriar, descricao: plural(c.bugsATriar, 'bug esperando triagem', 'bugs esperando triagem') }
+    : null
+
   const itens: ItemNav[] = [
     { id: 'inicio', nome: 'Início', icone: <IconeInicio /> },
     { id: 'deploys', nome: 'Deploys', icone: <IconeDeploys /> },
@@ -198,8 +207,9 @@ function TelasDoWorkspace() {
       contador: c.bugsATriar ? { valor: c.bugsATriar, descricao: plural(c.bugsATriar, 'bug a triar', 'bugs a triar') } : null,
     },
     { id: 'roadmap', nome: 'Roadmap', icone: <IconeRoadmap />, so: 'desk' },
+    { id: 'triagem', nome: 'Triagem com IA', icone: <IconeTriagem />, so: 'desk', contador: contadorTriagem },
     { id: 'metricas', nome: 'Métricas', icone: <IconeMetricas />, so: 'desk' },
-    { id: 'mais', nome: 'Mais', icone: <IconeMais />, so: 'cel', ativoEm: ['roadmap', 'metricas', 'config', 'conta'] },
+    { id: 'mais', nome: 'Mais', icone: <IconeMais />, so: 'cel', ativoEm: ['roadmap', 'triagem', 'metricas', 'config', 'conta'] },
     { id: 'config', nome: 'Configurações', icone: <IconeConfig />, so: 'desk', lugar: 'pe' },
   ]
 
@@ -272,7 +282,7 @@ function TelasDoWorkspace() {
       </div>
     )
   } else if (destino === 'mais') {
-    corpo = <Mais aoSair={conta.aoSair} />
+    corpo = <Mais aoSair={conta.aoSair} contadores={{ triagem: contadorTriagem }} />
   } else if (destino === 'conta') {
     corpo = <MinhaConta aoSair={conta.aoSair} />
   } else if (!workspaceAtivo) {
@@ -288,6 +298,7 @@ function TelasDoWorkspace() {
   } else if (destino === 'inicio') corpo = <Inicio />
   else if (destino === 'revisoes') corpo = <FilaRevisao soMinhas={rota.params.get('f') !== 'todas'} />
   else if (destino === 'bugs') corpo = <Bugs rota={rota} ir={ir} aoRelatar={relatar} />
+  else if (destino === 'triagem') corpo = <Triagem />
   else if (destino === 'roadmap') corpo = <Roadmap rota={rota} ir={ir} />
   else if (destino === 'metricas') corpo = <Metricas semanas={periodoDaRota(rota.params)} />
   else if (destino === 'config') corpo = <Config rota={rota} />

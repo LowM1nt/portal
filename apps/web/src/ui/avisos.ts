@@ -6,7 +6,8 @@ export const duracaoToast = () => (reduzirMovimento() ? 8000 : 5000)
 
 export type TipoAviso = 'ok' | 'erro' | 'info'
 
-export type Aviso = { tipo: TipoAviso; titulo: string; texto?: string }
+/** `acao`: botão no próprio toast (ex.: "Desfazer"); clicar executa e fecha o aviso. */
+export type Aviso = { tipo: TipoAviso; titulo: string; texto?: string; acao?: { rotulo: string; executar: () => void } }
 
 export type Avisos = {
   /** Mostra um toast e devolve o id dele. Erro não some sozinho; os outros somem em 5 s. */

@@ -4,6 +4,7 @@ import { chamarApi } from './apiClient.ts'
 import { NovaSenha } from './NovaSenha.tsx'
 import { TelasPublicas } from './TelasPublicas.tsx'
 import { VerificarMfa } from './VerificarMfa.tsx'
+import { esquecerWorkspace, lembrarWorkspace, workspaceLembrado } from './workspaceLembrado.ts'
 
 export type Workspace = { id: string; nome: string; papel: string }
 
@@ -185,10 +186,22 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   }, [cliente])
 
   const tentarDeNovo = useCallback(() => setTentativa((n) => n + 1), [])
-  const adicionarWorkspace = useCallback((w: Workspace) => {
-    setResultado((r) => (r?.workspaces ? { ...r, workspaces: [...r.workspaces.filter((x) => x.id !== w.id), w] } : r))
-    setEscolhaId(w.id)
-  }, [])
+  // A escolha fica guardada por usuário: recarregar a página volta ao mesmo workspace.
+  const trocarWorkspace = useCallback(
+    (id: string) => {
+      setEscolhaId(id)
+      if (usuarioId) lembrarWorkspace(usuarioId, id)
+    },
+    [usuarioId],
+  )
+  const adicionarWorkspace = useCallback(
+    (w: Workspace) => {
+      setResultado((r) => (r?.workspaces ? { ...r, workspaces: [...r.workspaces.filter((x) => x.id !== w.id), w] } : r))
+      setEscolhaId(w.id)
+      if (usuarioId) lembrarWorkspace(usuarioId, w.id)
+    },
+    [usuarioId],
+  )
   const definirGithubLogin = useCallback(
     (login: string | null) => setResultado((r) => (r ? { ...r, githubLogin: login } : r)),
     [],
@@ -198,7 +211,14 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   const workspaces = useMemo(() => atual?.workspaces ?? [], [atual])
   const githubLogin = atual?.githubLogin ?? null
   const mfaExigido = atual?.mfaExigido ?? false
-  const workspaceAtivo = workspaces.find((w) => w.id === escolhaId) ?? workspaces[0] ?? null
+  // O lembrado só vale se ainda estiver na lista de /api/me (saiu do time, foi removido…): senão, o primeiro.
+  const lembrado = useMemo(() => (usuarioId ? workspaceLembrado(usuarioId) : null), [usuarioId])
+  const workspaceAtivo =
+    workspaces.find((w) => w.id === escolhaId) ?? workspaces.find((w) => w.id === lembrado) ?? workspaces[0] ?? null
+  const listaCarregada = atual?.workspaces != null
+  useEffect(() => {
+    if (usuarioId && lembrado && listaCarregada && !workspaces.some((w) => w.id === lembrado)) esquecerWorkspace(usuarioId)
+  }, [usuarioId, lembrado, listaCarregada, workspaces])
 
   const workspaceAtivoId = workspaceAtivo?.id ?? null
   const api = useCallback(
@@ -234,14 +254,14 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
       salvarMfaExigido,
       workspaces,
       workspaceAtivo,
-      trocarWorkspace: setEscolhaId,
+      trocarWorkspace,
       adicionarWorkspace,
       sair,
       tentarDeNovo,
       api,
       cliente,
     }),
-    [estado, usuarioId, email, githubLogin, definirGithubLogin, mfaExigido, salvarMfaExigido, workspaces, workspaceAtivo, adicionarWorkspace, sair, tentarDeNovo, api, cliente],
+    [estado, usuarioId, email, githubLogin, definirGithubLogin, mfaExigido, salvarMfaExigido, workspaces, workspaceAtivo, trocarWorkspace, adicionarWorkspace, sair, tentarDeNovo, api, cliente],
   )
 
   return (

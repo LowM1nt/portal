@@ -200,3 +200,71 @@ describe('Bugs — ações', () => {
     expect(document.querySelector('img')).toBeNull()
   })
 })
+
+describe('Bugs — Discord e sugestão da IA', () => {
+  const DO_DISCORD = bug({ id: 'd1', titulo: 'Botão some no Safari', origem: 'discord', autor: 'Rafa Melo', relato: 'some o botão <b>salvar</b>' })
+
+  it('lista e detalhe mostram quem relatou no Discord', async () => {
+    stubApi({ 'GET /api/bugs': [DO_DISCORD, bug({ id: 'm1', titulo: 'Bug do time' })] })
+    montarApp('#/bugs')
+    await waitFor(() => expect(linhas()).toHaveLength(2))
+    expect(within(linhas()[0]).getByText('Rafa Melo')).toBeInTheDocument()
+    expect(within(linhas()[1]).getByText('Time')).toBeInTheDocument()
+    fireEvent.click(within(linhas()[0]).getByRole('link', { name: 'Botão some no Safari' }))
+    const painel = await screen.findByRole('dialog', { name: 'Botão some no Safari' })
+    expect(within(painel).getByText('Rafa Melo · Discord')).toBeInTheDocument()
+  })
+
+  it('a triar com sugestão pronta: "Sugestão da IA" separada do que o time confirmou, tudo em texto', async () => {
+    stubApi({
+      'GET /api/bugs': [DO_DISCORD],
+      'GET /api/triagem': [
+        {
+          bugId: 'd1',
+          titulo: DO_DISCORD.titulo,
+          relato: DO_DISCORD.relato,
+          origem: 'discord',
+          autor: 'Rafa Melo',
+          severidade: 'media',
+          criadoEm: DO_DISCORD.criadoEm,
+          possivelDuplicado: null,
+          sugestao: {
+            status: 'pronta',
+            severidade: 'critica',
+            area: 'Front · formulários',
+            passos: '1. Abrir no Safari\n2. Rolar até o fim',
+            esperado: 'Ver o botão salvar',
+            obtido: '<script>alert(1)</script>',
+            ambiente: 'Safari no iPhone',
+            confianca: 72,
+            evidencias: ['Só no Safari'],
+            erro: null,
+          },
+        },
+      ],
+    })
+    montarApp('#/bugs/d1')
+    const painel = await screen.findByRole('dialog', { name: 'Botão some no Safari' })
+    const sug = await within(painel).findByRole('region', { name: 'Sugestão da IA' })
+    expect(within(sug).getByText(/Ainda não confirmada/)).toBeInTheDocument()
+    expect(within(sug).getByText('Crítica')).toBeInTheDocument()
+    expect(within(sug).getByText('Front · formulários')).toBeInTheDocument()
+    expect(within(sug).getByText('Safari no iPhone')).toBeInTheDocument()
+    expect(within(sug).getByText('<script>alert(1)</script>')).toBeInTheDocument()
+    expect(within(sug).getByRole('meter', { name: 'Confiança da IA' })).toHaveAttribute('aria-valuenow', '72')
+    expect(within(sug).getByRole('link', { name: 'Decidir na Triagem' })).toHaveAttribute('href', '#/triagem')
+    // O que o time confirmou continua separado (e vazio, porque ninguém confirmou ainda).
+    expect(within(sug).queryByText('Sem passos anotados.')).not.toBeInTheDocument()
+    expect(within(painel).getByText('Sem passos anotados.')).toBeInTheDocument()
+    expect(within(painel).getByText('Média')).toBeInTheDocument()
+    expect(within(painel).getByText('some o botão <b>salvar</b>')).toBeInTheDocument()
+    expect(painel.querySelector('script')).toBeNull()
+  })
+
+  it('bug que já saiu da triagem não busca sugestão', async () => {
+    const f = stubApi({ 'GET /api/bugs': [bug({ id: 'r1', titulo: 'Resolvido', status: 'resolvido' })] })
+    montarApp('#/bugs/r1?f=resolvido')
+    await screen.findByRole('dialog', { name: 'Resolvido' })
+    expect(chamadas(f, 'GET /api/triagem')).toHaveLength(0)
+  })
+})

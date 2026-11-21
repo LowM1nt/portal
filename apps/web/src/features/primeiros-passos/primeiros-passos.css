@@ -33,13 +33,7 @@
 .onb-titulo-linha { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--e4); }
 .onb-titulo-linha .contagem { padding-top: var(--e2); }
 
-/* Passo a passo do token */
-.onb-dica {
-  padding: var(--e4); display: grid; gap: var(--e2); border: 1px solid var(--borda); border-radius: var(--raio-campo);
-  background: var(--campo); font: var(--t-pequeno);
-}
-.onb-dica ol { margin: 0; padding: 0 0 0 var(--e5); display: grid; gap: var(--e1); color: var(--texto-suave); }
-.onb-dica a { font-weight: 600; overflow-wrap: anywhere; }
+/* Passo a passo do token: .onb-dica fica em components.css (também usado em Configurações). */
 
 /* Caixas com lista (GitHub conectado, repositórios, convites) */
 .onb-caixa, .onb-repos > .lista-cfg {

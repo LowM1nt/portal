@@ -1,0 +1,75 @@
+/* Triagem com IA: um cartão por bug (cabeçalho, sugestão da IA, ações à direita). Celular: ações empilhadas. */
+
+.triagem { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e4); min-width: 0; }
+.osso-tri { height: 216px; border-radius: var(--raio-cartao); }
+
+.tri { padding: var(--e5); display: grid; gap: var(--e4); min-width: 0; }
+
+.tri-cab { display: grid; gap: var(--e1); min-width: 0; }
+.tri-quem { display: flex; align-items: center; gap: var(--e2); min-width: 0; color: var(--texto-apagado); font: var(--t-legenda); }
+.tri-quem svg { width: 16px; height: 16px; flex: none; }
+.tri-quem-txt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tri-titulo { font: var(--t-subtitulo); letter-spacing: var(--aperto-titulo); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tri-titulo a { color: var(--texto); text-decoration: none; }
+.tri-titulo a:hover { color: var(--roxo-claro); }
+.tri-relato {
+  color: var(--texto-suave); font: var(--t-pequeno); overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Sugestão da IA: caixa de campo, separada do que o time escreveu */
+.tri-sug {
+  padding: var(--e4); display: grid; gap: var(--e3); min-width: 0;
+  border: 1px solid var(--borda); border-radius: var(--raio-campo); background: var(--campo);
+}
+.tri-sug-cab { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); flex-wrap: wrap; min-width: 0; }
+.tri-rotulo { display: inline-flex; align-items: center; gap: var(--e2); white-space: nowrap; }
+.tri-rotulo svg { width: 14px; height: 14px; color: var(--roxo-claro); }
+.tri-selos { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; min-width: 0; }
+.tri-area { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+.tri-conf { display: inline-flex; align-items: center; gap: var(--e2); color: var(--texto-suave); font: var(--t-legenda); white-space: nowrap; }
+.tri-conf .progresso { width: 88px; }
+.tri-conf b { color: var(--texto); font-variant-numeric: tabular-nums; }
+
+.tri-dup { display: flex; align-items: baseline; gap: var(--e2); min-width: 0; font: var(--t-pequeno); color: var(--texto-suave); }
+.tri-dup > span { flex: none; }
+.tri-dup a { min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tri-dup-nota { color: var(--aviso); font-weight: 600; }
+
+.tri-evid { display: grid; gap: var(--e1); min-width: 0; font: var(--t-pequeno); color: var(--texto-suave); }
+.tri-evid b { color: var(--texto); font: 700 12px/1.4 var(--fonte); }
+.tri-evid ul { margin: 0; padding: 0 0 0 var(--e5); display: grid; gap: var(--e1); }
+.tri-evid li { overflow-wrap: anywhere; }
+
+/* Sem sugestão (lendo, falhou, sem chave…) */
+.tri-aviso {
+  padding: var(--e3) var(--e4); display: flex; align-items: center; flex-wrap: wrap; gap: var(--e1) var(--e2); min-width: 0;
+  border: 1px dashed var(--borda-forte); border-radius: var(--raio-campo); color: var(--texto-suave); font: var(--t-pequeno);
+}
+.tri-aviso a { font-weight: 600; }
+.tri-aviso-erro { display: grid; justify-items: start; border-style: solid; border-color: color-mix(in srgb, var(--erro) 35%, transparent); background: var(--erro-fundo); }
+.tri-aviso-erro b { color: var(--erro); }
+.tri-aviso-erro span { overflow-wrap: anywhere; }
+
+.tri-acoes { display: flex; align-items: center; justify-content: flex-end; gap: var(--e3); flex-wrap: wrap; }
+
+.tri-modal-bug { color: var(--texto); font-weight: 600; overflow-wrap: anywhere; }
+
+/* Sugestão da IA no detalhe do bug: caixa separada do que o time confirmou */
+.sug { padding: var(--e4); gap: var(--e3); border: 1px solid var(--borda-forte); border-radius: var(--raio-campo); background: var(--roxo-suave); }
+.sug-cab { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); flex-wrap: wrap; min-width: 0; }
+.sug-nota { color: var(--texto-suave); font: var(--t-pequeno); }
+.sug-nota a { font-weight: 600; }
+.sug-texto { white-space: pre-wrap; }
+.sug-nada { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; color: var(--texto-suave); font: var(--t-pequeno); }
+
+@media (max-width: 767px) {
+  .tri { padding: var(--e4); }
+  .tri-titulo { white-space: normal; overflow-wrap: anywhere; }
+  .tri-dup { flex-wrap: wrap; }
+  .tri-dup a { white-space: normal; overflow-wrap: anywhere; }
+  /* Botões grandes e empilhados: o principal em cima. */
+  .tri-acoes { flex-direction: column-reverse; align-items: stretch; }
+  .tri-acoes .botao { width: 100%; height: var(--altura-controle-g); font-size: 16px; }
+}

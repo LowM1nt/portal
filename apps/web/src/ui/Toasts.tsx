@@ -52,6 +52,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <div className="toast-texto">
                 <b>{t.titulo}</b>
                 {t.texto && <span>{t.texto}</span>}
+                {t.acao && (
+                  <button
+                    type="button"
+                    className="link-botao toast-acao"
+                    onClick={() => {
+                      fechar(t.id)
+                      t.acao?.executar()
+                    }}
+                  >
+                    {t.acao.rotulo}
+                  </button>
+                )}
               </div>
               <button type="button" className="botao-fechar" aria-label="Fechar aviso" onClick={() => fechar(t.id)}>
                 <IconeX />

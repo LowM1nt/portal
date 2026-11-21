@@ -58,3 +58,57 @@ export const salvarGithub = (api: Api, corpo: { token?: string; repositorios: st
   api('/api/integracoes/github', { method: 'PUT', ...json(corpo) })
 
 export const removerGithub = (api: Api) => api('/api/integracoes/github', { method: 'DELETE' })
+
+/** GET /api/integracoes/discord (D-006, D-014). O token nunca volta: só os 4 últimos caracteres. */
+export type ConfigDiscord = {
+  configurado: boolean
+  finalToken: string | null
+  canalId: string | null
+  ultimaLeitura: string | null
+  ultimoErro: string | null
+  configuradoEm?: string | null
+}
+
+/** GET /api/integracoes/ia (D-007, D-014): só diz se há chave e de qual provedor (nem o final da chave volta). */
+export type ConfigIa = { configurado: boolean; provedor: string | null }
+
+/** Provedores que a API aceita hoje. */
+export const PROVEDORES_IA = [{ id: 'gemini', nome: 'Google Gemini' }] as const
+
+export const nomeProvedor = (id: string | null) => PROVEDORES_IA.find((p) => p.id === id)?.nome ?? id ?? ''
+
+/** Mesmo formato que a API aceita: o ID (snowflake) do canal, só números. */
+export const canalValido = (id: string) => /^[0-9]{17,20}$/.test(id)
+
+/** Mesmos tetos da API (DiscordConfigService e IaConfigService). */
+export const LIMITE_TOKEN_DISCORD = 200
+export const LIMITE_CHAVE_IA = 500
+
+function objeto<T extends { configurado: boolean }>(corpo: unknown): T {
+  if (!corpo || typeof corpo !== 'object' || Array.isArray(corpo) || typeof (corpo as T).configurado !== 'boolean') {
+    throw new Error('Resposta inválida')
+  }
+  return corpo as T
+}
+
+export async function lerConfigDiscord(api: Api): Promise<ConfigDiscord> {
+  const r = await api('/api/integracoes/discord')
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return objeto<ConfigDiscord>(await r.json())
+}
+
+/** Sem `token`, só troca o canal (o token guardado continua). */
+export const salvarDiscord = (api: Api, corpo: { token?: string; canalId: string }) =>
+  api('/api/integracoes/discord', { method: 'PUT', ...json(corpo) })
+
+export const removerDiscord = (api: Api) => api('/api/integracoes/discord', { method: 'DELETE' })
+
+export async function lerConfigIa(api: Api): Promise<ConfigIa> {
+  const r = await api('/api/integracoes/ia')
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return objeto<ConfigIa>(await r.json())
+}
+
+export const salvarIa = (api: Api, corpo: { provedor: string; chave: string }) => api('/api/integracoes/ia', { method: 'PUT', ...json(corpo) })
+
+export const removerIa = (api: Api) => api('/api/integracoes/ia', { method: 'DELETE' })

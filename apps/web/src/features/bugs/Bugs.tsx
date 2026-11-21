@@ -6,7 +6,7 @@ import { useAvisoDeErro, useAvisos } from '../../ui/avisos.ts'
 import { Carregando, EstadoErro, EstadoVazio } from '../../ui/Estados.tsx'
 import { IconeBugs, IconeDiscord, IconePessoa } from '../../ui/icones.tsx'
 import type { Rota } from '../../ui/rota.ts'
-import { ABAS, SEVERIDADES, STATUS, abaDoStatus, moverBug, type Aba, type Bug, type Severidade, type StatusBug } from './api.ts'
+import { ABAS, SEVERIDADES, STATUS, abaDoStatus, moverBug, quemRelatou, type Aba, type Bug, type Severidade, type StatusBug } from './api.ts'
 import { PainelBug } from './PainelBug.tsx'
 import './bugs.css'
 
@@ -116,7 +116,7 @@ export function Bugs({ rota, ir, aoRelatar }: Props) {
           <span>Bug</span>
           <span>Severidade</span>
           <span>Status</span>
-          <span className="bugs-col-origem">Origem</span>
+          <span className="bugs-col-origem">Relatado por</span>
           <span className="bugs-dir">Relatado</span>
         </div>
         <ul className="bugs-lista" aria-label={`Bugs: ${ABAS.find((a) => a.id === aba)!.nome}`}>
@@ -137,9 +137,10 @@ export function Bugs({ rota, ir, aoRelatar }: Props) {
                 <span className="bugs-status">
                   <span className={`selo ${st.classe}`}>{st.nome}</span>
                 </span>
-                <span className="bugs-origem bugs-col-origem">
+                <span className="bugs-origem bugs-col-origem" title={b.origem === 'discord' ? 'Veio do Discord' : 'Relatado pelo time'}>
                   {b.origem === 'discord' ? <IconeDiscord /> : <IconePessoa />}
-                  {b.origem === 'discord' ? 'Discord' : 'Time'}
+                  <span className="bugs-origem-txt">{quemRelatou(b)}</span>
+                  <span className="sr">{b.origem === 'discord' ? ' (Discord)' : ''}</span>
                 </span>
                 <span className="bugs-quando">{haQuantoTempo(b.criadoEm, agora)}</span>
               </li>

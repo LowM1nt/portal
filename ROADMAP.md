@@ -233,28 +233,28 @@ Segurança primeiro: todo item novo tem teste de isolamento por workspace/conta 
   - aceite: itens com status (ideia, planejado, em andamento, entregue), prazo, progresso e ligação com deploys/PRs; isolamento por workspace
   - testes: CRUD, mover de status, isolamento, validação
 
-- [~] **P-025 — Bot de bugs no Discord (D-006)** (com o Claude: fechar o Releasy)
+- [x] **P-025 — Bot de bugs no Discord (D-006)** (com o Claude: fechar o Releasy)
   - nível: padrao
   - repo: portal · superfícies: api
   - arquivos: `apps/api/src/Bugs/Discord/`, `ICanalDeBugs`, config por workspace
   - aceite: mensagem no canal configurado vira bug "a triar" com o relato original; token do bot guardado cifrado; mensagens repetidas não duplicam
   - testes: respostas gravadas da API do Discord; deduplicação; token nunca em log
 
-- [~] **P-026 — IA extrai os campos do relato (D-007)** (com o Claude: fechar o Releasy)
+- [x] **P-026 — IA extrai os campos do relato (D-007)** (com o Claude: fechar o Releasy)
   - nível: padrao
   - repo: portal · superfícies: api, ui
   - arquivos: `apps/api/src/Bugs/Extracao/`, tela de integrações (chave do workspace + passo a passo da chave gratuita do Gemini)
   - aceite: relato livre → passos, esperado, obtido, ambiente e severidade sugerida (JSON validado por schema); sem chave entra sem extração; chave cifrada, nunca volta ao front
   - testes: resposta da IA gravada; JSON inválido não quebra; sem chave; chave nunca em log
 
-- [~] **P-027 — Tela de bugs: lista, filtros e detalhe** (com o Claude: fechar o Releasy)
+- [x] **P-027 — Tela de bugs: lista, filtros e detalhe** (com o Claude: fechar o Releasy)
   - nível: padrao
   - repo: portal · superfícies: ui
   - arquivos: `apps/web/src/features/bugs/`
   - aceite: igual ao protótipo (lista por status, filtros de severidade, detalhe em painel lateral, cartões no celular); carregando/vazio/erro
   - testes: teste de componente dos 4 estados + portão visual
 
-- [~] **P-029 — Tela do roadmap: quadro e linha do tempo** (com o Claude: fechar o Releasy)
+- [x] **P-029 — Tela do roadmap: quadro e linha do tempo** (com o Claude: fechar o Releasy)
   - nível: padrao
   - repo: portal · superfícies: ui
   - arquivos: `apps/web/src/features/roadmap/`
