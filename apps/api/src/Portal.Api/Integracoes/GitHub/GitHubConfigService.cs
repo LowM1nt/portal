@@ -19,6 +19,7 @@ public partial class GitHubConfigService
 {
     public const string Proposito = "Portal.Integracoes.GitHub.Token";
     private const int TokenMaximo = 500;
+    public const int RepositoriosMaximos = 50;
 
     private readonly PortalDbContext _db;
     private readonly IDataProtector _protetor;
@@ -49,9 +50,11 @@ public partial class GitHubConfigService
             return new(ResultadoTipo.Invalido, Erro: "O token do GitHub é longo demais.");
 
         var repos = (pedido.Repositorios ?? []).Select(r => r?.Trim() ?? "").ToArray();
-        if (repos.Any(r => !FormatoRepositorio().IsMatch(r)))
+        if (repos.Any(r => !FormatoRepositorio().IsMatch(r) || r.Split('/').Any(parte => parte is "." or "..")))
             return new(ResultadoTipo.Invalido, Erro: "Cada repositório deve estar no formato dono/repo.");
         repos = repos.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (repos.Length > RepositoriosMaximos)
+            return new(ResultadoTipo.Invalido, Erro: $"Dá pra acompanhar até {RepositoriosMaximos} repositórios por workspace.");
 
         var config = await _db.Set<ConfiguracaoGitHub>().FirstOrDefaultAsync(ct);
         if (config is null)

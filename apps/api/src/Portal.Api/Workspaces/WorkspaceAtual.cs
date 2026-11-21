@@ -42,4 +42,22 @@ public static class WorkspaceAtualExtensions
         });
         return builder;
     }
+
+    /// <summary>Depois de <see cref="RequerWorkspace"/>: exige o papel no workspace atual (senão 403).</summary>
+    public static TBuilder RequerPapel<TBuilder>(this TBuilder builder, string papel) where TBuilder : IEndpointConventionBuilder
+    {
+        builder.AddEndpointFilter(async (ctx, next) =>
+        {
+            var http = ctx.HttpContext;
+            var ws = http.RequestServices.GetRequiredService<WorkspaceAtual>();
+            var usuario = http.RequestServices.GetRequiredService<UsuarioAtual>();
+            var db = http.RequestServices.GetRequiredService<PortalDbContext>();
+            var temPapel = ws.Id != Guid.Empty && await db.Set<WorkspaceMembro>()
+                .AnyAsync(m => m.WorkspaceId == ws.Id && m.UsuarioId == usuario.Id && m.Papel == papel, http.RequestAborted);
+            return temPapel
+                ? await next(ctx)
+                : Results.Json(new { erro = "Só o dono do workspace pode mudar isso." }, statusCode: StatusCodes.Status403Forbidden);
+        });
+        return builder;
+    }
 }

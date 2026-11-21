@@ -48,6 +48,8 @@ public static class AuthExtensions
                     o.MetadataAddress = $"{emissor}/.well-known/openid-configuration";
                     o.TokenValidationParameters.ValidateIssuer = true;
                     o.TokenValidationParameters.ValidIssuer = emissor;
+                    // Supabase assina com chaves assimétricas (JWKS): nada de HS256 ou "none" em produção.
+                    o.TokenValidationParameters.ValidAlgorithms = [SecurityAlgorithms.EcdsaSha256, SecurityAlgorithms.RsaSha256];
                 }
                 else
                 {

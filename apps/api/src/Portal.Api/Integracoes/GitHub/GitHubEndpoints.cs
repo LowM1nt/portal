@@ -16,12 +16,12 @@ public static class GitHubEndpoints
         {
             var r = await servico.SalvarAsync(ws.Id, pedido, ct);
             return r.Tipo == ResultadoTipo.Ok ? Results.Ok(r.Valor) : Results.BadRequest(new { erro = r.Erro });
-        });
+        }).RequerPapel(Papeis.Dono);
 
         api.MapDelete("", async (GitHubConfigService servico, CancellationToken ct) =>
         {
             await servico.ApagarAsync(ct);
             return Results.NoContent();
-        });
+        }).RequerPapel(Papeis.Dono);
     }
 }
