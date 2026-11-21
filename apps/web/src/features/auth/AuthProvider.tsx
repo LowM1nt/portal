@@ -11,6 +11,8 @@ type Estado = 'carregando' | 'erro' | 'sem-sessao' | 'pronto'
 
 type Contexto = {
   estado: Estado
+  /** Id de quem está logado (chave das preferências por pessoa); null sem sessão. */
+  usuarioId: string | null
   /** E-mail de quem está logado (mostrado no menu da conta). */
   email: string | null
   /** Login do GitHub de quem está logado (filtra "Esperando você"); null se não configurou. */
@@ -23,6 +25,8 @@ type Contexto = {
   workspaces: Workspace[]
   workspaceAtivo: Workspace | null
   trocarWorkspace: (id: string) => void
+  /** Põe na lista um workspace recém-criado (POST /api/workspaces) e já seleciona ele, sem recarregar tudo. */
+  adicionarWorkspace: (w: Workspace) => void
   sair: () => Promise<void>
   tentarDeNovo: () => void
   api: (caminho: string, init?: RequestInit) => Promise<Response>
@@ -181,6 +185,10 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   }, [cliente])
 
   const tentarDeNovo = useCallback(() => setTentativa((n) => n + 1), [])
+  const adicionarWorkspace = useCallback((w: Workspace) => {
+    setResultado((r) => (r?.workspaces ? { ...r, workspaces: [...r.workspaces.filter((x) => x.id !== w.id), w] } : r))
+    setEscolhaId(w.id)
+  }, [])
   const definirGithubLogin = useCallback(
     (login: string | null) => setResultado((r) => (r ? { ...r, githubLogin: login } : r)),
     [],
@@ -218,6 +226,7 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   const valor = useMemo(
     () => ({
       estado,
+      usuarioId,
       email,
       githubLogin,
       definirGithubLogin,
@@ -226,12 +235,13 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
       workspaces,
       workspaceAtivo,
       trocarWorkspace: setEscolhaId,
+      adicionarWorkspace,
       sair,
       tentarDeNovo,
       api,
       cliente,
     }),
-    [estado, email, githubLogin, definirGithubLogin, mfaExigido, salvarMfaExigido, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
+    [estado, usuarioId, email, githubLogin, definirGithubLogin, mfaExigido, salvarMfaExigido, workspaces, workspaceAtivo, adicionarWorkspace, sair, tentarDeNovo, api, cliente],
   )
 
   return (

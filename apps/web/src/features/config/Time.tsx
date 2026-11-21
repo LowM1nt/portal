@@ -259,7 +259,8 @@ function LinhaConvite({ convite, aoRevogar }: { convite: ConvitePendente; aoRevo
   )
 }
 
-function Convidar({ aoFechar, aoCriado }: { aoFechar: () => void; aoCriado: (c: ConvitePendente) => void }) {
+/** Modal de convite: cria e mostra o link uma vez, com copiar. Também usado nos Primeiros passos. */
+export function Convidar({ aoFechar, aoCriado }: { aoFechar: () => void; aoCriado: (c: ConvitePendente) => void }) {
   const { api } = useAuth()
   const id = useId()
   const [email, setEmail] = useState('')

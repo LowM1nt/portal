@@ -167,7 +167,8 @@ function CartaoGithub({ config, dono, aoMudar }: PropsGithub) {
   )
 }
 
-function CampoToken({ id, valor, aoMudar, invalido }: { id: string; valor: string; aoMudar: (v: string) => void; invalido: boolean }) {
+/** Campo do token do GitHub (senha, sem autocompletar). Também usado nos Primeiros passos. */
+export function CampoToken({ id, valor, aoMudar, invalido }: { id: string; valor: string; aoMudar: (v: string) => void; invalido: boolean }) {
   return (
     <div className="campo">
       <label className="campo-rotulo" htmlFor={id}>
@@ -239,30 +240,102 @@ function TrocarToken({ repositorios, aoFechar, aoSalvo }: { repositorios: string
   )
 }
 
+type PropsEditor = {
+  id: string
+  lista: string[]
+  aoMudar: (lista: string[]) => void
+  /** Mensagem de validação ao adicionar ('' limpa). */
+  aoErro: (erro: string) => void
+  editavel: boolean
+}
+
+/**
+ * Lista de repositórios (dono/repo) com o campo de adicionar: remove, valida o formato, aceita a URL do GitHub e
+ * respeita o limite. Usada em Configurações e nos Primeiros passos.
+ */
+export function EditorRepositorios({ id, lista, aoMudar, aoErro, editavel }: PropsEditor) {
+  const [novo, setNovo] = useState('')
+  const cheio = lista.length >= REPOSITORIOS_MAXIMOS
+
+  function adicionar() {
+    const nome = normalizarRepositorio(novo)
+    if (!nome) return
+    if (!repositorioValido(nome)) return aoErro('Use o formato dono/repo, por exemplo acme/portal.')
+    if (lista.some((r) => r.toLowerCase() === nome.toLowerCase())) return aoErro('Esse repositório já está na lista.')
+    if (cheio) return aoErro(`Dá pra acompanhar até ${REPOSITORIOS_MAXIMOS} repositórios por workspace.`)
+    aoErro('')
+    aoMudar([...lista, nome])
+    setNovo('')
+  }
+
+  return (
+    <>
+      {lista.length === 0 ? (
+        <p className="bloco-vazio">{editavel ? 'Nenhum repositório ainda. Adicione o primeiro aqui embaixo.' : 'Nenhum repositório configurado ainda.'}</p>
+      ) : (
+        <ul className="lista-cfg" aria-label="Repositórios acompanhados">
+          {lista.map((r) => (
+            <li key={r}>
+              <IconeRepositorio />
+              <span className="txt mono">{r}</span>
+              {editavel && (
+                <button
+                  type="button"
+                  className="botao botao-fantasma botao-icone botao-p"
+                  aria-label={`Tirar ${r} da lista`}
+                  onClick={() => aoMudar(lista.filter((x) => x !== r))}
+                >
+                  <IconeLixo />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {editavel && (
+        <div className="campo">
+          <label className="campo-rotulo" htmlFor={`${id}-novo`}>
+            Adicionar repositório
+          </label>
+          <div className="linha-campo">
+            <input
+              id={`${id}-novo`}
+              className="controle mono"
+              placeholder="dono/repo"
+              spellCheck={false}
+              autoComplete="off"
+              value={novo}
+              disabled={cheio}
+              onChange={(e) => setNovo(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  adicionar()
+                }
+              }}
+            />
+            <button type="button" className="botao botao-secundario" onClick={adicionar} disabled={cheio || !novo.trim()}>
+              <IconeNovo />
+              Adicionar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 /** Lista de repositórios (dono/repo). Sem GitHub conectado, o mesmo formulário pede o token. */
 function Repositorios({ config, dono, aoMudar }: PropsGithub) {
   const { api } = useAuth()
   const { avisar } = useAvisos()
   const id = useId()
   const [lista, setLista] = useState(config.repositorios)
-  const [novo, setNovo] = useState('')
   const [token, setToken] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
   const mudou = lista.join('\n') !== config.repositorios.join('\n')
-  const cheio = lista.length >= REPOSITORIOS_MAXIMOS
-
-  function adicionar() {
-    const nome = normalizarRepositorio(novo)
-    if (!nome) return
-    if (!repositorioValido(nome)) return setErro('Use o formato dono/repo, por exemplo acme/portal.')
-    if (lista.some((r) => r.toLowerCase() === nome.toLowerCase())) return setErro('Esse repositório já está na lista.')
-    if (cheio) return setErro(`Dá pra acompanhar até ${REPOSITORIOS_MAXIMOS} repositórios por workspace.`)
-    setErro('')
-    setLista([...lista, nome])
-    setNovo('')
-  }
 
   async function salvar(e: FormEvent) {
     e.preventDefault()
@@ -299,59 +372,9 @@ function Repositorios({ config, dono, aoMudar }: PropsGithub) {
       </div>
       <form className="config-form" onSubmit={(e) => void salvar(e)} noValidate aria-label="Repositórios do GitHub">
         {dono && !config.configurado && <CampoToken id={`${id}-token`} valor={token} aoMudar={setToken} invalido={Boolean(erro) && !token.trim()} />}
-        {lista.length === 0 ? (
-          <p className="bloco-vazio">
-            {dono ? 'Nenhum repositório ainda. Adicione o primeiro aqui embaixo.' : 'Nenhum repositório configurado ainda.'}
-          </p>
-        ) : (
-          <ul className="lista-cfg" aria-label="Repositórios acompanhados">
-            {lista.map((r) => (
-              <li key={r}>
-                <IconeRepositorio />
-                <span className="txt mono">{r}</span>
-                {dono && (
-                  <button
-                    type="button"
-                    className="botao botao-fantasma botao-icone botao-p"
-                    aria-label={`Tirar ${r} da lista`}
-                    onClick={() => setLista(lista.filter((x) => x !== r))}
-                  >
-                    <IconeLixo />
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <EditorRepositorios id={id} lista={lista} aoMudar={setLista} aoErro={setErro} editavel={dono} />
         {dono && (
           <>
-            <div className="campo">
-              <label className="campo-rotulo" htmlFor={`${id}-novo`}>
-                Adicionar repositório
-              </label>
-              <div className="linha-campo">
-                <input
-                  id={`${id}-novo`}
-                  className="controle mono"
-                  placeholder="dono/repo"
-                  spellCheck={false}
-                  autoComplete="off"
-                  value={novo}
-                  disabled={cheio}
-                  onChange={(e) => setNovo(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      adicionar()
-                    }
-                  }}
-                />
-                <button type="button" className="botao botao-secundario" onClick={adicionar} disabled={cheio || !novo.trim()}>
-                  <IconeNovo />
-                  Adicionar
-                </button>
-              </div>
-            </div>
             {erro && (
               <p role="alert" className="campo-erro">
                 {erro}

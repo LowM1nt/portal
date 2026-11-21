@@ -21,6 +21,8 @@ import { DemoPage } from './features/demo/DemoPage.tsx'
 import { NaoEncontrado } from './features/erros/NaoEncontrado.tsx'
 import { Inicio } from './features/inicio/Inicio.tsx'
 import { Mais } from './features/mais/Mais.tsx'
+import { PrimeirosPassos } from './features/primeiros-passos/PrimeirosPassos.tsx'
+import { passoDaRota, usePrimeirosPassosAutomatico } from './features/primeiros-passos/primeirosPassos.ts'
 import { contadores, usePendencias } from './features/pendencias/pendencias.ts'
 import { PendenciasProvider } from './features/pendencias/PendenciasProvider.tsx'
 import { FilaRevisao } from './features/revisoes/FilaRevisao.tsx'
@@ -136,6 +138,9 @@ function TelasDoWorkspace() {
   useAvisoDeErro(estado === 'erro', 'Seus dados não vieram', 'Pode ser a conexão. Dá pra tentar de novo ali no meio da tela.')
 
   const destino = rota.destino
+  usePrimeirosPassosAutomatico(destino === 'inicio', ir)
+  // Primeiros passos: tela cheia, fora da casca (sem dock nem abas).
+  if (rota.partes[0] === 'primeiros-passos') return <PrimeirosPassos passo={passoDaRota(rota.params)} ir={ir} />
   if (destino === null) return <NaoEncontrado />
 
   const pronto = estado === 'pronto' && workspaceAtivo !== null
