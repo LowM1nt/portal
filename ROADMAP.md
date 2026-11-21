@@ -219,7 +219,7 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
 Ritmo: 1 PR por noite no portal e 1 no CRM. Decisões: D-006 a D-009. **Toda tela segue `docs/ui/` e passa pelo portão visual.**
 Segurança primeiro: todo item novo tem teste de isolamento por workspace/conta e de entrada inválida.
 
-- [ ] **P-024 — Bugs: modelo de dados e API por workspace**
+- [x] **P-024 — Bugs: modelo de dados e API por workspace**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - arquivos: `apps/api/src/Bugs/`, migração EF, `apps/api/tests/BugsTests.cs`
