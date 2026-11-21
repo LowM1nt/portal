@@ -78,7 +78,7 @@ Contrato da API:
 | `GET /api/integracoes/github` | Bearer, `X-Workspace-Id` | `{ configurado, finalToken, repositorios, ultimaSincronizacao, ultimoErro }` | 401, 404 |
 | `DELETE /api/integracoes/github` | Bearer, `X-Workspace-Id` | 204 | 401, 404 |
 
-## D-005 — "Aguardando revisão" (P-009) · 20/11/2026 · PROVISÓRIA (aguarda confirmação do dono)
+## D-005 — "Aguardando revisão" (P-009) · 20/11/2026 · aprovada pelo dono
 
 - **Aguardando revisão** = PR **aberta**, **não rascunho** e com **pelo menos um revisor solicitado ainda pendente** (o `requested_reviewers` da listagem do GitHub; quem já revisou sai dessa lista). É o "Review requested" do próprio GitHub.
 - Vem inteira da listagem que o portal já busca: **nenhuma chamada extra** à API do GitHub.
