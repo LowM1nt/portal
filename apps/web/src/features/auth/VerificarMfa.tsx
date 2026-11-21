@@ -8,7 +8,16 @@ import { LayoutL2 } from './LayoutL2.tsx'
  * Login com verificação em duas etapas: depois da senha, pede o código do app autenticador.
  * O Supabase troca a sessão por uma de nível aal2 quando o código confere.
  */
-export function VerificarMfa({ cliente, aoSair }: { cliente: SupabaseClient; aoSair: () => void }) {
+export function VerificarMfa({
+  cliente,
+  aoSair,
+  aoVerificado,
+}: {
+  cliente: SupabaseClient
+  aoSair: () => void
+  /** Código conferido (sessão aal2). */
+  aoVerificado?: () => void
+}) {
   const [codigo, setCodigo] = useState('')
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -27,6 +36,7 @@ export function VerificarMfa({ cliente, aoSair }: { cliente: SupabaseClient; aoS
       if (error || !fator) return setErro('Não achamos sua verificação em duas etapas. Sai e entra de novo, por favor.')
       const r = await cliente.auth.mfa.challengeAndVerify({ factorId: fator.id, code: limpo })
       if (r.error) return setErro('Código não confere ou expirou. Espera o próximo no app e tenta de novo.')
+      aoVerificado?.()
       avisar({ tipo: 'ok', titulo: 'Tudo certo!', texto: 'Verificação em duas etapas confirmada.' })
     } catch {
       setErro('Não deu pra conferir o código. Sem conexão? Tenta de novo em instantes.')

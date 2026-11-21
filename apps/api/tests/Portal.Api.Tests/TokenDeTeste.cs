@@ -11,7 +11,8 @@ public static class TokenDeTeste
     public const string Chave = "chave-simetrica-de-teste-com-pelo-menos-32-bytes!!";
     public const string OutraChave = "outra-chave-simetrica-de-teste-32-bytes-ou-mais!";
 
-    public static string Gerar(Guid sub, string? email = null, string? chave = null, bool expirado = false)
+    /// <param name="aal">Nível da sessão como o Supabase manda: aal1 (só senha) ou aal2 (senha + código); null = sem a claim.</param>
+    public static string Gerar(Guid sub, string? email = null, string? chave = null, bool expirado = false, string? aal = "aal1")
     {
         var agora = DateTime.UtcNow;
         // notBefore sempre antes de expires; expirado = os dois no passado.
@@ -20,6 +21,7 @@ public static class TokenDeTeste
 
         var claims = new List<Claim> { new("sub", sub.ToString()) };
         if (email is not null) claims.Add(new Claim("email", email));
+        if (aal is not null) claims.Add(new Claim("aal", aal));
 
         var credenciais = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chave ?? Chave)),

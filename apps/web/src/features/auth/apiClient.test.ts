@@ -44,6 +44,23 @@ describe('apiClient', () => {
     expect(onNaoAutorizado).toHaveBeenCalledTimes(1)
   })
 
+  it('403 com codigo mfa_necessario chama onMfaNecessario (e não desloga); outro 403 não', async () => {
+    const onNaoAutorizado = vi.fn()
+    const onMfaNecessario = vi.fn()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ erro: 'x', codigo: 'mfa_necessario' }), { status: 403 })))
+    const r = await chamarApi('/api/bugs', { token: 't', workspaceId: 'w1', onNaoAutorizado, onMfaNecessario })
+    expect(onMfaNecessario).toHaveBeenCalledTimes(1)
+    expect(onNaoAutorizado).not.toHaveBeenCalled()
+    // O corpo continua legível para quem chamou.
+    expect(((await r.json()) as { codigo: string }).codigo).toBe('mfa_necessario')
+
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ erro: 'Só o dono do workspace pode mudar isso.' }), { status: 403 })))
+    await chamarApi('/api/workspace/convites', { token: 't', workspaceId: 'w1', onNaoAutorizado, onMfaNecessario })
+    stubFetch(403)
+    await chamarApi('/api/x', { token: 't', workspaceId: null, onNaoAutorizado, onMfaNecessario })
+    expect(onMfaNecessario).toHaveBeenCalledTimes(1)
+  })
+
   it('não chama onNaoAutorizado em respostas que não são 401', async () => {
     stubFetch(200)
     const onNaoAutorizado = vi.fn()

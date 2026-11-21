@@ -14,6 +14,16 @@ afterEach(() => {
   esquecerTema()
 })
 
+/** Ordem global (vitest) da n-ésima chamada a uma rota no fetch falso. */
+function ordemDa(f: ReturnType<typeof stubApi>, chave: string, n = 0) {
+  const indices = f.mock.calls.flatMap(([url, init], i) =>
+    `${init?.method ?? 'GET'} ${new URL(String(url), 'http://teste').pathname}` === chave ? [i] : [],
+  )
+  return f.mock.invocationCallOrder[indices[n]]
+}
+
+const MFA_NECESSARIO = { erro: 'Confirme o código de duas etapas pra continuar.', codigo: 'mfa_necessario' }
+
 const VERIFICADO = { data: { all: [{ id: 'f1', status: 'verified', factor_type: 'totp' }], totp: [{ id: 'f1', status: 'verified' }] }, error: null }
 
 describe('Minha conta', () => {
@@ -75,7 +85,7 @@ describe('Minha conta', () => {
 
 describe('Minha conta — verificação em duas etapas', () => {
   it('ativar: gera o QR code do SDK (data URI), confere o código e liga', async () => {
-    stubApi()
+    const f = stubApi({ 'PUT /api/me/mfa': { mfaExigido: true } })
     const { auth, cliente } = clienteFalso()
     montarApp('#/conta', cliente)
     expect(await screen.findByText('Desligada')).toBeInTheDocument()
@@ -96,6 +106,22 @@ describe('Minha conta — verificação em duas etapas', () => {
     expect(await screen.findByText('Verificação em duas etapas ligada!')).toBeInTheDocument()
     expect(auth.mfa.challengeAndVerify).toHaveBeenCalledWith({ factorId: 'f1', code: '123456' })
     expect(await screen.findByText('Ligada')).toBeInTheDocument()
+    // Depois do verify (sessão aal2), a API passa a exigir o código.
+    expect(chamadas(f, 'PUT /api/me/mfa').map((c) => c.corpo)).toEqual([{ exigir: true }])
+    expect(auth.mfa.challengeAndVerify.mock.invocationCallOrder[0]).toBeLessThan(ordemDa(f, 'PUT /api/me/mfa'))
+  })
+
+  it('ativar: se a API não salvar, avisa e não dá como ligada', async () => {
+    stubApi({ 'PUT /api/me/mfa': 500 })
+    const { cliente } = clienteFalso()
+    montarApp('#/conta', cliente)
+    fireEvent.click(await screen.findByRole('button', { name: 'Ativar' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Gerar QR code' }))
+    const modal = await screen.findByRole('dialog', { name: 'Escaneie o QR code' })
+    fireEvent.change(within(modal).getByLabelText('Código de 6 números'), { target: { value: '123456' } })
+    fireEvent.click(within(modal).getByRole('button', { name: 'Ativar' }))
+    expect(await within(modal).findByRole('alert')).toHaveTextContent('Não deu pra salvar no Releasy')
+    expect(screen.queryByText('Verificação em duas etapas ligada!')).not.toBeInTheDocument()
   })
 
   it('cancelar o cadastro pela metade desfaz o fator não verificado', async () => {
@@ -122,8 +148,8 @@ describe('Minha conta — verificação em duas etapas', () => {
     expect(qrSeguro('data:image/svg+xml;utf-8,<svg/>')).toBe('data:image/svg+xml;utf-8,<svg/>')
   })
 
-  it('desativar pede o código, verifica e só então remove o fator', async () => {
-    stubApi()
+  it('desativar pede o código, verifica, desliga na API e só então remove o fator', async () => {
+    const f = stubApi({ 'GET /api/me': { ...ME, mfaExigido: true }, 'PUT /api/me/mfa': { mfaExigido: false } })
     const { auth, cliente } = clienteFalso()
     auth.mfa.listFactors.mockResolvedValue(VERIFICADO as never)
     montarApp('#/conta', cliente)
@@ -136,7 +162,56 @@ describe('Minha conta — verificação em duas etapas', () => {
     expect(await screen.findByText('Verificação em duas etapas desligada')).toBeInTheDocument()
     expect(auth.mfa.challengeAndVerify).toHaveBeenCalledWith({ factorId: 'f1', code: '654321' })
     expect(auth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'f1' })
-    expect(auth.mfa.challengeAndVerify.mock.invocationCallOrder[0]).toBeLessThan(auth.mfa.unenroll.mock.invocationCallOrder[0])
+    expect(chamadas(f, 'PUT /api/me/mfa').map((c) => c.corpo)).toEqual([{ exigir: false }])
+    expect(auth.mfa.challengeAndVerify.mock.invocationCallOrder[0]).toBeLessThan(ordemDa(f, 'PUT /api/me/mfa'))
+    expect(ordemDa(f, 'PUT /api/me/mfa')).toBeLessThan(auth.mfa.unenroll.mock.invocationCallOrder[0])
+  })
+
+  it('desativar: sem o código nada é chamado; se a API recusar, o fator fica', async () => {
+    const f = stubApi({ 'GET /api/me': { ...ME, mfaExigido: true }, 'PUT /api/me/mfa': () => json(MFA_NECESSARIO, 403) })
+    const { auth, cliente } = clienteFalso()
+    auth.mfa.listFactors.mockResolvedValue(VERIFICADO as never)
+    montarApp('#/conta', cliente)
+    fireEvent.click(await screen.findByRole('button', { name: 'Desativar' }))
+    const modal = screen.getByRole('dialog', { name: 'Desligar a verificação em duas etapas?' })
+    fireEvent.click(within(modal).getByRole('button', { name: 'Desligar' }))
+    expect(within(modal).getByRole('alert')).toHaveTextContent('O código tem 6 números')
+    expect(auth.mfa.challengeAndVerify).not.toHaveBeenCalled()
+    expect(chamadas(f, 'PUT /api/me/mfa')).toHaveLength(0)
+
+    fireEvent.change(within(modal).getByLabelText('Código de 6 números'), { target: { value: '654321' } })
+    fireEvent.click(within(modal).getByRole('button', { name: 'Desligar' }))
+    expect(await within(modal).findByRole('alert')).toHaveTextContent('Não deu pra salvar no Releasy')
+    expect(auth.mfa.unenroll).not.toHaveBeenCalled()
+  })
+
+  it('403 mfa_necessario em qualquer chamada leva à etapa do código, sem deslogar', async () => {
+    let aal2 = false
+    stubApi({
+      'GET /api/me': { ...ME, mfaExigido: true },
+      'GET /api/bugs': () => (aal2 ? json([]) : json(MFA_NECESSARIO, 403)),
+    })
+    const { auth, cliente, emitir } = clienteFalso()
+    auth.mfa.listFactors.mockResolvedValue(VERIFICADO as never)
+    montarApp('#/bugs', cliente)
+    expect(await screen.findByRole('heading', { name: 'Só mais um passo' })).toBeInTheDocument()
+    expect(auth.signOut).not.toHaveBeenCalled()
+
+    fireEvent.change(screen.getByLabelText('Código'), { target: { value: '111222' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar código' }))
+    await waitFor(() => expect(auth.mfa.challengeAndVerify).toHaveBeenCalledWith({ factorId: 'f1', code: '111222' }))
+    aal2 = true
+    emitir('MFA_CHALLENGE_VERIFIED', { ...sessao, access_token: 'tok-aal2' } as Session)
+    expect(await screen.findByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Só mais um passo' })).not.toBeInTheDocument()
+  })
+
+  it('sessão aal2 com duas etapas ligadas antes de a API exigir: liga na API', async () => {
+    const f = stubApi({ 'PUT /api/me/mfa': { mfaExigido: true } })
+    const { auth, cliente } = clienteFalso()
+    auth.mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: 'aal2', nextLevel: 'aal2' }, error: null } as never)
+    montarApp('#/inicio', cliente)
+    await waitFor(() => expect(chamadas(f, 'PUT /api/me/mfa').map((c) => c.corpo)).toEqual([{ exigir: true }]))
   })
 
   it('login com duas etapas ligadas: pede o código antes de mostrar o app', async () => {

@@ -47,11 +47,11 @@ public class ApiFactory : WebApplicationFactory<Program>
         await escopo.ServiceProvider.GetRequiredService<PortalDbContext>().Database.MigrateAsync();
     }
 
-    public HttpClient ClienteCom(Guid usuario, string? email = null, Guid? workspace = null)
+    public HttpClient ClienteCom(Guid usuario, string? email = null, Guid? workspace = null, string? aal = "aal1")
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", TokenDeTeste.Gerar(usuario, email));
+            new AuthenticationHeaderValue("Bearer", TokenDeTeste.Gerar(usuario, email, aal: aal));
         if (workspace is not null) client.DefaultRequestHeaders.Add("X-Workspace-Id", workspace.ToString());
         return client;
     }

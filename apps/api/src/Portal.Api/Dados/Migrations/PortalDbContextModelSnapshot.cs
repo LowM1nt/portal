@@ -348,6 +348,10 @@ namespace Portal.Api.Dados.Migrations
                         .HasColumnType("character varying(39)")
                         .HasColumnName("github_login");
 
+                    b.Property<bool>("MfaExigido")
+                        .HasColumnType("boolean")
+                        .HasColumnName("mfa_exigido");
+
                     b.HasKey("UsuarioId");
 
                     b.ToTable("perfis_usuario", (string)null);

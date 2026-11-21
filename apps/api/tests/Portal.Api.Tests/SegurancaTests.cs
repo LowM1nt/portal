@@ -56,9 +56,10 @@ public class SegurancaSemBancoTests
     public async Task Limite_autenticado_e_por_usuario()
     {
         using var api = new ApiConfigurada(new() { ["RateLimit:AutenticadoPorMinuto"] = "2" });
-        using var a = api.ClienteCom(Guid.NewGuid());
-        using var b = api.ClienteCom(Guid.NewGuid());
-        // Sem X-Workspace-Id a rota responde 400 antes do banco: só o limite importa aqui.
+        // Token aal2 não consulta o banco no filtro de duas etapas (D-013); sem X-Workspace-Id a rota responde 400
+        // antes do banco: só o limite importa aqui.
+        using var a = api.ClienteCom(Guid.NewGuid(), aal: "aal2");
+        using var b = api.ClienteCom(Guid.NewGuid(), aal: "aal2");
         Assert.Equal(HttpStatusCode.BadRequest, (await a.GetAsync("/api/deploys")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await a.GetAsync("/api/deploys")).StatusCode);
         Assert.Equal(HttpStatusCode.TooManyRequests, (await a.GetAsync("/api/deploys")).StatusCode);

@@ -16,6 +16,10 @@ type Contexto = {
   /** Login do GitHub de quem está logado (filtra "Esperando você"); null se não configurou. */
   githubLogin: string | null
   definirGithubLogin: (login: string | null) => void
+  /** A API exige o código de duas etapas desta pessoa (token aal2) em toda rota (D-013). */
+  mfaExigido: boolean
+  /** Liga ou desliga essa exigência na API. Só funciona com a sessão aal2 (logo depois de conferir um código). */
+  salvarMfaExigido: (exigir: boolean) => Promise<boolean>
   workspaces: Workspace[]
   workspaceAtivo: Workspace | null
   trocarWorkspace: (id: string) => void
@@ -26,6 +30,18 @@ type Contexto = {
 }
 
 const AuthContexto = createContext<Contexto | null>(null)
+
+/** A sessão já passou pelo segundo fator (aal2)? Sem o SDK de MFA (testes) ou com erro, responde não. */
+async function sessaoAal2(cliente: SupabaseClient): Promise<boolean> {
+  const mfa = cliente.auth.mfa as SupabaseClient['auth']['mfa'] | undefined
+  if (typeof mfa?.getAuthenticatorAssuranceLevel !== 'function') return false
+  try {
+    const { data, error } = await mfa.getAuthenticatorAssuranceLevel()
+    return !error && data?.currentLevel === 'aal2'
+  } catch {
+    return false
+  }
+}
 
 /**
  * Tem verificação em duas etapas e a sessão ainda não passou por ela (aal1 → aal2)? Sem o SDK de MFA
@@ -46,7 +62,14 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   const [sessao, setSessao] = useState<Session | null>(null)
   const [sessaoLida, setSessaoLida] = useState(false)
   const [tentativa, setTentativa] = useState(0)
-  const [resultado, setResultado] = useState<{ chave: string; workspaces: Workspace[] | null; githubLogin: string | null } | null>(null)
+  const [resultado, setResultado] = useState<{
+    chave: string
+    workspaces: Workspace[] | null
+    githubLogin: string | null
+    mfaExigido: boolean
+  } | null>(null)
+  // A API respondeu 403 mfa_necessario com este token: pede o código. Um token novo (aal2) desfaz sozinho.
+  const [mfaPedidoNoToken, setMfaPedidoNoToken] = useState<string | null>(null)
   // Checagem de duas etapas guardada por usuário: renovar o token não volta ao carregando.
   const [aal, setAal] = useState<{ usuario: string; precisa: boolean } | null>(null)
   const [escolhaId, setEscolhaId] = useState<string | null>(null)
@@ -93,11 +116,37 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
     }
   }, [cliente, usuarioId, tokenAtual])
 
+  /**
+   * PUT /api/me/mfa com o token lido do SDK na hora: logo depois do verify, a sessão aal2 ainda não chegou ao estado
+   * do React (tokenRef pode ser o aal1).
+   */
+  const salvarMfaExigido = useCallback(
+    async (exigir: boolean) => {
+      try {
+        const { data } = await cliente.auth.getSession()
+        const resposta = await chamarApi('/api/me/mfa', {
+          token: data.session?.access_token ?? '',
+          workspaceId: null,
+          onNaoAutorizado: () => {
+            void cliente.auth.signOut()
+          },
+          init: { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exigir }) },
+        })
+        if (!resposta.ok) return false
+        setResultado((r) => (r ? { ...r, mfaExigido: exigir } : r))
+        return true
+      } catch {
+        return false
+      }
+    },
+    [cliente],
+  )
+
   useEffect(() => {
     if (usuarioId === null) return
     let ativo = true
-    const guardar = (workspaces: Workspace[] | null, githubLogin: string | null = null) => {
-      if (ativo) setResultado({ chave, workspaces, githubLogin })
+    const guardar = (workspaces: Workspace[] | null, githubLogin: string | null = null, mfaExigido = false) => {
+      if (ativo) setResultado({ chave, workspaces, githubLogin, mfaExigido })
     }
     chamarApi('/api/me', {
       token: tokenRef.current ?? '',
@@ -109,14 +158,17 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
       .then(async (resposta) => {
         if (resposta.status === 401) return
         if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`)
-        const corpo = (await resposta.json()) as { workspaces: Workspace[]; githubLogin?: unknown }
-        guardar(corpo.workspaces, typeof corpo.githubLogin === 'string' ? corpo.githubLogin : null)
+        const corpo = (await resposta.json()) as { workspaces: Workspace[]; githubLogin?: unknown; mfaExigido?: unknown }
+        const mfaExigido = corpo.mfaExigido === true
+        guardar(corpo.workspaces, typeof corpo.githubLogin === 'string' ? corpo.githubLogin : null, mfaExigido)
+        // Duas etapas ligadas antes de a API exigir (ou um PUT que falhou): sessão aal2 sem a exigência → liga na API.
+        if (!mfaExigido && ativo && (await sessaoAal2(cliente))) await salvarMfaExigido(true)
       })
       .catch(() => guardar(null))
     return () => {
       ativo = false
     }
-  }, [cliente, usuarioId, chave])
+  }, [cliente, usuarioId, chave, salvarMfaExigido])
 
   const sair = useCallback(async () => {
     try {
@@ -137,6 +189,7 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   const atual = resultado?.chave === chave ? resultado : null
   const workspaces = useMemo(() => atual?.workspaces ?? [], [atual])
   const githubLogin = atual?.githubLogin ?? null
+  const mfaExigido = atual?.mfaExigido ?? false
   const workspaceAtivo = workspaces.find((w) => w.id === escolhaId) ?? workspaces[0] ?? null
 
   const workspaceAtivoId = workspaceAtivo?.id ?? null
@@ -148,6 +201,8 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
         onNaoAutorizado: () => {
           void cliente.auth.signOut()
         },
+        // Não desloga: leva para a etapa do código.
+        onMfaNecessario: () => setMfaPedidoNoToken(tokenRef.current),
         init,
       }),
     [cliente, workspaceAtivoId],
@@ -166,6 +221,8 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
       email,
       githubLogin,
       definirGithubLogin,
+      mfaExigido,
+      salvarMfaExigido,
       workspaces,
       workspaceAtivo,
       trocarWorkspace: setEscolhaId,
@@ -174,7 +231,7 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
       api,
       cliente,
     }),
-    [estado, email, githubLogin, definirGithubLogin, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
+    [estado, email, githubLogin, definirGithubLogin, mfaExigido, salvarMfaExigido, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
   )
 
   return (
@@ -183,8 +240,14 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
         <NovaSenha cliente={cliente} aoConcluir={() => setRecuperando(false)} />
       ) : estado === 'sem-sessao' ? (
         <TelasPublicas cliente={cliente} />
-      ) : sessao && aal?.usuario === usuarioId && aal.precisa ? (
-        <VerificarMfa cliente={cliente} aoSair={() => void sair().catch(() => undefined)} />
+      ) : sessao && ((aal?.usuario === usuarioId && aal.precisa) || (mfaPedidoNoToken !== null && mfaPedidoNoToken === tokenAtual)) ? (
+        <VerificarMfa
+          cliente={cliente}
+          aoSair={() => void sair().catch(() => undefined)}
+          aoVerificado={() => {
+            if (!mfaExigido) void salvarMfaExigido(true)
+          }}
+        />
       ) : (
         children
       )}
