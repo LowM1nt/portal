@@ -60,6 +60,7 @@ public class WorkspaceService
             WorkspaceId = workspace.Id,
             UsuarioId = _usuario.Id,
             Papel = Papeis.Dono,
+            Email = MembrosService.NormalizarEmail(_usuario.Email),
         });
         return workspace;
     }

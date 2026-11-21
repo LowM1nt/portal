@@ -6,6 +6,7 @@ using Portal.Api.Bugs;
 using Portal.Api.Dados;
 using Portal.Api.Demo;
 using Portal.Api.Deploys;
+using Portal.Api.Metricas;
 using Portal.Api.Revisoes;
 using Portal.Api.Roadmap;
 using Portal.Api.Seguranca;
@@ -24,6 +25,10 @@ builder.Services.AddScoped<RevisoesService>();
 builder.Services.AddScoped<RoadmapService>();
 builder.Services.AddScoped<BugsService>();
 builder.Services.AddScoped<GitHubConfigService>();
+builder.Services.AddScoped<MembrosService>();
+builder.Services.AddScoped<MetricasService>();
+// Sem provedor de e-mail ainda: o convite devolve o link para o dono copiar.
+builder.Services.AddSingleton<IEnviadorDeEmail, EnviadorDeEmailNulo>();
 builder.Services.AddHttpClient<ClienteGitHub>();
 builder.Services.AddSingleton<EtagsGitHub>();
 builder.Services.AddScoped<ImportadorDePrs>();
@@ -83,6 +88,8 @@ app.MapRevisoes();
 app.MapRoadmap();
 app.MapBugs();
 app.MapGitHub();
+app.MapMembros();
+app.MapMetricas();
 if (demoLigada) app.MapDemo();
 
 app.Run();

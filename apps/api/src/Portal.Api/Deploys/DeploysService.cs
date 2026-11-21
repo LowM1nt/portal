@@ -20,6 +20,10 @@ public partial class DeploysService
     public const int AmbienteMaximo = 50;
     public const string StatusAgendado = "agendado";
     public const string StatusCancelado = "cancelado";
+    /// <summary>Deploy que aconteceu e deu certo (entra nas métricas, D-010).</summary>
+    public const string StatusConcluido = "concluido";
+    /// <summary>Deploy que aconteceu e falhou (entra nas métricas, D-010).</summary>
+    public const string StatusFalhou = "falhou";
 
     private readonly PortalDbContext _db;
 

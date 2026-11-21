@@ -112,3 +112,60 @@ Contrato:
 
 - O MVP do CRM é **para um freelancer por conta**; equipes ficam para a fase 3.
 - Mesmo assim, toda tabela tem `contaId` e toda consulta filtra por ele (isolamento entre contas, com teste).
+
+## D-010 — Fórmula das métricas de entrega · 21/11/2026 · decidida na implementação
+
+Só com o que o modelo já tem (tabelas `deploys`, `pull_requests`, `itens_roadmap`); nada de dado inventado.
+
+- **Deploy acontecido** = deploy com status `concluido` (deu certo) ou `falhou`. O instante do deploy é o
+  `agendado_para` (o modelo não tem hora de término). `agendado` e `cancelado` nunca contam.
+- **Período**: os últimos `semanas × 7` dias até agora (`semanas` = 4 ou 12, padrão 12). O **período anterior** é a
+  janela de mesma duração logo antes. Séries: uma linha por janela de 7 dias, da mais antiga para a mais nova.
+- **Frequência de deploy** = deploys `concluido` no período ÷ dias do período (2 casas). Sem deploy é **0** (contagem real).
+- **Tempo até o deploy (lead time)**, por deploy `concluido`: `agendado_para` − início, em horas. O início é o `criado_em`
+  da **PR mais antiga ligada** ao deploy por um item do roadmap (`itens_roadmap.deploy_id` + `pull_request_id`); sem PR
+  ligada, é o `criado_em` do próprio deploy. Valor do período = **mediana** (2 casas). Amostra negativa (deploy registrado
+  depois de acontecer) fica de fora. Atenção: `pull_requests.criado_em` é quando a PR entrou no portal (1ª importação), não
+  a criação no GitHub.
+- **Taxa de falha** = `falhou` ÷ (`concluido` + `falhou`) no período, em % (1 casa). Sem deploy acontecido → nulo.
+- **Tempo para recuperar**, por repositório e em ordem de tempo: a primeira falha abre um incidente; falhas seguidas são o
+  mesmo incidente; o próximo `concluido` do mesmo repositório o fecha. Amostra = fechamento − primeira falha, em horas,
+  contada no período da primeira falha. Incidente ainda aberto não vira amostra. Valor = **mediana** (2 casas).
+- **Variação** = (atual − anterior) ÷ anterior × 100, em % (1 casa); **nula** se um dos dois for nulo ou o anterior for 0.
+- Sem amostra, lead time, taxa e recuperação vêm **nulos** (nunca 0).
+- Ainda não existe endpoint que marque um deploy como `concluido`/`falhou`: até isso entrar (manual ou via integração),
+  só dados semeados aparecem nas métricas.
+
+Contrato:
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `GET /api/metricas?semanas=4\|12` | Bearer, `X-Workspace-Id` | `{ semanas, inicio, fim, deploysPorDia, tempoAteDeployHoras, taxaDeFalha, tempoParaRecuperarHoras, series: [{ inicio, fim, deploys, falhas, taxaDeFalha, tempoAteDeployHoras, tempoParaRecuperarHoras }] }`; cada métrica é `{ valor, anterior, variacao }` | 400 (`semanas` fora de 4/12), 401, 404 |
+
+## D-011 — Membros, convites e papel admin · 21/11/2026 · decidida na implementação
+
+- Papéis: `dono`, `admin`, `membro`. **Admin, por enquanto, tem os mesmos poderes de membro**: integrações (GitHub),
+  convites e gestão de membros continuam **só do dono**. Afrouxar isso exige item novo no roadmap.
+- **Convite**: token aleatório de 32 bytes (`RandomNumberGenerator`, Base64Url); o banco guarda **só o SHA-256** do token.
+  Validade de 7 dias. O link (`{Web:Url ou Cors:Origem}/convite#token=…`, token no fragmento para não ir a log de servidor)
+  é devolvido **uma única vez**, na criação. Convite só dá papel `membro` ou `admin` (dono, só promovendo depois).
+- Até **50 convites pendentes** (não usados e não expirados) por workspace; o rate limit global vale para tudo.
+- **Aceite**: exige login; confere hash, validade, não usado e e-mail do convite == e-mail do JWT (sem diferenciar
+  maiúsculas). Uso único à prova de corrida: `UPDATE … WHERE usado_em IS NULL` dentro da transação que cria o vínculo.
+  Token inexistente, malformado, expirado, já usado ou de outro e-mail → **a mesma mensagem** (400). Quem já é membro → 409
+  (o convite não é gasto).
+- **Regras de membros**: o dono não remove a si mesmo (400) e ninguém rebaixa o último dono (409). Mudanças de membros e
+  convites do mesmo workspace são serializadas com `SELECT … FOR UPDATE` na linha do workspace. Membro de outro workspace → 404.
+- `workspace_membros.email` guarda o e-mail do JWT de quem criou o workspace ou aceitou o convite (só para exibir; nulo
+  em vínculos antigos).
+- Sem provedor de e-mail: `IEnviadorDeEmail` tem implementação nula; o dono copia o link.
+
+Contrato:
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `GET /api/workspace/membros` | Bearer, `X-Workspace-Id` | `[{ usuarioId, email, papel, voce }]` (donos, admins, membros) | 400, 401, 404 |
+| `POST /api/workspace/convites` | Bearer, `X-Workspace-Id`, `{ email, papel: "membro"\|"admin" }` (só dono) | 201 `{ id, email, papel, expiraEm, link }` | 400 (e-mail/papel inválido, 50 pendentes), 401, 403, 404, 409 (já é membro) |
+| `POST /api/convites/aceitar` | Bearer, `{ token }` | `{ workspaceId, nome, papel }` | 400 (mensagem neutra), 401, 409 (já é membro) |
+| `PATCH /api/workspace/membros/{usuarioId}` | Bearer, `X-Workspace-Id`, `{ papel: "dono"\|"admin"\|"membro" }` (só dono) | `{ usuarioId, email, papel, voce }` | 400, 401, 403, 404, 409 (último dono) |
+| `DELETE /api/workspace/membros/{usuarioId}` | Bearer, `X-Workspace-Id` (só dono) | 204 | 400 (a si mesmo), 401, 403, 404 |

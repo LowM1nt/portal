@@ -22,6 +22,8 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
 
     public DbSet<WorkspaceMembro> WorkspaceMembros => Set<WorkspaceMembro>();
 
+    public DbSet<Convite> Convites => Set<Convite>();
+
     public DbSet<Repositorio> Repositorios => Set<Repositorio>();
 
     public DbSet<Deploy> Deploys => Set<Deploy>();
@@ -68,8 +70,28 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
             e.Property(m => m.WorkspaceId).HasColumnName("workspace_id");
             e.Property(m => m.UsuarioId).HasColumnName("usuario_id");
             e.Property(m => m.Papel).HasColumnName("papel").HasMaxLength(20).IsRequired();
+            e.Property(m => m.Email).HasColumnName("email").HasMaxLength(Convite.EmailMaximo);
             e.HasOne<Workspace>().WithMany().HasForeignKey(m => m.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(m => m.UsuarioId);
+        });
+
+        modelBuilder.Entity<Convite>(e =>
+        {
+            e.ToTable("convites");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).HasColumnName("id");
+            e.Property(c => c.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(c => c.Email).HasColumnName("email").HasMaxLength(Convite.EmailMaximo).IsRequired();
+            e.Property(c => c.Papel).HasColumnName("papel").HasMaxLength(20).IsRequired();
+            e.Property(c => c.TokenHash).HasColumnName("token_hash").IsRequired();
+            e.Property(c => c.CriadoPor).HasColumnName("criado_por");
+            e.Property(c => c.CriadoEm).HasColumnName("criado_em");
+            e.Property(c => c.ExpiraEm).HasColumnName("expira_em");
+            e.Property(c => c.UsadoEm).HasColumnName("usado_em");
+            e.Property(c => c.UsadoPor).HasColumnName("usado_por");
+            e.HasOne<Workspace>().WithMany().HasForeignKey(c => c.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => c.TokenHash).IsUnique();
+            e.HasIndex(c => new { c.WorkspaceId, c.UsadoEm, c.ExpiraEm });
         });
 
         modelBuilder.Entity<Repositorio>(e =>
