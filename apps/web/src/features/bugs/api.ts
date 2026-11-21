@@ -13,7 +13,12 @@ export type Bug = {
   status: StatusBug
   criadoEm: string
   atualizadoEm: string
+  /** Nome visível de quem relatou fora do portal (Discord); null nos bugs do time. Texto de fora: sempre texto puro. */
+  autor?: string | null
 }
+
+/** "Rafa Melo" (Discord), "Discord" (sem nome) ou "Time" (relatado no portal). */
+export const quemRelatou = (b: Pick<Bug, 'origem' | 'autor'>) => b.autor?.trim() || (b.origem === 'discord' ? 'Discord' : 'Time')
 
 export type NovoBug = {
   titulo: string

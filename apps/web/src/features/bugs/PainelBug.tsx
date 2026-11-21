@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { haQuantoTempo } from '../revisoes/tempo.ts'
+import { SugestaoNoBug } from '../triagem/SugestaoNoBug.tsx'
 import { Painel } from '../../ui/Sobreposicao.tsx'
-import { SEVERIDADES, STATUS, type Bug, type StatusBug } from './api.ts'
+import { SEVERIDADES, STATUS, quemRelatou, type Bug, type StatusBug } from './api.ts'
 
 type Props = {
   /** `null`: o link aponta para um bug que não existe (ou é de outro workspace). */
@@ -95,6 +96,11 @@ export function PainelBug({ bug, aoFechar, aoMover }: Props) {
         <dd>
           <span className={`selo ${st.classe}`}>{st.nome}</span>
         </dd>
+        <dt>Relatado por</dt>
+        <dd>
+          {quemRelatou(bug)}
+          {bug.origem === 'discord' && bug.autor?.trim() ? ' · Discord' : ''}
+        </dd>
         <dt>Relatado</dt>
         <dd>
           {haQuantoTempo(bug.criadoEm, new Date())} · {dataHora.format(new Date(bug.criadoEm))}
@@ -104,6 +110,8 @@ export function PainelBug({ bug, aoFechar, aoMover }: Props) {
         <span className="secao-t">Relato original</span>
         <Texto valor={bug.relato} vazio="Ninguém escreveu um relato." />
       </div>
+      {/* Só enquanto está "a triar": depois disso, vale o que o time confirmou (os campos abaixo). */}
+      {bug.status === 'a_triar' && <SugestaoNoBug bugId={bug.id} />}
       <div className="secao">
         <span className="secao-t">Passos pra reproduzir</span>
         <Texto valor={bug.passos} vazio="Sem passos anotados." />

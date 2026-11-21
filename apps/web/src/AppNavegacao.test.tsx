@@ -45,12 +45,13 @@ afterEach(() => {
 })
 
 describe('Casca — destinos, contadores e Mais', () => {
-  it('dock com Início, Deploys, Revisões, Bugs, Roadmap, Métricas e Configurações no pé; abas do celular com Mais', async () => {
+  it('dock com Início, Deploys, Revisões, Bugs, Roadmap, Triagem, Métricas e Configurações no pé; abas do celular com Mais', async () => {
     stubApi()
     montarApp('/')
     await screen.findByText('Tudo quietinho por aqui')
     const nomes = within(nav()).getAllByRole('link').map((a) => a.textContent)
-    expect(nomes).toEqual(['Início', 'Deploys', 'Revisões', 'Bugs', 'Roadmap', 'Métricas', 'Mais', 'Configurações'])
+    expect(nomes).toEqual(['Início', 'Deploys', 'Revisões', 'Bugs', 'Roadmap', 'Triagem com IA', 'Métricas', 'Mais', 'Configurações'])
+    expect(link('Triagem com IA').closest('li')).toHaveClass('so-desk')
     expect(link('Roadmap').closest('li')).toHaveClass('so-desk')
     expect(link('Métricas').closest('li')).toHaveClass('so-desk')
     expect(link('Mais').closest('li')).toHaveClass('so-cel')
@@ -165,6 +166,7 @@ describe('Casca — busca rápida e arrastar', () => {
       'Revisões',
       'Bugs',
       'Roadmap',
+      'Triagem com IA',
       'Métricas',
       'Configurações',
     ])

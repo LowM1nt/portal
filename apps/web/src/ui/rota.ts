@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 /** Telas que existem na casca autenticada. "Mais" só aparece como aba no celular. */
-export type Destino = 'inicio' | 'deploys' | 'revisoes' | 'bugs' | 'roadmap' | 'metricas' | 'config' | 'conta' | 'mais'
+export type Destino = 'inicio' | 'deploys' | 'revisoes' | 'bugs' | 'triagem' | 'roadmap' | 'metricas' | 'config' | 'conta' | 'mais'
 
-const DESTINOS: readonly Destino[] = ['inicio', 'deploys', 'revisoes', 'bugs', 'roadmap', 'metricas', 'config', 'conta', 'mais']
+const DESTINOS: readonly Destino[] = ['inicio', 'deploys', 'revisoes', 'bugs', 'triagem', 'roadmap', 'metricas', 'config', 'conta', 'mais']
 
 /** Telas de quem ainda não entrou; logado, elas levam ao Início. */
 export const PUBLICAS = ['entrar', 'criar-conta', 'esqueci'] as const

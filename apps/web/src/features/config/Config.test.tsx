@@ -42,9 +42,10 @@ describe('Configurações — Repositórios e integrações', () => {
     const abas = await screen.findByRole('navigation', { name: 'Seções das configurações' })
     expect(within(abas).getByRole('link', { name: 'Repositórios e integrações' })).toHaveAttribute('aria-current', 'true')
     expect(within(abas).getByRole('link', { name: 'Time e workspace' })).toHaveAttribute('href', '#/config/time')
-    expect(await screen.findAllByText('Em breve')).toHaveLength(2)
-    expect(screen.getByText('Discord')).toBeInTheDocument()
-    expect(screen.getByText('Slack')).toBeInTheDocument()
+    // GitHub, Discord e IA lado a lado; nada de "Em breve" no lugar do Discord.
+    expect(await screen.findByText('Discord', { selector: '.integ-cartao > b' })).toBeInTheDocument()
+    expect(screen.getByText('Triagem com IA', { selector: '.integ-cartao > b' })).toBeInTheDocument()
+    expect(screen.queryByText('Em breve')).not.toBeInTheDocument()
   })
 
   it('dono conecta: token em campo de senha, repositório validado (aceita a URL) e o token nunca volta pra tela', async () => {

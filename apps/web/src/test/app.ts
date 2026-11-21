@@ -49,9 +49,15 @@ export const json = (corpo: unknown, status = 200) => new Response(JSON.stringif
 /** Resposta de uma rota: corpo JSON, status HTTP, 'pendente' (nunca responde) ou função. */
 export type Resposta = unknown | number | 'pendente' | ((init: RequestInit | undefined, url: URL) => Response | Promise<Response>)
 
+/** Integrações que respondem objeto (não lista): sem resposta no teste, vêm desconectadas. */
+const PADRAO: Record<string, unknown> = {
+  'GET /api/integracoes/discord': { configurado: false, finalToken: null, canalId: null, ultimaLeitura: null, ultimoErro: null },
+  'GET /api/integracoes/ia': { configurado: false, provedor: null },
+}
+
 /**
  * Troca o fetch por um roteador: a chave é "MÉTODO /caminho" (ex.: "GET /api/bugs").
- * /api/me responde o workspace Acme; rota sem resposta devolve lista vazia.
+ * /api/me responde o workspace Acme; Discord e IA vêm desconectados; outra rota sem resposta devolve lista vazia.
  */
 export function stubApi(rotas: Record<string, Resposta> = {}) {
   const f = vi.fn(async (url: string | URL, init?: RequestInit): Promise<Response> => {
@@ -59,7 +65,7 @@ export function stubApi(rotas: Record<string, Resposta> = {}) {
     const chave = `${init?.method ?? 'GET'} ${u.pathname}`
     if (chave === 'GET /api/me' && !('GET /api/me' in rotas)) return json(ME)
     const r = rotas[chave]
-    if (r === undefined) return json([])
+    if (r === undefined) return json(chave in PADRAO ? PADRAO[chave] : [])
     if (r === 'pendente') return new Promise<Response>(() => {})
     if (typeof r === 'number') return new Response('', { status: r })
     if (typeof r === 'function') return (r as (init: RequestInit | undefined, url: URL) => Response | Promise<Response>)(init, u)
