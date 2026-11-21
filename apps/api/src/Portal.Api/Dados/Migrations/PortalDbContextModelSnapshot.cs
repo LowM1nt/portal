@@ -395,6 +395,64 @@ namespace Portal.Api.Dados.Migrations
                     b.ToTable("itens_roadmap", (string)null);
                 });
 
+            modelBuilder.Entity("Portal.Api.Workspaces.Convite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<Guid>("CriadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("criado_por");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<DateTimeOffset>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<string>("Papel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("papel");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTimeOffset?>("UsadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_em");
+
+                    b.Property<Guid?>("UsadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usado_por");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("WorkspaceId", "UsadoEm", "ExpiraEm");
+
+                    b.ToTable("convites", (string)null);
+                });
+
             modelBuilder.Entity("Portal.Api.Workspaces.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -433,6 +491,11 @@ namespace Portal.Api.Dados.Migrations
                     b.Property<Guid>("UsuarioId")
                         .HasColumnType("uuid")
                         .HasColumnName("usuario_id");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
 
                     b.Property<string>("Papel")
                         .IsRequired()
@@ -495,6 +558,15 @@ namespace Portal.Api.Dados.Migrations
                         .HasForeignKey("PullRequestId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Portal.Api.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Workspaces.Convite", b =>
+                {
                     b.HasOne("Portal.Api.Workspaces.Workspace", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
