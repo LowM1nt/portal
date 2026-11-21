@@ -53,7 +53,9 @@ describe('App', () => {
     await usuario.type(await screen.findByLabelText('E-mail'), 'dono@exemplo.com')
     await usuario.type(screen.getByLabelText('Senha'), 'segredo')
     await usuario.click(screen.getByRole('button', { name: 'Entrar' }))
-    expect(await screen.findByText('dono@exemplo.com')).toBeInTheDocument()
+    // o e-mail e o "Sair" ficam no menu da conta (avatar no pé do dock)
+    await usuario.click(await screen.findByRole('button', { name: 'Sua conta' }))
+    expect(screen.getByText('dono@exemplo.com')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
   })
 
@@ -69,7 +71,8 @@ describe('App', () => {
   it('com sessão salva, entra direto e sai ao clicar em Sair', async () => {
     const usuario = userEvent.setup()
     render(<App cliente={clienteFalso({ user: { email: 'dono@exemplo.com' } } as Session)} />)
-    await usuario.click(await screen.findByRole('button', { name: 'Sair' }))
+    await usuario.click(await screen.findByRole('button', { name: 'Sua conta' }))
+    await usuario.click(screen.getByRole('button', { name: 'Sair' }))
     await waitFor(() => expect(screen.getByRole('form', { name: 'Entrar no painel' })).toBeInTheDocument())
   })
 })

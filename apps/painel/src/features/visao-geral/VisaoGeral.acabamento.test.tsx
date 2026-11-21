@@ -113,6 +113,8 @@ describe('VisaoGeral — acabamento (P-019)', () => {
     expect(botao).toHaveClass('botao')
     expect(botao.className.split(/\s+/).filter((c) => c.startsWith('botao-')).length).toBeGreaterThan(0)
     await usuario.click(botao)
+    expect(inserts).toHaveLength(0) // antes, a confirmação
+    await usuario.click(screen.getByRole('button', { name: 'Sim, cancelar post' }))
     expect(inserts).toEqual([{ tabela: 'comandos', valor: { comando: 'cancelar_post' } }])
   })
 

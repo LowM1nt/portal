@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { formatarNumero } from '../../formatar.ts'
+import { Carregando, EstadoErro, EstadoVazio } from '../../ui/Estados.tsx'
+import { IconeCheck, IconeLua, IconePausa, IconePost } from '../../ui/icones.tsx'
 import BotaoComando from './BotaoComando.tsx'
 import { buscarVisaoGeral, type DadosVisaoGeral, type TarefaDaNoite } from './dados.ts'
 
@@ -26,9 +28,9 @@ const reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL
 
 const SELO: Record<TarefaDaNoite['estado'], { rotulo: string; classe: string }> = {
   merge: { rotulo: 'Merge feito', classe: 'selo selo-ok' },
-  pr_aberta: { rotulo: 'PR aberta', classe: 'selo selo-roxo' },
+  pr_aberta: { rotulo: 'PR aberta', classe: 'selo selo-andamento' },
   reprovada: { rotulo: 'Reprovada', classe: 'selo selo-erro' },
-  fila_dificeis: { rotulo: 'Fila de difíceis', classe: 'selo selo-atencao' },
+  fila_dificeis: { rotulo: 'Fila de difíceis', classe: 'selo selo-aviso' },
 }
 
 function formatarHora(iso: string): string {
@@ -86,8 +88,15 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
         cliente={cliente}
         comando="pausar"
         rotulo="Pausar agente"
+        icone={<IconePausa />}
         variante="botao-perigo"
+        confirmacao={{
+          titulo: 'Pausar o agente?',
+          texto: 'O pedido vai para a fila de comandos e o agente pausa assim que ler.',
+          acao: 'Sim, pausar',
+        }}
         ok="Comando de pausa enviado."
+        okTexto="O agente pausa assim que ler o pedido."
         falha="Não foi possível enviar o comando de pausa."
       />
     </div>
@@ -95,39 +104,51 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
 
   if (estado.situacao === 'carregando') {
     return (
-      <div className="grade">
-        {cabecalho(
-          'Visão geral',
-          <p className="suave pequeno" aria-busy="true">
-            Carregando…
-          </p>,
-        )}
+      <div className="tela">
+        {cabecalho('Visão geral', <p>Buscando como foi a noite…</p>)}
+        <Carregando className="tela">
+          <span className="osso osso-noite" />
+          <div className="grade grade-4">
+            {[1, 2, 3, 4].map((n) => (
+              <span key={n} className="osso osso-numero" />
+            ))}
+          </div>
+          <span className="osso osso-bloco" />
+        </Carregando>
       </div>
     )
   }
   if (estado.situacao === 'erro') {
     return (
-      <div className="grade">
-        {cabecalho(
-          'Visão geral',
-          <div className="grupo-botoes">
-            <p role="alert" className="selo selo-erro">
-              Não foi possível carregar a visão geral.
-            </p>
-            <button type="button" className="botao" onClick={tentarDeNovo}>
-              Tentar de novo
-            </button>
-          </div>,
-        )}
+      <div className="tela">
+        {cabecalho('Visão geral', <p>Resumo da última noite do agente.</p>)}
+        <div className="painel">
+          <EstadoErro
+            titulo="Não foi possível carregar a visão geral."
+            texto="Seus dados estão seguros. Pode ser a conexão; tenta de novo?"
+            aoTentar={tentarDeNovo}
+          />
+        </div>
       </div>
     )
   }
   if (estado.situacao === 'vazio') {
     return (
-      <div className="grade">
+      <div className="tela">
         {cabecalho('Visão geral', <Sincronizacao em={estado.dados.sincronizadoEm} />)}
-        <p className="vazio">Nenhuma atividade do agente na última noite.</p>
-        <ProximoPost cliente={cliente} post={estado.dados.proximoPost} />
+        <div className="grade grade-2">
+          <section className="painel" aria-label="Última noite">
+            <header>
+              <h2>Última noite</h2>
+            </header>
+            <EstadoVazio
+              icone={<IconeLua />}
+              titulo="Nenhuma atividade do agente na última noite."
+              texto="Quando ele rodar, a linha da noite e os números aparecem aqui."
+            />
+          </section>
+          <ProximoPost cliente={cliente} post={estado.dados.proximoPost} />
+        </div>
       </div>
     )
   }
@@ -140,11 +161,11 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
   ].filter((p): p is string => p !== false)
 
   return (
-    <div className="grade">
+    <div className="tela">
       {cabecalho(
         tituloDaNoite(d.noiteTs ?? ''),
         <>
-          <p className="suave pequeno">
+          <p>
             Resultado: {d.prsComMerge} {d.prsComMerge === 1 ? 'PR com merge' : 'PRs com merge'}.
             {d.minutosFora > 0 && ` A internet caiu por ${d.minutosFora} min.`}
           </p>
@@ -166,14 +187,16 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
           <h2>Tarefas da noite</h2>
         </header>
         {d.itensDaNoite.length === 0 ? (
-          <p className="vazio">Nenhuma tarefa registrada nesta noite.</p>
+          <EstadoVazio icone={<IconeLua />} titulo="Nenhuma tarefa registrada nesta noite." texto="O resumo chegou, mas sem tarefas." />
         ) : (
           <table className="tabela">
             <thead>
               <tr>
                 <th scope="col">Tarefa</th>
-                <th scope="col">Resultado</th>
-                <th scope="col" className="num">
+                <th scope="col" className="col-resultado">
+                  Resultado
+                </th>
+                <th scope="col" className="num col-tokens">
                   Tokens
                 </th>
               </tr>
@@ -181,7 +204,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
             <tbody>
               {d.itensDaNoite.map((t) => (
                 <tr key={t.id}>
-                  <td>
+                  <td title={t.titulo ? `${t.item} ${t.titulo}` : t.item}>
                     <b>{t.item}</b>
                     {t.titulo && <> {t.titulo}</>}
                   </td>
@@ -204,7 +227,7 @@ export default function VisaoGeral({ cliente }: { cliente: SupabaseClient }) {
             <h2>Precisa de você</h2>
           </header>
           {pendencias.length === 0 ? (
-            <p className="vazio">Nada precisa de você agora.</p>
+            <EstadoVazio icone={<IconeCheck />} titulo="Nada precisa de você agora." texto="Pode ir tomar um café." />
           ) : (
             <ul className="lista">
               {pendencias.map((p) => (
@@ -229,7 +252,7 @@ function Numero({ rotulo, valor }: { rotulo: string; valor: string }) {
 
 function LinhaDaNoite({ tarefas, minutosFora }: { tarefas: TarefaDaNoite[]; minutosFora: number }) {
   return (
-    <section className="noite" aria-label="Linha da noite">
+    <section className="painel noite" aria-label="Linha da noite">
       <div className="noite-barra">
         {tarefas.map((t) => (
           <span
@@ -268,7 +291,7 @@ function LinhaDaNoite({ tarefas, minutosFora }: { tarefas: TarefaDaNoite[]; minu
 
 function Sincronizacao({ em }: { em: string | null }) {
   return (
-    <p className="suave pequeno">
+    <p className="pequeno">
       <span>Última sincronização:</span> {em ? <time dateTime={em}>{haQuanto(em)}</time> : 'nunca'}
     </p>
   )
@@ -283,31 +306,40 @@ function ProximoPost({ cliente, post }: { cliente: SupabaseClient; post: DadosVi
     <section className="painel" aria-label="Próximo post">
       <header>
         <h2>Próximo post</h2>
+        {post?.publicaEm && (
+          <span className="post-quando">Publica em {diaHora.format(new Date(post.publicaEm)).replace(':', 'h')}</span>
+        )}
       </header>
       {post ? (
         <>
-          <p className={longo && !aberto ? 'pequeno suave texto-limitado' : 'pequeno suave'}>{post.texto}</p>
-          {longo && !aberto && (
-            <button type="button" className="botao botao-quieto" onClick={() => setAberto(true)}>
-              Ler inteiro
-            </button>
-          )}
-          {post.publicaEm && (
-            <p className="suave pequeno">Publica em {diaHora.format(new Date(post.publicaEm)).replace(':', 'h')}</p>
-          )}
-          <div className="pe">
+          <p className={longo && !aberto ? 'post-texto texto-limitado' : 'post-texto'}>{post.texto}</p>
+          <div className="post-acoes">
+            {longo && !aberto ? (
+              <button type="button" className="botao botao-fantasma botao-p" onClick={() => setAberto(true)}>
+                Ler inteiro
+              </button>
+            ) : (
+              <span />
+            )}
             <BotaoComando
               cliente={cliente}
               comando="cancelar_post"
               rotulo="Cancelar post"
               variante="botao-perigo"
+              confirmacao={{
+                titulo: 'Cancelar este post?',
+                texto: 'O agente recebe o pedido e o post não sai no horário marcado.',
+                acao: 'Sim, cancelar post',
+                voltar: 'Manter post',
+              }}
               ok="Pedido de cancelamento enviado."
+              okTexto="O agente cancela o post assim que ler o pedido."
               falha="Não foi possível cancelar o post."
             />
           </div>
         </>
       ) : (
-        <p className="vazio">Nenhum post agendado.</p>
+        <EstadoVazio icone={<IconePost />} titulo="Nenhum post agendado." texto="Quando o agente agendar um post, ele aparece aqui." />
       )}
     </section>
   )

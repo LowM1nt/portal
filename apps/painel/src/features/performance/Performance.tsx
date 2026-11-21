@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { formatarNumero } from "../../formatar.ts";
+import { Carregando, EstadoErro, EstadoVazio } from "../../ui/Estados.tsx";
+import { IconePerformance } from "../../ui/icones.tsx";
 import { buscarPerformance, type Indicadores, type Periodo } from "./dados.ts";
 
 type Estado =
@@ -66,81 +68,91 @@ export default function Performance({ cliente }: { cliente: SupabaseClient }) {
   const semValor = "—";
 
   return (
-    <div className="grade">
-      <h1>Performance</h1>
-      <div className="abas" role="tablist" aria-label="Período">
-        {([7, 30] as const).map((p) => (
-          <button
-            key={p}
-            type="button"
-            role="tab"
-            className="aba"
-            aria-selected={periodo === p}
-            onClick={() => escolher(p)}
-          >
-            {p} dias
-          </button>
-        ))}
+    <div className="tela">
+      <div className="cabecalho">
+        <div className="titulo">
+          <h1>Performance</h1>
+          <p>Como o agente anda no período escolhido.</p>
+        </div>
+        <div className="abas" role="tablist" aria-label="Período">
+          {([7, 30] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              role="tab"
+              className="aba"
+              aria-selected={periodo === p}
+              onClick={() => escolher(p)}
+            >
+              {p} dias
+            </button>
+          ))}
+        </div>
       </div>
 
       {estado.situacao === "carregando" && (
-        <p className="suave" aria-busy="true">
-          Carregando…
-        </p>
+        <Carregando className="grade grade-5">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <span key={n} className="osso osso-numero" />
+          ))}
+        </Carregando>
       )}
       {estado.situacao === "erro" && (
         <div className="painel">
-          <p role="alert" className="selo selo-erro">
-            Não foi possível carregar a performance.
-          </p>
-          <button type="button" className="botao" onClick={tentarDeNovo}>
-            Tentar de novo
-          </button>
+          <EstadoErro
+            titulo="Não foi possível carregar a performance."
+            texto="Seus dados estão seguros. Pode ser a conexão; tenta de novo?"
+            aoTentar={tentarDeNovo}
+          />
         </div>
       )}
       {estado.situacao === "vazio" && (
-        <p className="vazio">Sem eventos do agente neste período.</p>
+        <div className="painel">
+          <EstadoVazio
+            icone={<IconePerformance />}
+            titulo="Sem eventos do agente neste período."
+            texto="Quando ele rodar uma noite, os números aparecem aqui."
+          />
+        </div>
       )}
       {estado.situacao === "pronto" && (
-        <section className="painel" aria-label="Indicadores de performance">
-          <div className="grade grade-3">
-            <Numero
-              rotulo="PRs por noite"
-              valor={
-                estado.indicadores.prsPorNoite === null
-                  ? semValor
-                  : decimal.format(estado.indicadores.prsPorNoite)
-              }
-            />
-            <Numero
-              rotulo="Taxa de aprovação nos portões"
-              valor={
-                estado.indicadores.taxaAprovacao === null
-                  ? semValor
-                  : `${inteiro.format(estado.indicadores.taxaAprovacao * 100)}%`
-              }
-            />
-            <Numero
-              rotulo="Tokens por tarefa"
-              valor={
-                estado.indicadores.tokensPorTarefa === null
-                  ? semValor
-                  : formatarNumero(estado.indicadores.tokensPorTarefa)
-              }
-            />
-            <Numero
-              rotulo="Fila de difíceis"
-              valor={
-                estado.indicadores.filaDificeis === null
-                  ? semValor
-                  : formatarNumero(estado.indicadores.filaDificeis)
-              }
-            />
-            <Numero
-              rotulo="Acionamentos do fallback"
-              valor={formatarNumero(estado.indicadores.fallbacks)}
-            />
-          </div>
+        <section className="grade grade-5" aria-label="Indicadores de performance">
+          <Numero
+            rotulo="PRs por noite"
+            valor={
+              estado.indicadores.prsPorNoite === null
+                ? semValor
+                : decimal.format(estado.indicadores.prsPorNoite)
+            }
+          />
+          <Numero
+            rotulo="Taxa de aprovação nos portões"
+            valor={
+              estado.indicadores.taxaAprovacao === null
+                ? semValor
+                : `${inteiro.format(estado.indicadores.taxaAprovacao * 100)}%`
+            }
+          />
+          <Numero
+            rotulo="Tokens por tarefa"
+            valor={
+              estado.indicadores.tokensPorTarefa === null
+                ? semValor
+                : formatarNumero(estado.indicadores.tokensPorTarefa)
+            }
+          />
+          <Numero
+            rotulo="Fila de difíceis"
+            valor={
+              estado.indicadores.filaDificeis === null
+                ? semValor
+                : formatarNumero(estado.indicadores.filaDificeis)
+            }
+          />
+          <Numero
+            rotulo="Acionamentos do fallback"
+            valor={formatarNumero(estado.indicadores.fallbacks)}
+          />
         </section>
       )}
     </div>

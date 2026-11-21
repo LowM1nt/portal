@@ -1,78 +1,101 @@
-/* Madrugada — design system pessoal. Tokens.
-   Escuro é o padrão, sempre. Claro só por escolha: <html data-theme="light">.
-   Uso: importar este arquivo antes de components.css. */
+/* Releasy — tokens do padrão visual (fonte única de verdade).
+   Escuro é o padrão; claro só por escolha (data-theme="light") ou preferência do sistema.
+   Nunca use cor, raio, sombra ou espaço "na mão": sempre var(--...). */
 
 :root {
-  color-scheme: dark;
+  /* Fonte */
+  --fonte: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fonte-mono: ui-monospace, "Cascadia Code", Menlo, monospace;
 
-  /* superfícies: cinza-escuro neutro, na linha do Discord. O roxo fica só na marca */
-  --noite: #313338;          /* fundo da página */
-  --veu: #2b2d31;            /* painéis e menu (um tom abaixo do fundo) */
-  --veu-alto: #383a40;       /* hover, item selecionado, campos */
-  --linha: #3f4147;          /* bordas e divisórias */
+  /* Cores — tema escuro "Aurora berinjela" */
+  --fundo: #110b1b;
+  --halo: radial-gradient(900px 420px at 85% -5%, rgba(155, 77, 255, .30), transparent 70%),
+          radial-gradient(800px 380px at 0% 100%, rgba(214, 92, 255, .16), transparent 70%);
+  --superficie: rgba(30, 19, 45, .85);      /* cartões, dock, listas (vidro leve) */
+  --superficie-solida: #1c1329;             /* modal, painel lateral, toast, Ctrl+K */
+  --superficie-2: #251a36;                  /* hover, chips, botão secundário */
+  --campo: rgba(17, 11, 27, .6);            /* fundo de campo de formulário */
+  --borda: rgba(155, 77, 255, .16);
+  --borda-forte: rgba(155, 77, 255, .45);
+  --texto: #f5effb;
+  --texto-suave: #b3a6c9;
+  --texto-apagado: #7f7396;
 
-  /* texto */
-  --texto: #f2f3f5;
-  --texto-suave: #b5bac1;
-  --texto-fraco: #8e929b;
+  --roxo: #9b4dff;            /* destaque/marca: botão primário, item ativo, foco, ponto da logo */
+  --roxo-hover: #a964ff;
+  --roxo-claro: #c89bff;      /* texto roxo sobre fundo escuro, selo "rodando" */
+  --roxo-suave: rgba(155, 77, 255, .16);
+  --sobre-roxo: #ffffff;
 
-  /* roxo: a marca */
-  --roxo: #7a45f0;           /* preenchimentos (botão, barra, seleção) */
-  --roxo-forte: #8f5bff;     /* hover de preenchimento, foco */
-  --roxo-texto: #b79cff;     /* links e ícones sobre fundo escuro */
-  --roxo-veu: #3b3466;       /* fundo tingido (selo, destaque suave) */
-  --sobre-roxo: #ffffff;     /* texto sobre --roxo */
+  --ok: #34d399;    --ok-fundo: rgba(52, 211, 153, .13);
+  --aviso: #fbbf24; --aviso-fundo: rgba(251, 191, 36, .13);
+  --erro: #fb7185;  --erro-fundo: rgba(251, 113, 133, .14);
 
-  /* estado: só para informar, nunca para decorar */
-  --ok: #4ade9a;       --ok-veu: #233b30;
-  --atencao: #ffb85c;  --atencao-veu: #45371f;
-  --erro: #ff6b8a;     --erro-veu: #4a2530;
+  /* Brilho: leve (decisão do dono) */
+  --vidro: blur(6px);
+  --aura: 0 2px 8px rgba(155, 77, 255, .18);   /* só botão primário e item ativo */
+  --sombra: 0 10px 30px rgba(10, 4, 22, .5);
+  --sombra-flutuante: 0 24px 60px rgba(0, 0, 0, .6);  /* modal, Ctrl+K */
 
-  /* séries de gráfico, em ordem */
-  --serie-1: #8f5bff; --serie-2: #2dd4bf; --serie-3: #ffb85c; --serie-4: #f472b6;
+  /* Raio */
+  --raio-pilula: 999px;   /* botões, chips, selos, abas do celular */
+  --raio-campo: 12px;     /* campos, itens do dock */
+  --raio-cartao: 16px;    /* cartões, listas, toasts */
+  --raio-grande: 20px;    /* modal, painel lateral, dock, Ctrl+K */
 
-  /* tipografia */
-  --fonte-titulo: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --fonte-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fonte-codigo: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  /* Espaço (grade de 4 px) */
+  --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 20px; --e6: 24px; --e8: 32px; --e10: 40px; --e12: 48px;
 
-  /* escala tipográfica (razão 1,25) */
-  --t-12: 0.75rem; --t-14: 0.875rem; --t-16: 1rem; --t-20: 1.25rem;
-  --t-25: 1.563rem; --t-31: 1.953rem; --t-39: 2.441rem;
-
-  /* espaço (base 4) */
-  --e-1: 4px; --e-2: 8px; --e-3: 12px; --e-4: 16px; --e-5: 24px; --e-6: 32px; --e-7: 48px; --e-8: 64px;
-
-  /* tamanhos únicos: todo controle tem a mesma altura, todo selo também */
-  --altura-controle: 40px;   /* botão, campo, select, item do menu, linha da noite */
+  /* Tamanhos fixos */
+  --altura-controle: 40px;      /* botão médio, campo, item do dock */
+  --altura-controle-p: 32px;
+  --altura-controle-g: 48px;
+  --altura-linha: 52px;         /* linha de tabela */
   --altura-selo: 24px;
-  --coluna: minmax(0, 1fr);  /* toda grade usa colunas iguais */
-  --vao: var(--e-5);         /* um único vão entre blocos: 24px */
+  --largura-conteudo: 1120px;   /* conteúdo sempre centralizado nessa largura máxima */
+  --dock-largura: 64px;
 
-  /* raio: cresce com a hierarquia */
-  --raio-controle: 8px;   /* botão, campo, selo */
-  --raio-painel: 14px;    /* painel, diálogo */
-  --raio-pilula: 999px;
+  /* Tipografia */
+  --t-display: 700 30px/1.2 var(--fonte);
+  --t-titulo: 800 22px/1.25 var(--fonte);
+  --t-subtitulo: 800 16px/1.3 var(--fonte);
+  --t-corpo: 500 14px/1.5 var(--fonte);
+  --t-pequeno: 500 13px/1.45 var(--fonte);
+  --t-legenda: 600 12px/1.4 var(--fonte);
+  --t-numero: 800 24px/1.1 var(--fonte);
+  --aperto-titulo: -0.02em;
 
-  /* movimento: só em resposta a uma ação */
-  --rapido: 120ms; --normal: 200ms; --curva: cubic-bezier(.2, .7, .2, 1);
-
-  --foco: 0 0 0 2px var(--noite), 0 0 0 4px var(--roxo-forte);
-  --largura-leitura: 68ch;
-  --largura-cartao: 400px;
+  /* Movimento: sutil */
+  --rapido: 150ms;
+  --medio: 200ms;
+  --curva: cubic-bezier(.2, .8, .2, 1);
+  --toast-duracao: 5s;
 }
 
-/* tema claro: papel levemente lilás, roxo mais fundo para manter contraste */
 :root[data-theme="light"] {
-  color-scheme: light;
-  --noite: #faf8ff; --veu: #ffffff; --veu-alto: #f1ecfd; --linha: #e2daf6;
-  --texto: #1b1530; --texto-suave: #5b5480; --texto-fraco: #8a84a8;
-  --roxo: #6a35e0; --roxo-forte: #5a27cc; --roxo-texto: #5a27cc; --roxo-veu: #efe8ff;
-  --ok: #0c7a4b; --ok-veu: #e2f6ec;
-  --atencao: #9a5600; --atencao-veu: #fff1dc;
-  --erro: #c2264d; --erro-veu: #ffe6ec;
-  --serie-1: #6a35e0; --serie-2: #0f9488; --serie-3: #b86e00; --serie-4: #c0267d;
+  --fundo: #f7f4fc;
+  --halo: radial-gradient(900px 420px at 85% -5%, rgba(155, 77, 255, .12), transparent 70%);
+  --superficie: rgba(255, 255, 255, .9);
+  --superficie-solida: #ffffff;
+  --superficie-2: #f0eaf9;
+  --campo: #ffffff;
+  --borda: #e6ddf3;
+  --borda-forte: #c9b3ee;
+  --texto: #1a1225;
+  --texto-suave: #5f5371;
+  --texto-apagado: #8a7f9b;
+  --roxo: #8a3df0;
+  --roxo-hover: #7a2fe0;
+  --roxo-claro: #7a2fe0;
+  --roxo-suave: rgba(138, 61, 240, .10);
+  --ok: #0f8a5f;    --ok-fundo: #e3f6ee;
+  --aviso: #a16207; --aviso-fundo: #fdf3d8;
+  --erro: #c8324f;  --erro-fundo: #fde8ec;
+  --aura: 0 2px 8px rgba(138, 61, 240, .16);
+  --sombra: 0 8px 24px rgba(40, 20, 70, .08);
+  --sombra-flutuante: 0 24px 60px rgba(40, 20, 70, .18);
 }
+
 @media (prefers-reduced-motion: reduce) {
-  :root { --rapido: 0ms; --normal: 0ms; }
+  :root { --rapido: 0ms; --medio: 0ms; --toast-duracao: 8s; }
 }

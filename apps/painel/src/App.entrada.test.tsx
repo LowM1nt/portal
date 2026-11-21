@@ -21,7 +21,7 @@ describe('App — tela de entrada centralizada', () => {
     render(<App cliente={clienteFalso().cliente} />)
     const titulo = await screen.findByRole('heading', { name: 'Entrar' })
     expect(titulo.closest('.painel')).not.toBeNull()
-    expect(screen.getByText('Madrugada')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'm1nt.' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
