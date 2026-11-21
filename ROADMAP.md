@@ -209,3 +209,110 @@ GitHub e o painel (visão geral e performance). Só então começa a fase 2.
   - aceite: os eventos locais chegam ao Supabase pela fila de saída; sem internet, ficam pendentes e sobem depois, sem duplicar
   - testes: enviar, cair a conexão no meio e reenviar
 
+
+
+---
+
+# Fase 2 — bot de bugs, roadmap e MVP do CRM
+
+**Meta da fase 2:** o Releasy ganha bugs (com bot do Discord e IA) e roadmap; o CRM "fechou." sai com demo pública.
+Ritmo: 1 PR por noite no portal e 1 no CRM. Decisões: D-006 a D-009. **Toda tela segue `docs/ui/` e passa pelo portão visual.**
+Segurança primeiro: todo item novo tem teste de isolamento por workspace/conta e de entrada inválida.
+
+- [ ] **P-024 — Bugs: modelo de dados e API por workspace**
+  - nível: padrao
+  - repo: portal · superfícies: api, dados
+  - arquivos: `apps/api/src/Bugs/`, migração EF, `apps/api/tests/BugsTests.cs`
+  - aceite: CRUD de bug (título, relato, passos, esperado × obtido, severidade, origem, status); listar por status; isolamento por workspace; validação de tamanho
+  - testes: criar/listar/mudar status; IDOR entre workspaces dá 404; entrada inválida dá 400
+
+- [ ] **P-028 — Roadmap: modelo de dados e API**
+  - nível: padrao
+  - repo: portal · superfícies: api, dados
+  - arquivos: `apps/api/src/Roadmap/`, migração EF, `apps/api/tests/RoadmapTests.cs`
+  - aceite: itens com status (ideia, planejado, em andamento, entregue), prazo, progresso e ligação com deploys/PRs; isolamento por workspace
+  - testes: CRUD, mover de status, isolamento, validação
+
+- [ ] **P-025 — Bot de bugs no Discord (D-006)**
+  - nível: padrao
+  - repo: portal · superfícies: api
+  - arquivos: `apps/api/src/Bugs/Discord/`, `ICanalDeBugs`, config por workspace
+  - aceite: mensagem no canal configurado vira bug "a triar" com o relato original; token do bot guardado cifrado; mensagens repetidas não duplicam
+  - testes: respostas gravadas da API do Discord; deduplicação; token nunca em log
+
+- [ ] **P-026 — IA extrai os campos do relato (D-007)**
+  - nível: padrao
+  - repo: portal · superfícies: api, ui
+  - arquivos: `apps/api/src/Bugs/Extracao/`, tela de integrações (chave do workspace + passo a passo da chave gratuita do Gemini)
+  - aceite: relato livre → passos, esperado, obtido, ambiente e severidade sugerida (JSON validado por schema); sem chave entra sem extração; chave cifrada, nunca volta ao front
+  - testes: resposta da IA gravada; JSON inválido não quebra; sem chave; chave nunca em log
+
+- [ ] **P-027 — Tela de bugs: lista, filtros e detalhe**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - arquivos: `apps/web/src/features/bugs/`
+  - aceite: igual ao protótipo (lista por status, filtros de severidade, detalhe em painel lateral, cartões no celular); carregando/vazio/erro
+  - testes: teste de componente dos 4 estados + portão visual
+
+- [ ] **P-029 — Tela do roadmap: quadro e linha do tempo**
+  - nível: padrao
+  - repo: portal · superfícies: ui
+  - arquivos: `apps/web/src/features/roadmap/`
+  - aceite: igual ao protótipo (quadro por status com progresso, linha do tempo); carregando/vazio/erro
+  - testes: teste de componente + portão visual
+
+- [ ] **C-001 — CRM: esqueleto (repo `crm`)**
+  - nível: padrao
+  - repo: crm · superfícies: api, ui
+  - arquivos: repo novo `LowM1nt/crm`: Next.js + TS, Drizzle + Postgres, Auth.js (D-008), Tailwind com os tokens de `docs/ui/`, CI com CodeQL e Semgrep
+  - aceite: build, um teste por camada, login funcionando, `_headers`/CSP, cookies seguros
+  - testes: login e rota protegida (sem sessão → redireciona)
+
+- [ ] **C-002 — CRM: contatos e leads**
+  - nível: padrao
+  - repo: crm · superfícies: api, dados
+  - arquivos: `crm/src/contatos/`
+  - aceite: CRUD com `contaId` em toda consulta (D-009); validação com zod
+  - testes: isolamento entre contas; entrada inválida
+
+- [ ] **C-003 — CRM: tela de contatos e leads**
+  - nível: padrao
+  - repo: crm · superfícies: ui
+  - arquivos: `crm/src/app/contatos/`
+  - aceite: segue `docs/ui/`; 4 estados; celular W1
+  - testes: componente + portão visual
+
+- [ ] **C-004 — CRM: pipeline em kanban**
+  - nível: padrao
+  - repo: crm · superfícies: ui, api
+  - arquivos: `crm/src/pipeline/`
+  - aceite: estágios, arrastar entre colunas (também por teclado), valor por estágio
+  - testes: mover estágio; acessibilidade do arrastar; portão visual
+
+- [ ] **C-005 — CRM: propostas**
+  - nível: padrao
+  - repo: crm · superfícies: api, ui
+  - arquivos: `crm/src/propostas/`
+  - aceite: itens, valor, status, PDF simples
+  - testes: cálculo de total; PDF gerado; isolamento
+
+- [ ] **C-006 — CRM: controle de horas**
+  - nível: padrao
+  - repo: crm · superfícies: api, ui
+  - arquivos: `crm/src/horas/`
+  - aceite: horas por cliente/projeto, total do mês
+  - testes: somatórios; isolamento
+
+- [ ] **C-007 — CRM: IA — resumo do lead e próximo passo (D-007)**
+  - nível: padrao
+  - repo: crm · superfícies: api
+  - arquivos: `crm/src/ia/`
+  - aceite: mesma regra de chave do D-007 (própria ou gratuita guiada)
+  - testes: resposta gravada; sem chave não quebra
+
+- [ ] **C-008 — CRM: demo pública com dados fictícios**
+  - nível: barato
+  - repo: crm · superfícies: ui
+  - arquivos: `crm/src/app/demo/`
+  - aceite: somente leitura, dados fictícios, rate limit
+  - testes: escrita recusada; dados fictícios
