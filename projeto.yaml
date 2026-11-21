@@ -47,9 +47,9 @@ registro_de_tarefas:        # skill registro-de-trabalho
 
 design_system:              # skill reuso-primeiro
   pasta: "apps/web/src/styles/"
-  componentes: "apps/web/src/styles/components.css"   # Madrugada (fonte: docs/design-system/)
-  tokens: "apps/web/src/styles/tokens.css"            # Madrugada (fonte: docs/design-system/)
-  fonte: "docs/design-system/"                        # ainda não aplicado nos apps (item P-003)
+  componentes: "apps/web/src/styles/components.css"   # Releasy (guia: docs/ui/README.md)
+  tokens: "apps/web/src/styles/tokens.css"            # Releasy (cópia de docs/ui/tokens.css)
+  fonte: "docs/ui/"                                   # padrão visual Releasy (Madrugada só como histórico)
   storybook: false
 
 invariantes:                # regras do projeto que valem sempre (curtas)

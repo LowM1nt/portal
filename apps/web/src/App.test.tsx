@@ -130,11 +130,12 @@ describe('App — autenticação e workspace ativo', () => {
     expect(await screen.findByRole('form', { name: 'Entrar no portal' })).toBeInTheDocument()
   })
 
-  it('clicar em "Sair" chama signOut, limpa o workspace ativo e mostra o login', async () => {
+  it('sair pelo menu da conta chama signOut, limpa o workspace ativo e mostra o login', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => respostaMe()))
     const { auth, cliente } = clienteFalso(sessao)
     render(<App cliente={cliente} />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Sair' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Sua conta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1))
     expect(await screen.findByRole('form', { name: 'Entrar no portal' })).toBeInTheDocument()
     expect(screen.queryByText('Meu workspace')).not.toBeInTheDocument()

@@ -1,12 +1,65 @@
-.calendario { display: grid; gap: var(--vao); }
-.calendario-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--e-3); }
-.calendario-semana { margin: 0; }
-.calendario-aviso { display: grid; gap: var(--e-3); justify-items: start; }
-.calendario-dias { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--e-3); }
-.calendario-dia { display: grid; gap: var(--e-2); align-content: start; min-width: 0; }
-.calendario-dia-titulo { margin: 0; color: var(--texto-suave); }
-.calendario-cartao { display: grid; gap: var(--e-1); padding: var(--e-3); border-radius: var(--raio-controle); background: var(--veu-alto); color: var(--texto); overflow-wrap: anywhere; }
+/* Calendário de deploys: semana em colunas no computador, cartões empilhados no celular.
+   Só tokens (cor, espaço, raio, fonte); medidas fixas só em altura mínima. */
 
-@media (max-width: 720px) {
-  .calendario-dias { grid-template-columns: minmax(0, 1fr); }
+.calendario { display: grid; gap: var(--e4); min-width: 0; }
+.calendario-barra { display: flex; align-items: center; gap: var(--e3); min-width: 0; }
+.calendario-semana {
+  margin: 0; min-width: 0; font: var(--t-subtitulo); letter-spacing: var(--aperto-titulo);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.semana {
+  list-style: none; margin: 0; padding: 0; min-width: 0;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--e3); align-items: stretch;
+}
+.dia { display: flex; flex-direction: column; gap: var(--e2); min-width: 0; min-height: 240px; padding: var(--e2); }
+.dia-hoje { border-color: var(--borda-forte); }
+.dia-cab {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--e2);
+  padding: var(--e1) var(--e1) var(--e2);
+}
+.dia-cab b { font: var(--t-legenda); color: var(--texto-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.dia-cab strong { font: var(--t-titulo); letter-spacing: var(--aperto-titulo); font-variant-numeric: tabular-nums; }
+.dia-hoje .dia-cab strong { color: var(--roxo-claro); }
+
+.dep {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--e2); min-width: 0;
+  padding: var(--e3); border-radius: var(--raio-campo);
+  background: var(--superficie-2); border: 1px solid var(--borda);
+}
+.dep-titulo {
+  font: var(--t-pequeno); font-weight: 700; color: var(--texto); align-self: stretch;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+}
+.dep-linha {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--e2); align-self: stretch;
+  min-width: 0; font: var(--t-legenda); color: var(--texto-apagado);
+}
+.dep-hora { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dep-ambiente { font-family: var(--fonte-mono); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dep-cancelado .dep-titulo { color: var(--texto-suave); text-decoration: line-through; }
+
+.dia-vazio {
+  flex: 1; display: grid; place-items: center; min-height: 44px;
+  font: var(--t-pequeno); color: var(--texto-apagado);
+  border: 1px dashed var(--borda); border-radius: var(--raio-campo);
+}
+
+/* Esqueleto no formato da semana */
+.semana-carregando .osso-linha { height: 20px; width: 60%; }
+.semana-carregando .osso-cartao { height: 88px; }
+
+/* Telas médias: quatro colunas (a semana ocupa duas linhas). */
+@media (max-width: 1199px) {
+  .semana { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Celular: um dia embaixo do outro; dia livre vira uma linha só. */
+@media (max-width: 767px) {
+  .semana { grid-template-columns: minmax(0, 1fr); }
+  .dia { min-height: 0; padding: var(--e3); }
+  .dia-livre { flex-direction: row; align-items: center; justify-content: space-between; }
+  .dia-livre .dia-cab { justify-content: flex-start; gap: var(--e3); padding: 0 var(--e1); }
+  .dia-livre .dia-vazio { flex: none; min-height: 0; border: 0; padding: 0 var(--e1); }
+  .semana-carregando .dia { min-height: 0; }
 }

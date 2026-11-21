@@ -9,6 +9,8 @@ type Estado = 'carregando' | 'erro' | 'sem-sessao' | 'pronto'
 
 type Contexto = {
   estado: Estado
+  /** E-mail de quem está logado (mostrado no menu da conta). */
+  email: string | null
   workspaces: Workspace[]
   workspaceAtivo: Workspace | null
   trocarWorkspace: (id: string) => void
@@ -50,6 +52,7 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   }, [tokenAtual])
 
   const usuarioId = sessao ? String(sessao.user?.id ?? '') : null
+  const email = sessao?.user?.email ?? null
   const chave = `${usuarioId ?? ''}#${tentativa}`
 
   useEffect(() => {
@@ -115,8 +118,8 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   else estado = 'pronto'
 
   const valor = useMemo(
-    () => ({ estado, workspaces, workspaceAtivo, trocarWorkspace: setEscolhaId, sair, tentarDeNovo, api, cliente }),
-    [estado, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
+    () => ({ estado, email, workspaces, workspaceAtivo, trocarWorkspace: setEscolhaId, sair, tentarDeNovo, api, cliente }),
+    [estado, email, workspaces, workspaceAtivo, sair, tentarDeNovo, api, cliente],
   )
 
   return (

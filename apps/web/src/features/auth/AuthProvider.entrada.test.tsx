@@ -24,10 +24,10 @@ function renderizar(cliente: SupabaseClient) {
 }
 
 describe('AuthProvider — tela de entrada centralizada', () => {
-  it('sem sessão, mostra o cartão de entrada e não a navegação', async () => {
+  it('sem sessão, mostra o formulário de entrada e não a navegação', async () => {
     renderizar(clienteFalso().cliente)
     const titulo = await screen.findByRole('heading', { name: 'Entrar' })
-    expect(titulo.closest('.painel')).not.toBeNull()
+    expect(titulo.closest('form')).not.toBeNull()
     expect(screen.getByLabelText('E-mail')).toBeInTheDocument()
     expect(screen.getByLabelText('Senha')).toBeInTheDocument()
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
@@ -38,14 +38,14 @@ describe('AuthProvider — tela de entrada centralizada', () => {
     expect(await screen.findByLabelText('E-mail')).toHaveFocus()
   })
 
-  it('erro de login aparece dentro do cartão', async () => {
+  it('erro de login aparece dentro do formulário', async () => {
     renderizar(clienteFalso(false).cliente)
     const titulo = await screen.findByRole('heading', { name: 'Entrar' })
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'a@exemplo.com' } })
     fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'errada' } })
     fireEvent.submit(titulo.closest('form') as HTMLFormElement)
     const alerta = await screen.findByRole('alert')
-    expect(titulo.closest('.painel')).toContainElement(alerta)
+    expect(titulo.closest('form')).toContainElement(alerta)
   })
 
   it('enviar o formulário (Enter) chama o login', async () => {

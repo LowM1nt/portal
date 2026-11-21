@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider.tsx'
 import { buscarFila, type PrRevisao, type StatusCi } from './api.ts'
 import { haQuantoTempo } from './tempo.ts'
+import { useAvisoDeErro } from '../../ui/avisos.ts'
+import { Carregando, EstadoErro, EstadoVazio } from '../../ui/Estados.tsx'
+import { IconeRevisoes } from '../../ui/icones.tsx'
+import './fila.css'
 
 const CI: Record<StatusCi, { rotulo: string; classe: string }> = {
   sucesso: { rotulo: 'Sucesso', classe: 'selo-ok' },
   falhou: { rotulo: 'Falhou', classe: 'selo-erro' },
-  rodando: { rotulo: 'Rodando', classe: 'selo-atencao' },
-  'sem CI': { rotulo: 'Sem CI', classe: '' },
+  rodando: { rotulo: 'Rodando', classe: 'selo-andamento' },
+  'sem CI': { rotulo: 'Sem CI', classe: 'selo-neutro' },
 }
-
-const quebra = { minWidth: 0, overflowWrap: 'anywhere' } as const
 
 type Resultado = { chave: string; lista: PrRevisao[] | null }
 
@@ -20,6 +22,7 @@ export function FilaRevisao() {
   const [resultado, setResultado] = useState<Resultado | null>(null)
   const [repo, setRepo] = useState('')
   const [revisor, setRevisor] = useState('')
+  const id = useId()
   const chave = `${workspaceAtivo?.id ?? ''}#${tentativa}`
 
   useEffect(() => {
@@ -34,6 +37,7 @@ export function FilaRevisao() {
 
   const lista = resultado?.chave === chave ? resultado.lista : null
   const pronto = resultado?.chave === chave
+  useAvisoDeErro(pronto && lista === null, 'A fila não veio', 'Pode ser a conexão. Dá pra tentar de novo ali na fila.')
 
   const repositorios = useMemo(() => [...new Set((lista ?? []).map((p) => p.repositorio))].sort(), [lista])
   const revisores = useMemo(() => [...new Set((lista ?? []).flatMap((p) => p.revisores))].sort(), [lista])
@@ -41,69 +45,94 @@ export function FilaRevisao() {
   let corpo
   if (!pronto) {
     corpo = (
-      <p className="suave" aria-busy="true">
-        Carregando…
-      </p>
+      <Carregando className="cartao fila-carregando">
+        {[0, 1, 2, 3].map((n) => (
+          <span key={n} className="osso osso-fila" />
+        ))}
+      </Carregando>
     )
   } else if (lista === null) {
     corpo = (
-      <div>
-        <p role="alert" className="selo selo-erro" style={{ height: 'auto', whiteSpace: 'normal' }}>
-          Não foi possível carregar a fila de revisão.
-        </p>
-        <button type="button" className="botao botao-primario" onClick={() => setTentativa((n) => n + 1)}>
-          Tentar de novo
-        </button>
+      <div className="cartao">
+        <EstadoErro
+          titulo="Ops, não deu pra carregar a fila de revisão."
+          texto="Seus dados estão seguros. Tenta de novo?"
+          aoTentar={() => setTentativa((n) => n + 1)}
+        />
       </div>
     )
   } else {
     const visiveis = lista.filter(
       (p) => (!repo || p.repositorio === repo) && (!revisor || p.revisores.includes(revisor)),
     )
+    const filtrando = Boolean(repo || revisor)
     const agora = new Date()
     corpo =
       visiveis.length === 0 ? (
-        <p className="vazio">Nenhuma PR esperando revisão</p>
+        <div className="cartao">
+          <EstadoVazio
+            icone={<IconeRevisoes />}
+            titulo="Nenhuma PR esperando revisão"
+            texto={filtrando ? 'Nada com esses filtros. Que tal ver tudo?' : 'Fila zerada! Bom trabalho, time.'}
+            acao={
+              filtrando && (
+                <button
+                  type="button"
+                  className="botao botao-secundario"
+                  onClick={() => {
+                    setRepo('')
+                    setRevisor('')
+                  }}
+                >
+                  Limpar filtros
+                </button>
+              )
+            }
+          />
+        </div>
       ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--e-3)' }}>
-          {visiveis.map((p) => {
-            const ci = CI[p.statusCi] ?? CI['sem CI']
-            return (
-              <li
-                key={`${p.repositorio}#${p.numero}`}
-                style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--e-2) var(--e-3)', alignItems: 'center', ...quebra }}
-              >
-                <a href={p.url} target="_blank" rel="noopener noreferrer" style={quebra}>
-                  {p.titulo}
-                </a>
-                <span className="suave" style={quebra}>
-                  {p.repositorio}
-                </span>
-                <span className="suave" style={quebra}>
-                  {p.autor}
-                </span>
-                <span className="suave" style={quebra}>
-                  {p.revisores.join(', ')}
-                </span>
-                <span className={`selo ${ci.classe}`.trim()}>{ci.rotulo}</span>
-                <span className="suave">{haQuantoTempo(p.atualizadaEm, agora)}</span>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="cartao fila">
+          <div className="fila-cab" aria-hidden="true">
+            <span>Pull request</span>
+            <span>Autor</span>
+            <span>Revisores</span>
+            <span>CI</span>
+            <span className="fila-dir">Atualizada</span>
+          </div>
+          <ul className="fila-lista" aria-label="PRs esperando revisão">
+            {visiveis.map((p) => {
+              const ci = CI[p.statusCi] ?? CI['sem CI']
+              return (
+                <li key={`${p.repositorio}#${p.numero}`} className="fila-linha">
+                  <span className="fila-pr">
+                    <a href={p.url} target="_blank" rel="noopener noreferrer" className="fila-titulo">
+                      {p.titulo}
+                    </a>
+                    <span className="fila-repo">{p.repositorio}</span>
+                  </span>
+                  <span className="fila-autor">{p.autor}</span>
+                  <span className="fila-revisores">{p.revisores.join(', ') || 'Sem revisor'}</span>
+                  <span className="fila-ci">
+                    <span className={`selo ${ci.classe}`}>{ci.rotulo}</span>
+                  </span>
+                  <span className="fila-tempo">{haQuantoTempo(p.atualizadaEm, agora)}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )
   }
 
   return (
-    <section className="painel" aria-label="Fila de revisão" style={quebra}>
-      <header style={{ flexWrap: 'wrap' }}>
-        <h2>Fila de revisão</h2>
-      </header>
+    <section className="fila-revisao" aria-label="Fila de revisão">
       {pronto && lista !== null && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--e-3)' }}>
-          <label className="campo" style={{ minWidth: 0, flex: '1 1 140px' }}>
-            Repositório
-            <select value={repo} onChange={(e) => setRepo(e.target.value)}>
+        <div className="fila-filtros">
+          <div className="campo">
+            <label className="campo-rotulo" htmlFor={`${id}-repo`}>
+              Repositório
+            </label>
+            <select id={`${id}-repo`} className="controle" value={repo} onChange={(e) => setRepo(e.target.value)}>
               <option value="">Todos</option>
               {repositorios.map((r) => (
                 <option key={r} value={r}>
@@ -111,10 +140,17 @@ export function FilaRevisao() {
                 </option>
               ))}
             </select>
-          </label>
-          <label className="campo" style={{ minWidth: 0, flex: '1 1 140px' }}>
-            Revisor
-            <select value={revisor} onChange={(e) => setRevisor(e.target.value)}>
+          </div>
+          <div className="campo">
+            <label className="campo-rotulo" htmlFor={`${id}-revisor`}>
+              Revisor
+            </label>
+            <select
+              id={`${id}-revisor`}
+              className="controle"
+              value={revisor}
+              onChange={(e) => setRevisor(e.target.value)}
+            >
               <option value="">Todos</option>
               {revisores.map((r) => (
                 <option key={r} value={r}>
@@ -122,7 +158,7 @@ export function FilaRevisao() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
       )}
       {corpo}
