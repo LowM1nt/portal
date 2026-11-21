@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { IconeBusca, IconeLua, IconeSair, IconeSol } from './icones.tsx'
 import { Logo, LogoCurto } from './Marca.tsx'
 import { Paleta, type Comando } from './Paleta.tsx'
@@ -40,7 +40,10 @@ export function Casca<T extends string>({ itens, ativo, aoIr, conta, children }:
     focoAntes.current?.focus()
   }, [])
 
-  useEffect(() => {
+  // useLayoutEffect, não useEffect: o ouvinte entra junto com o desenho. Com useEffect ele só entrava numa
+  // tarefa seguinte e um Ctrl+K logo após a casca aparecer (aparelho lento, usuário rápido) se perdia; a cada
+  // abrir/fechar o ouvinte novo também já vale no mesmo instante, sem janela com o estado antigo.
+  useLayoutEffect(() => {
     function atalho(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
