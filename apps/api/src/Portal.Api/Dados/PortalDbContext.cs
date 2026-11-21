@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Portal.Api.Bugs;
 using Portal.Api.Dados.Entidades;
 using Portal.Api.Integracoes.GitHub;
+using Portal.Api.Roadmap;
 using Portal.Api.Workspaces;
 
 namespace Portal.Api.Dados;
@@ -27,6 +28,7 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
 
     public DbSet<PullRequest> PullRequests => Set<PullRequest>();
 
+    public DbSet<ItemRoadmap> ItensRoadmap => Set<ItemRoadmap>();
     public DbSet<Bug> Bugs => Set<Bug>();
 
     public DbSet<ConfiguracaoGitHub> ConfiguracoesGitHub => Set<ConfiguracaoGitHub>();
@@ -137,6 +139,29 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
             e.Property(c => c.UltimoErro).HasColumnName("ultimo_erro");
             e.HasOne<Workspace>().WithMany().HasForeignKey(c => c.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(c => c.WorkspaceId).IsUnique();
+        });
+
+        modelBuilder.Entity<ItemRoadmap>(e =>
+        {
+            e.ToTable("itens_roadmap");
+            e.HasKey(i => i.Id);
+            e.Property(i => i.Id).HasColumnName("id");
+            e.Property(i => i.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(i => i.Titulo).HasColumnName("titulo").HasMaxLength(200).IsRequired();
+            e.Property(i => i.Descricao).HasColumnName("descricao");
+            e.Property(i => i.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+            e.Property(i => i.Prazo).HasColumnName("prazo");
+            e.Property(i => i.Progresso).HasColumnName("progresso");
+            e.Property(i => i.DeployId).HasColumnName("deploy_id");
+            e.Property(i => i.PullRequestId).HasColumnName("pull_request_id");
+            e.Property(i => i.CriadoEm).HasColumnName("criado_em");
+            e.Property(i => i.AtualizadoEm).HasColumnName("atualizado_em");
+            e.HasOne<Workspace>().WithMany().HasForeignKey(i => i.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Deploy>().WithMany().HasForeignKey(i => i.DeployId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<PullRequest>().WithMany().HasForeignKey(i => i.PullRequestId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(i => new { i.WorkspaceId, i.Status });
+            e.HasIndex(i => i.DeployId);
+            e.HasIndex(i => i.PullRequestId);
         });
 
         modelBuilder.Entity<Bug>(e =>

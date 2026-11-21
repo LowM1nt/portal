@@ -226,7 +226,7 @@ Segurança primeiro: todo item novo tem teste de isolamento por workspace/conta 
   - aceite: CRUD de bug (título, relato, passos, esperado × obtido, severidade, origem, status); listar por status; isolamento por workspace; validação de tamanho
   - testes: criar/listar/mudar status; IDOR entre workspaces dá 404; entrada inválida dá 400
 
-- [ ] **P-028 — Roadmap: modelo de dados e API**
+- [x] **P-028 — Roadmap: modelo de dados e API**
   - nível: padrao
   - repo: portal · superfícies: api, dados
   - arquivos: `apps/api/src/Roadmap/`, migração EF, `apps/api/tests/RoadmapTests.cs`
