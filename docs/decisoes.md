@@ -89,3 +89,26 @@ Contrato:
 | Método e rota | Entrada | Saída | Erros |
 | --- | --- | --- | --- |
 | `GET /api/revisoes?repositorio=dono/repo&revisor=login` | Bearer, `X-Workspace-Id` (filtros opcionais) | `[{ numero, titulo, autor, url, repositorio, revisores: ["login"], statusCi, atualizadaEm }]`, mais antigas primeiro | 401, 404 |
+
+
+## D-006 — Bot de bugs: Discord primeiro · 20/11/2026 · decidida pelo dono
+
+- O bot de bugs começa **só no Discord** (um canal configurado por workspace vira bugs "a triar").
+- A integração fica atrás de uma interface (`ICanalDeBugs`) para o Slack entrar depois sem refazer nada.
+
+## D-007 — Quem paga a IA que lê o relato · 20/11/2026 · decidida pelo dono
+
+- **A chave é do próprio workspace** (o time configura a sua). O dono do Releasy não paga IA de cliente.
+- **Opção gratuita guiada:** a tela de integrações oferece "Usar uma chave gratuita" com **passo a passo** para gerar uma chave grátis do Google Gemini (com aviso dos limites do plano grátis).
+- Sem chave, o bug entra **sem extração** (só o relato original); nunca falha.
+- A chave é guardada **criptografada** (Data Protection), nunca volta ao front nem aparece em log, como o token do GitHub (D-004).
+
+## D-008 — Login do CRM com Auth.js · 20/11/2026 · decidida pelo dono
+
+- O CRM ("fechou.") usa **Auth.js** (Next.js), stack diferente do Releasy de propósito (repertório no portfólio).
+- Sem senha guardada em texto: e-mail mágico e/ou GitHub/Google; sessão em cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
+
+## D-009 — CRM com um usuário por conta · 20/11/2026 · decidida pelo dono
+
+- O MVP do CRM é **para um freelancer por conta**; equipes ficam para a fase 3.
+- Mesmo assim, toda tabela tem `contaId` e toda consulta filtra por ele (isolamento entre contas, com teste).
