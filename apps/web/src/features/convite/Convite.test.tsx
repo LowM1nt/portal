@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ME, chamadas, clienteFalso, json, montarApp, sessao, stubApi } from '../../test/app.ts'
 import { convitePendente } from './convite.ts'
 
-const TOKEN = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ' // 43 caracteres, como a API gera
+// Convite de mentira no formato que a API gera (43 caracteres Base64Url), montado para ficar óbvio que não é segredo.
+const CONVITE_FALSO = 'convite-de-teste-'.padEnd(43, 'x')
 const NOVO_WS = { id: 'w2', nome: 'Time da Bia', papel: 'membro' }
 
 afterEach(() => {
@@ -24,14 +25,14 @@ describe('Convite (/convite#token=…)', () => {
         return json({ workspaceId: 'w2', nome: 'Time da Bia', papel: 'membro' })
       },
     })
-    montarApp(`/convite#token=${TOKEN}`)
+    montarApp(`/convite#token=${CONVITE_FALSO}`)
     expect(window.location.pathname).toBe('/')
-    expect(window.location.href).not.toContain(TOKEN)
+    expect(window.location.href).not.toContain(CONVITE_FALSO)
 
     expect(await screen.findByText('Bem-vindo ao Time da Bia!')).toBeInTheDocument()
     expect(chamadas(f, 'POST /api/convites/aceitar')).toHaveLength(1)
-    expect(chamadas(f, 'POST /api/convites/aceitar')[0].corpo).toEqual({ token: TOKEN })
-    expect(urls(f).some((u) => u.includes(TOKEN))).toBe(false)
+    expect(chamadas(f, 'POST /api/convites/aceitar')[0].corpo).toEqual({ token: CONVITE_FALSO })
+    expect(urls(f).some((u) => u.includes(CONVITE_FALSO))).toBe(false)
     expect(convitePendente()).toBeNull()
     // Recarrega o /api/me e já entra no workspace novo.
     await waitFor(() => expect(document.querySelector('.ws-nome')).toHaveTextContent('Time da Bia'))
@@ -40,11 +41,11 @@ describe('Convite (/convite#token=…)', () => {
   it('sem login: guarda o convite só nesta aba, pede pra entrar e aceita depois do login', async () => {
     const f = stubApi({ 'POST /api/convites/aceitar': { workspaceId: 'w1', nome: 'Acme', papel: 'membro' } })
     const { cliente, emitir } = clienteFalso(null)
-    montarApp(`/convite#token=${TOKEN}`, cliente)
+    montarApp(`/convite#token=${CONVITE_FALSO}`, cliente)
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.getByText(/Você recebeu um convite!/)).toBeInTheDocument()
-    expect(window.location.href).not.toContain(TOKEN)
-    expect(window.sessionStorage.getItem('releasy-convite')).toBe(TOKEN)
+    expect(window.location.href).not.toContain(CONVITE_FALSO)
+    expect(window.sessionStorage.getItem('releasy-convite')).toBe(CONVITE_FALSO)
     expect(chamadas(f, 'POST /api/convites/aceitar')).toHaveLength(0)
 
     emitir('SIGNED_IN', sessao)
@@ -54,7 +55,7 @@ describe('Convite (/convite#token=…)', () => {
 
   it('convite inválido, expirado ou de outro e-mail: mostra a mensagem neutra da API', async () => {
     stubApi({ 'POST /api/convites/aceitar': () => json({ erro: 'Convite inválido ou expirado. Peça um novo convite ao dono do workspace.' }, 400) })
-    montarApp(`/convite#token=${TOKEN}`)
+    montarApp(`/convite#token=${CONVITE_FALSO}`)
     expect(await screen.findByText('Não deu pra aceitar o convite')).toBeInTheDocument()
     expect(screen.getByText(/Peça um novo convite/)).toBeInTheDocument()
     expect(convitePendente()).toBeNull()
@@ -62,7 +63,7 @@ describe('Convite (/convite#token=…)', () => {
 
   it('quem já é membro recebe um aviso amigável (409)', async () => {
     stubApi({ 'POST /api/convites/aceitar': () => json({ erro: 'Você já faz parte deste workspace.' }, 409) })
-    montarApp(`/convite#token=${TOKEN}`)
+    montarApp(`/convite#token=${CONVITE_FALSO}`)
     expect(await screen.findByText('Você já faz parte desse workspace')).toBeInTheDocument()
   })
 

@@ -2,7 +2,8 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ME, chamadas, json, montarApp, stubApi } from '../../test/app.ts'
 
-const TOKEN = 'github_pat_SEGREDO_unico_wxyz'
+// Valor de mentira, só para o teste (não é um token do GitHub); termina em wxyz como o finalToken das respostas.
+const PAT_DE_MENTIRA = 'pat-de-mentira-wxyz'
 const DESCONECTADO = { configurado: false, finalToken: null, repositorios: [], ultimaSincronizacao: null, ultimoErro: null }
 const CONECTADO = {
   configurado: true,
@@ -71,13 +72,13 @@ describe('Configurações — Repositórios e integrações', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Cola o token do GitHub')
     expect(chamadas(f, 'PUT /api/integracoes/github')).toHaveLength(0)
 
-    fireEvent.change(token, { target: { value: TOKEN } })
+    fireEvent.change(token, { target: { value: PAT_DE_MENTIRA } })
     fireEvent.click(screen.getByRole('button', { name: 'Conectar GitHub' }))
     expect(await screen.findByText('GitHub conectado!')).toBeInTheDocument()
-    expect(chamadas(f, 'PUT /api/integracoes/github')[0].corpo).toEqual({ token: TOKEN, repositorios: ['acme/portal'] })
+    expect(chamadas(f, 'PUT /api/integracoes/github')[0].corpo).toEqual({ token: PAT_DE_MENTIRA, repositorios: ['acme/portal'] })
     expect(screen.queryByLabelText('Token do GitHub')).not.toBeInTheDocument()
     expect(screen.getByText('••••wxyz')).toBeInTheDocument()
-    expect(document.body.innerHTML).not.toContain('SEGREDO')
+    expect(document.body.innerHTML).not.toContain(PAT_DE_MENTIRA)
   })
 
   it('configurado: mostra data, final do token, sincronização e erro; troca só repositórios sem mandar token', async () => {
@@ -104,10 +105,10 @@ describe('Configurações — Repositórios e integrações', () => {
     montarApp('#/config/repositorios')
     fireEvent.click(await screen.findByRole('button', { name: 'Trocar token' }))
     const modal = screen.getByRole('dialog', { name: 'Trocar o token do GitHub' })
-    fireEvent.change(within(modal).getByLabelText('Token do GitHub'), { target: { value: TOKEN } })
+    fireEvent.change(within(modal).getByLabelText('Token do GitHub'), { target: { value: PAT_DE_MENTIRA } })
     fireEvent.click(within(modal).getByRole('button', { name: 'Salvar token' }))
     expect(await screen.findByText('Token trocado!')).toBeInTheDocument()
-    expect(chamadas(f, 'PUT /api/integracoes/github')[0].corpo).toEqual({ token: TOKEN, repositorios: ['acme/portal', 'acme/api'] })
+    expect(chamadas(f, 'PUT /api/integracoes/github')[0].corpo).toEqual({ token: PAT_DE_MENTIRA, repositorios: ['acme/portal', 'acme/api'] })
     expect(screen.getByText('••••wxyz')).toBeInTheDocument()
   })
 
