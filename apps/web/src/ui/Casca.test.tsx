@@ -30,7 +30,8 @@ const ctrlK = () => fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
 const paleta = () => screen.queryByRole('dialog', { name: 'Busca rápida' })
 
 beforeEach(() => {
-  window.history.replaceState(null, '', '/')
+  // Sem hash o destino padrão é o Início; estes testes partem dos Deploys.
+  window.history.replaceState(null, '', '/#/deploys')
   window.localStorage.clear()
   document.documentElement.removeAttribute('data-theme')
   esquecerTema()

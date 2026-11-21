@@ -117,3 +117,66 @@ export const IconeTime = () => (
     <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" />
   </Icone>
 )
+
+export const IconeInicio = () => (
+  <Icone>
+    <rect x="3" y="3" width="7" height="7" rx="2" />
+    <rect x="14" y="3" width="7" height="7" rx="2" />
+    <rect x="3" y="14" width="7" height="7" rx="2" />
+    <rect x="14" y="14" width="7" height="7" rx="2" />
+  </Icone>
+)
+
+export const IconeBugs = () => (
+  <Icone>
+    <rect x="7" y="8" width="10" height="12" rx="5" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2M3 13h4M17 13h4M4 19l3-2M20 19l-3-2M4 7l3 2M20 7l-3 2" />
+  </Icone>
+)
+
+export const IconeRoadmap = () => (
+  <Icone>
+    <path d="M4 6h10M4 12h16M4 18h7" />
+    <circle cx="17" cy="6" r="2" />
+    <circle cx="14" cy="18" r="2" />
+  </Icone>
+)
+
+/** Três pontos: a aba "Mais" do celular. */
+export const IconeMais = () => (
+  <Icone>
+    <circle cx="5" cy="12" r="1.3" />
+    <circle cx="12" cy="12" r="1.3" />
+    <circle cx="19" cy="12" r="1.3" />
+  </Icone>
+)
+
+/** Sinal de mais: criar alguma coisa. */
+export const IconeNovo = () => (
+  <Icone traco={2}>
+    <path d="M12 5v14M5 12h14" />
+  </Icone>
+)
+
+export const IconeMapa = () => (
+  <Icone>
+    <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z" />
+    <path d="M9 4v14M15 6v14" />
+  </Icone>
+)
+
+export const IconeDiscord = () => (
+  <Icone>
+    <path d="M8 7.5a14 14 0 0 1 8 0M7 16.5a14 14 0 0 0 10 0" />
+    <path d="M7.5 6 5 6.8C3.3 9.5 2.6 12.4 3 16.5c1.5 1.2 3 1.8 4.5 2.1l1-2M16.5 6l2.5.8c1.7 2.7 2.4 5.6 2 9.7-1.5 1.2-3 1.8-4.5 2.1l-1-2" />
+    <circle cx="9" cy="12.5" r="1.2" />
+    <circle cx="15" cy="12.5" r="1.2" />
+  </Icone>
+)
+
+export const IconePessoa = () => (
+  <Icone>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </Icone>
+)

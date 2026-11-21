@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { chamarApi } from './apiClient.ts'
-import { Entrar } from './Entrar.tsx'
+import { NovaSenha } from './NovaSenha.tsx'
+import { TelasPublicas } from './TelasPublicas.tsx'
 
 export type Workspace = { id: string; nome: string; papel: string }
 
@@ -28,6 +29,8 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
   const [tentativa, setTentativa] = useState(0)
   const [resultado, setResultado] = useState<{ chave: string; workspaces: Workspace[] | null } | null>(null)
   const [escolhaId, setEscolhaId] = useState<string | null>(null)
+  // Chegou pelo link de "Esqueci a senha": antes de tudo, escolhe a senha nova.
+  const [recuperando, setRecuperando] = useState(false)
 
   useEffect(() => {
     let ativo = true
@@ -37,7 +40,10 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
         setSessaoLida(true)
       }
     })
-    const { data } = cliente.auth.onAuthStateChange((_evento, nova) => setSessao(nova))
+    const { data } = cliente.auth.onAuthStateChange((evento, nova) => {
+      setSessao(nova)
+      if (evento === 'PASSWORD_RECOVERY') setRecuperando(true)
+    })
     return () => {
       ativo = false
       data.subscription.unsubscribe()
@@ -124,7 +130,13 @@ export function AuthProvider({ cliente, children }: { cliente: SupabaseClient; c
 
   return (
     <AuthContexto.Provider value={valor}>
-      {estado === 'sem-sessao' ? <Entrar cliente={cliente} /> : children}
+      {recuperando && sessao ? (
+        <NovaSenha cliente={cliente} aoConcluir={() => setRecuperando(false)} />
+      ) : estado === 'sem-sessao' ? (
+        <TelasPublicas cliente={cliente} />
+      ) : (
+        children
+      )}
     </AuthContexto.Provider>
   )
 }

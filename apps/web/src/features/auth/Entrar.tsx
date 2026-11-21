@@ -1,15 +1,15 @@
 import { useId, useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { useAvisos } from '../../ui/avisos.ts'
-import { Logo } from '../../ui/Marca.tsx'
+import { PUBLICAS } from '../../ui/rota.ts'
 import { useVarredura } from '../../ui/transicao.ts'
+import { LayoutL2 } from './LayoutL2.tsx'
 
-// Prévia decorativa do lado da marca (não são dados de ninguém).
-const PREVIA = [
-  { titulo: 'Filtro por ambiente', selo: 'selo-ok', rotulo: 'Sucesso' },
-  { titulo: 'Ajuste no lead time', selo: 'selo-andamento', rotulo: 'Rodando' },
-  { titulo: 'Novo tema escuro', selo: 'selo-erro', rotulo: 'Falhou' },
-]
+/** Depois de entrar, quem estava numa tela pública (#/criar-conta…) cai no Início. */
+function irParaInicioSePublica() {
+  const tela = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0]
+  if ((PUBLICAS as readonly string[]).includes(tela)) window.history.replaceState(null, '', '#/inicio')
+}
 
 export function Entrar({ cliente }: { cliente: SupabaseClient }) {
   const [email, setEmail] = useState('')
@@ -24,6 +24,7 @@ export function Entrar({ cliente }: { cliente: SupabaseClient }) {
     e.preventDefault()
     setErro('')
     setEnviando(true)
+    irParaInicioSePublica()
     const { error } = await cliente.auth.signInWithPassword({ email, password: senha })
     setEnviando(false)
     if (error) {
@@ -35,79 +36,62 @@ export function Entrar({ cliente }: { cliente: SupabaseClient }) {
   }
 
   return (
-    <main className="login">
-      <section className="login-marca">
-        <Logo className="login-logo" />
-        <div className="login-frase">
-          <h2>
-            Deploy sem drama.
-            <br />
-            <em>Release sem susto.</em>
-          </h2>
-          <p>O calendário do que sobe e a fila de revisões do time, num lugar só.</p>
+    <LayoutL2>
+      <form className="login-form" onSubmit={(e) => void enviar(e)} aria-label="Entrar no portal">
+        <div className="login-titulo">
+          <h1>Entrar</h1>
+          <p className="suave">Bora pro deploy de hoje? Entre para ver o que sobe e o que está em revisão.</p>
         </div>
-        <div className="cartao login-previa" aria-hidden="true">
-          {PREVIA.map((p) => (
-            <div key={p.titulo} className="login-previa-item">
-              <span>{p.titulo}</span>
-              <span className={`selo ${p.selo}`}>{p.rotulo}</span>
-            </div>
-          ))}
+        <div className="campo">
+          <label className="campo-rotulo" htmlFor={`${id}-email`}>
+            E-mail
+          </label>
+          <input
+            id={`${id}-email`}
+            className="controle"
+            type="email"
+            autoComplete="email"
+            placeholder="voce@exemplo.com"
+            autoFocus
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={erro ? true : undefined}
+          />
         </div>
-      </section>
-
-      <section className="login-lado-form">
-        <form className="login-form" onSubmit={(e) => void enviar(e)} aria-label="Entrar no portal">
-          <div className="login-titulo">
-            <h1>Entrar</h1>
-            <p className="suave">Bora pro deploy de hoje? Entre para ver o que sobe e o que está em revisão.</p>
-          </div>
-          <div className="campo">
-            <label className="campo-rotulo" htmlFor={`${id}-email`}>
-              E-mail
-            </label>
-            <input
-              id={`${id}-email`}
-              className="controle"
-              type="email"
-              autoComplete="email"
-              placeholder="voce@exemplo.com"
-              autoFocus
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={erro ? true : undefined}
-            />
-          </div>
-          <div className="campo">
+        <div className="campo">
+          <div className="campo-cab">
             <label className="campo-rotulo" htmlFor={`${id}-senha`}>
               Senha
             </label>
-            <input
-              id={`${id}-senha`}
-              className="controle"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              aria-invalid={erro ? true : undefined}
-            />
+            <a className="link-p" href="#/esqueci">
+              Esqueci a senha
+            </a>
           </div>
-          {erro && (
-            <p role="alert" className="campo-erro">
-              {erro}
-            </p>
-          )}
-          <button type="submit" className="botao botao-primario botao-g botao-cheio" disabled={enviando}>
-            {enviando && <span className="giro" aria-hidden="true" />}
-            {enviando ? 'Entrando…' : 'Entrar'}
-          </button>
-          <p className="login-rodape">
-            Só quer dar uma olhada? <a href="/demo">Ver a demo</a>
+          <input
+            id={`${id}-senha`}
+            className="controle"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            aria-invalid={erro ? true : undefined}
+          />
+        </div>
+        {erro && (
+          <p role="alert" className="campo-erro">
+            {erro}
           </p>
-        </form>
-      </section>
-    </main>
+        )}
+        <button type="submit" className="botao botao-primario botao-g botao-cheio" disabled={enviando}>
+          {enviando && <span className="giro" aria-hidden="true" />}
+          {enviando ? 'Entrando…' : 'Entrar'}
+        </button>
+        <p className="login-rodape">
+          Primeira vez por aqui? <a href="#/criar-conta">Criar conta</a> · <a href="/demo">Ver a demo</a>
+        </p>
+      </form>
+    </LayoutL2>
   )
 }
