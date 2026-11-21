@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Casca, type Conta, type ItemNav } from './Casca.tsx'
 import { IconePerformance, IconeVisao } from './icones.tsx'
@@ -135,5 +136,33 @@ describe('Casca — busca rápida (Ctrl+K)', () => {
     ctrlK()
     fireEvent.change(within(paleta()!).getByRole('combobox'), { target: { value: 'pausar' } })
     expect(within(paleta()!).getByText('Nada encontrado')).toBeInTheDocument()
+  })
+
+  it('Ctrl+K funciona no instante em que a casca aparece (aparelho lento / usuário rápido)', async () => {
+    // Fora do act, como no navegador: o React desenha numa tarefa e só roda os useEffect numa tarefa
+    // seguinte. A tecla vem logo que a casca aparece, antes dessa tarefa: o atalho não pode se perder.
+    const ambiente = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    const antes = ambiente.IS_REACT_ACT_ENVIRONMENT
+    ambiente.IS_REACT_ACT_ENVIRONMENT = false
+    const host = document.body.appendChild(document.createElement('div'))
+    const raiz = createRoot(host)
+    try {
+      const apareceu = new Promise<void>((resolver) => {
+        const observador = new MutationObserver(() => {
+          if (!host.querySelector('nav')) return
+          observador.disconnect()
+          ctrlK()
+          resolver()
+        })
+        observador.observe(host, { childList: true, subtree: true })
+      })
+      raiz.render(<Montada conta={{ email: 'dono@exemplo.com', aoSair: vi.fn() }} />)
+      await apareceu
+      await waitFor(() => expect(paleta()).toBeInTheDocument())
+    } finally {
+      raiz.unmount()
+      host.remove()
+      ambiente.IS_REACT_ACT_ENVIRONMENT = antes
+    }
   })
 })
