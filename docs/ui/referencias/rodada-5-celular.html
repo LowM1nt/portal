@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Padrão visual — rodada 5: celular</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --fundo:#110b1b; --sup:rgba(30,19,45,.85); --sup-s:#1c1329; --sup2:#251a36; --borda:rgba(155,77,255,.16); --texto:#f5effb; --suave:#b3a6c9; --apagado:#7f7396; --roxo:#9b4dff; --roxo-claro:#c89bff; --roxo-suave:rgba(155,77,255,.16); --aura:0 2px 8px rgba(155,77,255,.18); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #0b0712; color: var(--texto); padding: 48px 32px 96px; }
+  .pagina { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; }
+  .intro { color: var(--suave); margin-top: 10px; font-size: 15px; line-height: 1.6; max-width: 860px; }
+  .grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 36px; justify-items: center; }
+  .col { width: 100%; max-width: 340px; }
+  .rot { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; min-height: 66px; }
+  .rot b { display: inline-grid; place-items: center; min-width: 34px; height: 28px; border-radius: 9px; background: var(--sup2); font-size: 13px; font-weight: 800; flex: none; }
+  .rot .n { font-weight: 800; font-size: 15px; }
+  .rot .d { display: block; color: var(--suave); font-size: 13px; margin-top: 2px; line-height: 1.4; }
+
+  .cel { position: relative; width: 320px; height: 660px; margin: 0 auto; border-radius: 44px; padding: 10px; background: #2a2236; box-shadow: 0 30px 60px rgba(0,0,0,.5); }
+  .tela { position: relative; height: 100%; border-radius: 36px; overflow: hidden; background: var(--fundo); }
+  .tela::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(360px 220px at 90% -5%, rgba(155,77,255,.30), transparent 70%), radial-gradient(320px 200px at 0% 105%, rgba(214,92,255,.16), transparent 70%); }
+  .status { position: relative; height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-size: 12px; font-weight: 700; }
+  .status i { width: 86px; height: 22px; border-radius: 999px; background: #000; position: absolute; left: 50%; top: 6px; transform: translateX(-50%); }
+  .topo { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 8px 18px 4px; }
+  .logo { display: inline-flex; align-items: baseline; font-size: 22px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+  .logo .p { width: .2em; height: .2em; border-radius: 50%; background: var(--roxo); margin-left: .04em; }
+  .topo .acoes { display: flex; gap: 6px; }
+  .ib { width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; color: var(--suave); }
+  .ib svg { width: 19px; height: 19px; }
+  .av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--roxo-claro), #ff9ccc); }
+  .titulo { position: relative; padding: 14px 18px 0; }
+  .titulo h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .titulo p { color: var(--suave); font-size: 12.5px; margin-top: 3px; }
+  .chips { position: relative; display: flex; gap: 8px; padding: 14px 18px 0; }
+  .chip { height: 30px; padding: 0 13px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--suave); background: var(--sup2); border: 1px solid var(--borda); white-space: nowrap; }
+  .chip.at { background: var(--roxo); color: #fff; border-color: transparent; }
+  .lista { position: relative; padding: 14px 18px 0; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--sup); backdrop-filter: blur(6px); border: 1px solid var(--borda); border-radius: 16px; padding: 13px 14px; }
+  .card .l1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .card b { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .l2 { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--suave); font-size: 12px; white-space: nowrap; }
+  .card .l2 i { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, var(--roxo-claro), #ff9ccc); }
+  .card .l2 span:last-child { margin-left: auto; }
+  .selo { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: 700; flex: none; }
+  .selo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .ok { color: #34d399; background: rgba(52,211,153,.12); } .rod { color: var(--roxo-claro); background: var(--roxo-suave); } .fal { color: #fb7185; background: rgba(251,113,133,.13); }
+
+  .fab { position: absolute; right: 18px; width: 56px; height: 56px; border-radius: 999px; background: var(--roxo); color: #fff; display: grid; place-items: center; box-shadow: 0 6px 16px rgba(155,77,255,.30); z-index: 3; }
+  .fab svg { width: 24px; height: 24px; }
+  .fab.ext { width: auto; height: 50px; padding: 0 20px 0 16px; display: inline-flex; gap: 8px; font-size: 14px; font-weight: 700; }
+  .fab.ext svg { width: 20px; height: 20px; }
+  .indicador { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); width: 110px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.55); z-index: 4; }
+
+  /* W1: barra no rodapé estilo WhatsApp (pílula atrás do ícone + nome) */
+  .w1 .abas { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; padding: 8px 6px 20px; display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(22,14,34,.96); border-top: 1px solid var(--borda); z-index: 2; }
+  .w1 .aba { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--suave); font-size: 11px; font-weight: 600; }
+  .w1 .aba .ic { width: 58px; height: 30px; border-radius: 999px; display: grid; place-items: center; }
+  .w1 .aba svg { width: 21px; height: 21px; }
+  .w1 .aba.at { color: var(--texto); font-weight: 700; }
+  .w1 .aba.at .ic { background: var(--roxo-suave); color: var(--roxo-claro); }
+  .w1 .fab { bottom: 98px; }
+  .badge { position: absolute; transform: translate(12px, -10px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--roxo); color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
+  .ic { position: relative; }
+
+  /* W2: barra flutuante (o dock B deitado) */
+  .w2 .abas { position: absolute; left: 16px; right: 16px; bottom: 22px; height: 64px; padding: 8px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: rgba(30,19,45,.92); backdrop-filter: blur(6px); border: 1px solid var(--borda); border-radius: 999px; z-index: 2; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  .w2 .aba { display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; color: var(--suave); font-size: 12px; font-weight: 700; }
+  .w2 .aba svg { width: 21px; height: 21px; }
+  .w2 .aba span { display: none; }
+  .w2 .aba.at { background: var(--roxo); color: #fff; box-shadow: var(--aura); }
+  .w2 .fab { bottom: 100px; }
+
+  /* W3: abas no topo, deslizáveis (o WhatsApp clássico do Android) */
+  .w3 .abas-topo { position: relative; display: flex; padding: 12px 18px 0; gap: 4px; border-bottom: 1px solid var(--borda); }
+  .w3 .abas-topo span { flex: 1; text-align: center; padding: 10px 0 12px; font-size: 13px; font-weight: 600; color: var(--suave); position: relative; }
+  .w3 .abas-topo span.at { color: var(--texto); font-weight: 700; }
+  .w3 .abas-topo span.at::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--roxo); }
+  .w3 .fab { bottom: 32px; }
+  .dica-gesto { position: absolute; left: 50%; bottom: 108px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--apagado); white-space: nowrap; }
+  .w1 .dica-gesto, .w2 .dica-gesto { bottom: 158px; }
+  .dica-gesto svg { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <h1>Rodada 5: o Releasy no celular</h1>
+  <p class="intro">Navegação estilo WhatsApp: poucos destinos, sempre ao alcance do polegar, e dá pra <b>arrastar para o lado</b> para trocar de tela. As listas viram cartões. O botão "+" redondo (flutuante) é a ação principal da tela. Escolha o estilo de navegação.</p>
+  <div class="grade" id="g"></div>
+</div>
+
+<template id="t">
+  <div class="cel"><div class="tela">
+    <div class="status"><span>9:41</span><i></i><span>5G ▮</span></div>
+    <div class="topo"><span class="logo">releasy<i class="p"></i></span><div class="acoes"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span><span class="ib"><span class="av"></span></span></div></div>
+    <div class="slot-topo"></div>
+    <div class="titulo"><h2>Deploys</h2><p>Semana de 17 a 23 de nov.</p></div>
+    <div class="chips"><span class="chip at">Semana</span><span class="chip">Mês</span><span class="chip">Lista</span></div>
+    <div class="lista">
+      <div class="card"><div class="l1"><b>Filtro por ambiente</b><span class="selo ok">Sucesso</span></div><div class="l2"><i></i><span>Ana Souza</span><span>Hoje, 16:00</span></div></div>
+      <div class="card"><div class="l1"><b>Ajuste no lead time</b><span class="selo rod">Rodando</span></div><div class="l2"><i></i><span>Bruno Lima</span><span>Amanhã, 11:00</span></div></div>
+      <div class="card"><div class="l1"><b>Novo tema escuro</b><span class="selo fal">Falhou</span></div><div class="l2"><i></i><span>Carla Dias</span><span>Sex, 15:00</span></div></div>
+    </div>
+    <div class="dica-gesto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>arraste para trocar de aba</div>
+    <span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    <div class="slot-baixo"></div>
+    <i class="indicador"></i>
+  </div></div>
+</template>
+
+<script>
+  const ic = {
+    inicio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>',
+    deploys: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+    revisoes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5v7M18 15.5V10a4 4 0 0 0-4-4h-3"/></svg>',
+    perf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 16l4-5 3 3 5-7"/></svg>',
+  };
+  const abas = [['inicio', 'Início'], ['deploys', 'Deploys', true], ['revisoes', 'Revisões', false, 2], ['perf', 'Métricas']];
+  const op = [
+    ['W1', 'w1', 'Barra no rodapé, estilo WhatsApp', 'ícone e nome em todas as abas; a ativa ganha uma pílula e há contador de pendências.'],
+    ['W2', 'w2', 'Barra flutuante (o dock deitado)', 'a mesma pílula do desktop, só que embaixo; só ícones, com a ativa preenchida.'],
+    ['W3', 'w3', 'Abas no topo, deslizáveis', 'o WhatsApp clássico do Android: abas com nome embaixo do logo e sublinhado roxo.'],
+  ];
+  const g = document.getElementById('g');
+  for (const [c, cls, n, d] of op) {
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.innerHTML = `<div class="rot"><b>${c}</b><span><span class="n">${n}</span><span class="d">${d}</span></span></div>`;
+    const t = document.getElementById('t').content.cloneNode(true);
+    const cel = t.firstElementChild;
+    cel.classList.add(cls);
+    if (cls === 'w3') {
+      cel.querySelector('.slot-topo').outerHTML = `<div class="abas-topo">${abas.map(([k, nome, at]) => `<span class="${at ? 'at' : ''}">${nome}</span>`).join('')}</div>`;
+      cel.querySelector('.titulo h2').textContent = 'Semana de 17 a 23 de nov.';
+      cel.querySelector('.titulo p').textContent = '4 deploys · 2 PRs esperando você';
+    } else {
+      cel.querySelector('.slot-baixo').outerHTML = `<nav class="abas">${abas.map(([k, nome, at, b]) => cls === 'w1'
+        ? `<div class="aba ${at ? 'at' : ''}"><span class="ic">${ic[k]}${b ? `<span class="badge">${b}</span>` : ''}</span>${nome}</div>`
+        : `<div class="aba ${at ? 'at' : ''}">${ic[k]}<span>${nome}</span></div>`).join('')}</nav>`;
+    }
+    col.appendChild(t);
+    g.appendChild(col);
+  }
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 # Madrugada — meu design system pessoal
+> ⚠️ **Substituído** pelo padrão visual do Releasy em [`docs/ui/`](../ui/README.md) (20/11/2026). Mantido só como histórico.
 
 O visual de tudo o que eu construo: o painel do agente, o portal, o CRM, o portfólio e a loja.
 
