@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import PerfilSeletor from './PerfilSeletor.tsx'
+import { ToastProvider } from '../../ui/Toasts.tsx'
 import { clienteContrato, type Opcoes } from '../../test/clienteContrato.ts'
 
 const linhas: Opcoes['linhas'] = {
@@ -29,7 +30,7 @@ describe('PerfilSeletor', () => {
   it('escolher outro perfil e confirmar grava trocar_perfil com args {perfil}', async () => {
     const usuario = userEvent.setup()
     const { cliente, inserts } = clienteContrato({ linhas })
-    render(<PerfilSeletor cliente={cliente} />)
+    render(<PerfilSeletor cliente={cliente} />, { wrapper: ToastProvider })
     await usuario.selectOptions(await screen.findByRole('combobox'), 'economico')
     await usuario.click(screen.getByRole('button', { name: /trocar/i }))
     expect(

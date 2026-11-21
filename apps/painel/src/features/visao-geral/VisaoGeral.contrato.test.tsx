@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import VisaoGeral from './VisaoGeral.tsx'
+import { ToastProvider } from '../../ui/Toasts.tsx'
 import { clienteContrato, type Opcoes } from '../../test/clienteContrato.ts'
 
 const ha = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
@@ -69,10 +70,12 @@ describe('VisaoGeral pelo contrato', () => {
   it('mostra o erro do botão quando a gravação do comando falha', async () => {
     const usuario = userEvent.setup()
     const { cliente } = clienteContrato({ linhas: noiteReal, erroInsert: true })
-    render(<VisaoGeral cliente={cliente} />)
+    render(<VisaoGeral cliente={cliente} />, { wrapper: ToastProvider })
     await usuario.click(await screen.findByRole('button', { name: 'Cancelar post' }))
+    await usuario.click(screen.getByRole('button', { name: 'Sim, cancelar post' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível cancelar/i)
     await usuario.click(screen.getByRole('button', { name: 'Pausar agente' }))
+    await usuario.click(screen.getByRole('button', { name: 'Sim, pausar' }))
     await waitFor(() => expect(screen.getByText(/não foi possível enviar o comando de pausa/i)).toBeInTheDocument())
   })
 
@@ -111,11 +114,13 @@ describe('VisaoGeral pelo contrato', () => {
     render(<VisaoGeral cliente={cliente} />)
 
     await usuario.click(await screen.findByRole('button', { name: 'Cancelar post' }))
+    await usuario.click(screen.getByRole('button', { name: 'Sim, cancelar post' }))
     await waitFor(() => expect(inserts).toHaveLength(1))
     expect(inserts[0].tabela).toBe('comandos')
     expect(inserts[0].valor.comando).toBe('cancelar_post')
 
     await usuario.click(screen.getByRole('button', { name: 'Pausar agente' }))
+    await usuario.click(screen.getByRole('button', { name: 'Sim, pausar' }))
     await waitFor(() => expect(inserts).toHaveLength(2))
     expect(inserts[1].tabela).toBe('comandos')
     expect(inserts[1].valor.comando).toBe('pausar')
