@@ -12,7 +12,5 @@ WORKDIR /app
 COPY --from=build /app .
 ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
-ENV DataProtection__PastaDasChaves=/app/chaves-dp
-RUN mkdir -p /app/chaves-dp && chown app:app /app/chaves-dp
 USER app
 ENTRYPOINT ["dotnet", "Portal.Api.dll"]

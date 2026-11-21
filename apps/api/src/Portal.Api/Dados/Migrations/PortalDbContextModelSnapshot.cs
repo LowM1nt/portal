@@ -23,6 +23,28 @@ namespace Portal.Api.Dados.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text")
+                        .HasColumnName("xml");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("chaves_protecao_dados", (string)null);
+                });
+
             modelBuilder.Entity("Portal.Api.Dados.Entidades.Deploy", b =>
                 {
                     b.Property<Guid>("Id")
@@ -95,24 +117,24 @@ namespace Portal.Api.Dados.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
 
+                    b.Property<bool>("Draft")
+                        .HasColumnType("boolean")
+                        .HasColumnName("draft");
+
+                    b.Property<List<string>>("EquipesSolicitadas")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("equipes_solicitadas");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("estado");
 
-                    b.Property<bool>("Draft")
-                        .HasColumnType("boolean")
-                        .HasColumnName("draft");
-
                     b.Property<int>("Numero")
                         .HasColumnType("integer")
                         .HasColumnName("numero");
-
-                    b.Property<List<string>>("EquipesSolicitadas")
-                        .IsRequired()
-                        .HasColumnType("text[]")
-                        .HasColumnName("equipes_solicitadas");
 
                     b.Property<Guid>("RepositorioId")
                         .HasColumnType("uuid")

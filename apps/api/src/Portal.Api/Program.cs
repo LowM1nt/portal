@@ -28,10 +28,13 @@ builder.Services.AddSingleton(TimeProvider.System);
 if (!builder.Environment.IsEnvironment("Testing"))
     builder.Services.AddHostedService<SincronizacaoGitHub>();
 // Chaves do Data Protection persistidas: sem isso, cada reinício do container gera chaves novas e os
-// tokens já salvos (GitHub) ficam ilegíveis. Pasta vem de DataProtection:PastaDasChaves (volume no compose).
+// tokens já salvos (GitHub) ficam ilegíveis. Com banco, ficam no Postgres (tabela chaves_protecao_dados),
+// que sobrevive a reinícios do Render; a pasta (DataProtection:PastaDasChaves) é só para rodar sem banco.
 var protecaoDeDados = builder.Services.AddDataProtection().SetApplicationName("portal");
 var pastaDasChaves = builder.Configuration["DataProtection:PastaDasChaves"];
-if (!string.IsNullOrWhiteSpace(pastaDasChaves))
+if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("Portal")))
+    protecaoDeDados.PersistKeysToDbContext<PortalDbContext>();
+else if (!string.IsNullOrWhiteSpace(pastaDasChaves))
     protecaoDeDados.PersistKeysToFileSystem(new DirectoryInfo(pastaDasChaves));
 builder.Services.AddAutenticacaoSupabase();
 builder.Services.AddSegurancaHttp();
