@@ -1,4 +1,5 @@
 import type { Rota } from '../../ui/rota.ts'
+import { hrefPasso } from '../primeiros-passos/primeirosPassos.ts'
 import { Integracoes } from './Integracoes.tsx'
 import { Time } from './Time.tsx'
 import './config.css'
@@ -21,6 +22,9 @@ export function Config({ rota }: { rota: Rota }) {
             </a>
           ))}
         </nav>
+        <a className="botao botao-fantasma botao-p" href={hrefPasso(1)}>
+          Primeiros passos
+        </a>
       </div>
       {aba === 'time' ? <Time /> : <Integracoes />}
     </div>
