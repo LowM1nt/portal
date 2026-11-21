@@ -69,4 +69,10 @@ public class Bug
     public StatusBug Status { get; set; } = StatusBug.ATriar;
     public DateTimeOffset CriadoEm { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset AtualizadoEm { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>Nome visível de quem relatou fora do portal (Discord). Nulo nos bugs manuais.</summary>
+    public string? Autor { get; set; }
+
+    /// <summary>Id da mensagem de origem (Discord). Único por workspace: a mesma mensagem não vira dois bugs.</summary>
+    public string? MensagemExternaId { get; set; }
 }

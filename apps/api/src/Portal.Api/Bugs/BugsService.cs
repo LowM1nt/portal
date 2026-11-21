@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Portal.Api.Bugs.Extracao;
 using Portal.Api.Dados;
 using Portal.Api.Deploys;
 
@@ -10,7 +11,7 @@ public record BugStatusPedido(string? Status);
 
 public record BugResposta(
     Guid Id, string Titulo, string Relato, string Passos, string Esperado, string Obtido,
-    string Severidade, string Origem, string Status, DateTimeOffset CriadoEm, DateTimeOffset AtualizadoEm);
+    string Severidade, string Origem, string Status, DateTimeOffset CriadoEm, DateTimeOffset AtualizadoEm, string? Autor = null);
 
 public class BugsService
 {
@@ -29,7 +30,7 @@ public class BugsService
 
     private static BugResposta Mapear(Bug b) => new(
         b.Id, b.Titulo, b.Relato, b.Passos, b.Esperado, b.Obtido,
-        TextoBug.Para(b.Severidade), TextoBug.Para(b.Origem), TextoBug.Para(b.Status), b.CriadoEm, b.AtualizadoEm);
+        TextoBug.Para(b.Severidade), TextoBug.Para(b.Origem), TextoBug.Para(b.Status), b.CriadoEm, b.AtualizadoEm, b.Autor);
 
     public async Task<Resultado<List<BugResposta>>> ListarAsync(string? status, CancellationToken ct)
     {
@@ -78,6 +79,8 @@ public class BugsService
             AtualizadoEm = agora,
         };
         _db.Bugs.Add(bug);
+        // Com chave de IA no workspace, a extração (P-026) entra na fila na mesma transação do bug.
+        await FilaDeExtracao.EnfileirarSeTiverChaveAsync(_db, bug, agora, ct);
         await _db.SaveChangesAsync(ct);
         return new(ResultadoTipo.Ok, Mapear(bug));
     }

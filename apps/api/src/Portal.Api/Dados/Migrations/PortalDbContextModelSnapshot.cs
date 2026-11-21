@@ -56,6 +56,11 @@ namespace Portal.Api.Dados.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("atualizado_em");
 
+                    b.Property<string>("Autor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("autor");
+
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
@@ -65,6 +70,11 @@ namespace Portal.Api.Dados.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("esperado");
+
+                    b.Property<string>("MensagemExternaId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("mensagem_externa_id");
 
                     b.Property<string>("Obtido")
                         .IsRequired()
@@ -114,9 +124,189 @@ namespace Portal.Api.Dados.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("WorkspaceId", "MensagemExternaId")
+                        .IsUnique()
+                        .HasFilter("mensagem_externa_id IS NOT NULL");
+
                     b.HasIndex("WorkspaceId", "Status");
 
                     b.ToTable("bugs", (string)null);
+                });
+
+            modelBuilder.Entity("Portal.Api.Bugs.Discord.ConfiguracaoDiscord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CanalId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("canal_id");
+
+                    b.Property<DateTimeOffset>("ConfiguradoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("configurado_em");
+
+                    b.Property<string>("FinalToken")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)")
+                        .HasColumnName("final_token");
+
+                    b.Property<string>("TokenCriptografado")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_criptografado");
+
+                    b.Property<DateTimeOffset?>("UltimaLeitura")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultima_leitura");
+
+                    b.Property<string>("UltimaMensagemId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("ultima_mensagem_id");
+
+                    b.Property<string>("UltimoErro")
+                        .HasColumnType("text")
+                        .HasColumnName("ultimo_erro");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId")
+                        .IsUnique();
+
+                    b.ToTable("configuracoes_discord", (string)null);
+                });
+
+            modelBuilder.Entity("Portal.Api.Bugs.Extracao.ConfiguracaoIa", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ChaveCriptografada")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chave_criptografada");
+
+                    b.Property<DateTimeOffset>("ConfiguradoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("configurado_em");
+
+                    b.Property<string>("Provedor")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("provedor");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId")
+                        .IsUnique();
+
+                    b.ToTable("configuracoes_ia", (string)null);
+                });
+
+            modelBuilder.Entity("Portal.Api.Bugs.Extracao.SugestaoIa", b =>
+                {
+                    b.Property<Guid>("BugId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bug_id");
+
+                    b.Property<string>("Ambiente")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("ambiente");
+
+                    b.Property<string>("Area")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("area");
+
+                    b.Property<DateTimeOffset>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizado_em");
+
+                    b.Property<int?>("Confianca")
+                        .HasColumnType("integer")
+                        .HasColumnName("confianca");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Erro")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("erro");
+
+                    b.Property<string>("Esperado")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("esperado");
+
+                    b.Property<string[]>("Evidencias")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("evidencias");
+
+                    b.Property<string>("Obtido")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("obtido");
+
+                    b.Property<string>("Passos")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("passos");
+
+                    b.Property<DateTimeOffset>("ProximaTentativaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("proxima_tentativa_em");
+
+                    b.Property<string>("Severidade")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("severidade");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer")
+                        .HasColumnName("tentativas");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("BugId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.HasIndex("Status", "ProximaTentativaEm");
+
+                    b.ToTable("sugestoes_ia", (string)null);
                 });
 
             modelBuilder.Entity("Portal.Api.Dados.Entidades.Deploy", b =>
@@ -536,6 +726,39 @@ namespace Portal.Api.Dados.Migrations
 
             modelBuilder.Entity("Portal.Api.Bugs.Bug", b =>
                 {
+                    b.HasOne("Portal.Api.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Bugs.Discord.ConfiguracaoDiscord", b =>
+                {
+                    b.HasOne("Portal.Api.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Bugs.Extracao.ConfiguracaoIa", b =>
+                {
+                    b.HasOne("Portal.Api.Workspaces.Workspace", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Portal.Api.Bugs.Extracao.SugestaoIa", b =>
+                {
+                    b.HasOne("Portal.Api.Bugs.Bug", null)
+                        .WithOne()
+                        .HasForeignKey("Portal.Api.Bugs.Extracao.SugestaoIa", "BugId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Portal.Api.Workspaces.Workspace", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")

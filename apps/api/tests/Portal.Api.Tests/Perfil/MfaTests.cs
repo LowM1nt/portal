@@ -68,6 +68,14 @@ public class MfaTests
         Pedido("GET", "/api/metricas"),
         Pedido("GET", "/api/integracoes/github"),
         Pedido("DELETE", "/api/integracoes/github"),
+        Pedido("GET", "/api/integracoes/discord"),
+        Pedido("PUT", "/api/integracoes/discord", new { token = "x", canalId = "123456789012345678" }),
+        Pedido("DELETE", "/api/integracoes/discord"),
+        Pedido("GET", "/api/integracoes/ia"),
+        Pedido("PUT", "/api/integracoes/ia", new { provedor = "gemini", chave = "x" }),
+        Pedido("DELETE", "/api/integracoes/ia"),
+        Pedido("GET", "/api/triagem"),
+        Pedido("POST", $"/api/triagem/{Guid.NewGuid()}", new { acao = "aprovar" }),
         Pedido("GET", "/api/workspace/membros"),
         Pedido("GET", "/api/workspace/convites"),
         Pedido("POST", "/api/workspace/convites", new { email = "x@y.com", papel = "membro" }),
@@ -123,7 +131,7 @@ public class MfaTests
         var ws = await LigarMfa(api, ana);
         using var aal2 = api.ClienteCom(ana, workspace: ws, aal: "aal2");
 
-        foreach (var rota in new[] { "/api/bugs", "/api/roadmap", "/api/repositorios", "/api/workspace/membros", "/api/integracoes/github", $"/api/workspaces/{ws}" })
+        foreach (var rota in new[] { "/api/bugs", "/api/roadmap", "/api/repositorios", "/api/workspace/membros", "/api/integracoes/github", "/api/integracoes/discord", "/api/integracoes/ia", "/api/triagem", $"/api/workspaces/{ws}" })
         {
             using var r = await aal2.GetAsync(rota);
             Assert.True(r.StatusCode == HttpStatusCode.OK, $"{rota}: {r.StatusCode}");

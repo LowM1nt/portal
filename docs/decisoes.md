@@ -247,3 +247,104 @@ Contrato (novos):
 | `PUT /api/me/mfa` | Bearer **aal2**, `{ exigir: true\|false }` | `{ mfaExigido }` | 400 (sem `exigir`), 401, 403 `mfa_necessario` (token aal1) |
 | `GET /api/me` | Bearer (aal1 ou aal2) | passa a trazer `mfaExigido` | 401 |
 | qualquer rota autenticada | Bearer aal1 com `mfa_exigido` | — | 403 `{ erro, codigo: "mfa_necessario" }` |
+
+## D-014 — Bot de bugs no Discord, extração por IA e base da triagem · 21/11/2026 · decidida na implementação
+
+Implementa P-025 (D-006) e P-026 (D-007) na API, mais a base da tela de triagem do lote D.
+
+**Configuração (por workspace; só o dono muda, qualquer membro lê o estado)**
+
+- **Discord**: token do bot + ID do canal. O token é cifrado com Data Protection (propósito próprio,
+  `Portal.Integracoes.Discord.Token`), nunca volta (só os 4 últimos caracteres) e nunca vai para log. Trocar o canal
+  reinicia o cursor. O bot precisa estar no servidor, ter "Ver canal" e "Ler histórico de mensagens" no canal e o
+  intent privilegiado **Message Content** ligado no portal de desenvolvedores do Discord (sem ele o `content` vem vazio
+  e nada vira bug).
+- **IA**: provedor (`gemini`; outro entra implementando `IProvedorDeIa`) + chave do workspace, cifrada do mesmo jeito
+  (propósito `Portal.Integracoes.IA.Chave`). O GET diz só `configurado` e `provedor`: nem o final da chave volta.
+- Os `HttpClient` do Discord e do Gemini registram cabeçalhos sempre mascarados (`RedactLoggedHeaders`); a chave do
+  Gemini vai no cabeçalho `x-goog-api-key`, nunca na URL. Exceções viram log só com o tipo, nunca com a mensagem.
+
+**Fluxo do Discord (P-025)**: `CaptacaoDoDiscord`, serviço em segundo plano (fora do ambiente Testing).
+
+1. A cada **1 minuto**, para cada workspace com bot: `GET /api/v10/channels/{canal}/messages?after={cursor}&limit=100`
+   com `Authorization: Bot ...`. O cursor começa no instante da configuração (snowflake calculado da data): o histórico
+   anterior do canal **não** é importado.
+2. Cada mensagem de gente (tipos 0 e 19) com texto vira bug **"a triar"**, origem `discord`, título = 1ª linha (até 120
+   caracteres), relato = texto original, autor = nome visível (`global_name`, senão `username`). Bots, webhooks,
+   mensagens de sistema e mensagens sem texto (só anexo) são ignorados, mas contam para o cursor.
+3. **Deduplicação**: índice único `(workspace_id, mensagem_externa_id)` em `bugs` + checagem antes de inserir; bugs e
+   cursor gravam na mesma transação. A mesma mensagem nunca vira dois bugs (nem relendo do zero).
+4. Até **5 páginas** por workspace por ciclo; o resto fica para o próximo.
+5. **Rate limit**: 429 → respeita o `Retry-After` (cabeçalho ou `retry_after` do corpo; teto de 1 h) e não chama o
+   Discord desse workspace antes disso. Balde zerado (`X-RateLimit-Remaining: 0`) → para a paginação e espera o
+   `X-RateLimit-Reset-After`. A espera fica em memória (um reinício zera; o Discord responde 429 de novo se preciso).
+6. **Falha nunca derruba a API**: 401/403 → "Token do bot inválido ou sem acesso ao canal."; 404 → "Canal do Discord
+   não encontrado."; 5xx, rede, timeout (20 s) ou corpo ilegível → "Não foi possível ler o canal do Discord." O erro
+   fica em `configuracoes_discord.ultimo_erro` (aparece no GET) e some na próxima leitura boa. Um workspace com erro
+   não atrapalha os outros.
+
+**Fluxo da IA (P-026)**: `ProcessadorDeExtracao` + `ExtracaoEmSegundoPlano` (fora do ambiente Testing).
+
+1. Ao criar um bug (manual ou Discord), se o workspace tem chave, ele entra na fila (`sugestoes_ia`, status
+   `pendente`) na mesma transação. **Sem chave, nada entra na fila e a IA nunca é chamada**: o bug fica só com o relato.
+2. A cada **15 s**, até 10 pendentes por ciclo: monta o pedido, chama o provedor com a chave do próprio workspace e
+   grava o resultado. Se a chave foi apagada antes, a sugestão vira `cancelada` sem chamada nenhuma.
+3. **Limites**: só os primeiros **4.000 caracteres** do relato (e 200 do título) vão para a IA; saída limitada a
+   **1.024 tokens** (`maxOutputTokens`); resposta acima de 8.000 caracteres é rejeitada sem interpretar; o corpo HTTP
+   lido tem teto de 256 KB; **timeout de 30 s** por chamada.
+4. **Retentativas**: só para falha temporária (429, 5xx, timeout, rede): até **3 tentativas**, esperando 1 min e depois
+   2 min. Chave recusada (401/403 ou `API_KEY_INVALID`), pedido recusado e resposta fora do formato **não** são
+   retentados. Tudo que falha vira `falhou` com uma mensagem curta, e o bug segue normal.
+5. **Saída validada por schema**: objeto com exatamente as chaves `passos`, `esperado`, `obtido`, `ambiente`,
+   `severidade` (`baixa|media|alta|critica`), `area`, `confianca` (inteiro 0–100) e `evidencias` (até 3 trechos de até
+   200 caracteres), com teto de tamanho em cada texto. O schema também vai no pedido (`responseSchema`, saída
+   `application/json`), mas a validação é sempre do nosso lado. Qualquer desvio (chave a mais ou a menos, tipo errado,
+   enum fora, JSON quebrado, texto livre) **rejeita a resposta inteira**: nada é aproveitado.
+6. **A sugestão fica separada do bug**: `sugestoes_ia` guarda o que a IA disse; os campos do bug (`passos`,
+   `severidade`...) continuam sendo o que o humano escreveu ou confirmou na triagem.
+
+**Prompt injection**
+
+- O relato vai como **dado**: na mensagem do usuário, entre marcadores com um nonce aleatório por chamada
+  (`<<<RELATO_ab12...>>>` … `<<<FIM_RELATO_ab12...>>>`). `<<<`/`>>>` dentro do relato viram `‹‹‹`/`›››`, então o relato
+  não consegue "fechar" o bloco.
+- A instrução de sistema diz que tudo entre os marcadores é dado não confiável e que ordens ali (ignorar regras, mudar o
+  formato, revelar instruções, fingir ser o sistema) não devem ser obedecidas.
+- A defesa que vale mesmo é a validação: ainda que o modelo obedeça ao relato, a resposta só entra se bater exatamente
+  com o schema, e o que entra é texto curto e uma severidade de um enum, mostrados como sugestão para um humano aprovar.
+  A resposta nunca vira comando, nunca muda status sozinha e nunca é executada.
+
+**Triagem (base da tela do lote D)**: qualquer membro do workspace.
+
+- `GET /api/triagem`: até 100 bugs "a triar" (mais novos primeiro) com a sugestão (se houver) e o **possível
+  duplicado**: o bug mais parecido do mesmo workspace (entre os 500 mais recentes, fora os descartados) por similaridade
+  de palavras (Jaccard sem acento nem caixa, ignorando palavras curtas e comuns; 60% título + 40% título e primeiros
+  1.000 caracteres do relato), se a nota for ≥ 50. Sem embeddings.
+- `POST /api/triagem/{bugId}`: `aprovar` (exige sugestão `pronta`; aplica a severidade sugerida, move para
+  `em_andamento`, sugestão `aprovada`), `ajustar` (severidade escolhida, move para `em_andamento`; sugestão pronta vira
+  `ajustada`; funciona sem sugestão) ou `descartar` (sugestão `pronta`/`falhou` vira `descartada`; o bug continua "a
+  triar"). Bug que já não está "a triar" → 409.
+
+**Dados** (migration `BotDiscordEExtracaoIa`, RLS ligado nas tabelas novas): `bugs.autor`, `bugs.mensagem_externa_id`
+(+ índice único parcial); `configuracoes_discord`; `configuracoes_ia`; `sugestoes_ia` (uma por bug, FK com cascade).
+`GET /api/bugs` passa a trazer `autor` (ou null).
+
+**Limites conhecidos**: testado só com respostas gravadas (HttpMessageHandler falso), nunca contra o Discord ou o Gemini
+reais. A fila da IA assume uma instância (o Render hoje roda uma): com várias, duas poderiam processar a mesma pendente
+(mesmo resultado, chamada dobrada). Modelo padrão `gemini-2.5-flash`, configurável em `Ia:Gemini:Modelo`.
+
+Contrato da API:
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `GET /api/integracoes/discord` | Bearer, `X-Workspace-Id` | `{ configurado, finalToken, canalId, ultimaLeitura, ultimoErro, configuradoEm }` | 401, 404 |
+| `PUT /api/integracoes/discord` | idem (só dono), `{ token?, canalId }` (sem token = mantém o atual) | igual ao GET | 400, 401, 403, 404 |
+| `DELETE /api/integracoes/discord` | idem (só dono) | 204 | 401, 403, 404 |
+| `GET /api/integracoes/ia` | Bearer, `X-Workspace-Id` | `{ configurado, provedor }` | 401, 404 |
+| `PUT /api/integracoes/ia` | idem (só dono), `{ provedor: "gemini", chave? }` (sem chave = mantém a atual) | `{ configurado, provedor }` | 400, 401, 403, 404 |
+| `DELETE /api/integracoes/ia` | idem (só dono) | 204 | 401, 403, 404 |
+| `GET /api/triagem` | Bearer, `X-Workspace-Id` | `[{ bugId, titulo, relato, origem, autor, severidade, criadoEm, sugestao, possivelDuplicado }]`; `sugestao` = `{ status, severidade, area, passos, esperado, obtido, ambiente, confianca, evidencias, erro }` ou null; `possivelDuplicado` = `{ bugId, titulo, similaridade }` ou null | 401, 404 |
+| `POST /api/triagem/{bugId}` | idem, `{ acao: "aprovar"\|"ajustar"\|"descartar", severidade? }` | `{ bug, sugestao }` | 400 (ação/severidade), 401, 404 (inexistente ou de outro workspace), 409 (já triado; sem sugestão para aprovar/descartar) |
+
+Status da sugestão: `pendente`, `pronta`, `falhou`, `cancelada`, `aprovada`, `ajustada`, `descartada`. Todas as rotas
+novas passam pelo filtro de duas etapas (D-013).

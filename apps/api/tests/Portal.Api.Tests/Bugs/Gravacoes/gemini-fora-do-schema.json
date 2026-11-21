@@ -1,0 +1,15 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          { "text": "{\"passos\": \"1. Pagar\", \"esperado\": \"QR code\", \"obtido\": \"Tela branca\", \"ambiente\": \"\", \"severidade\": \"urgente\", \"area\": \"Checkout\", \"confianca\": 150, \"evidencias\": []}" }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "modelVersion": "gemini-2.5-flash"
+}
