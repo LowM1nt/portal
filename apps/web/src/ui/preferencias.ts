@@ -13,3 +13,6 @@ export const reduzirMovimento = (): boolean => consulta('(prefers-reduced-motion
 
 /** O sistema prefere o tema claro? (o escuro é o padrão do Releasy) */
 export const sistemaPrefereClaro = (): boolean => consulta('(prefers-color-scheme: light)')
+
+/** Layout de celular (abas no rodapé): mesma quebra do CSS. */
+export const eCelular = (): boolean => consulta('(max-width: 767px)')

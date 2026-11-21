@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { chaveDia, chaveDiaUtc, diasDaSemana, proximaSemana, rotuloSemana, semanaAnterior } from './semana.ts'
+import { chaveDia, chaveDiaUtc, diasDaSemana, periodo, proximaSemana, rotuloSemana, semanaAnterior } from './semana.ts'
 import { useAuth } from '../auth/AuthProvider.tsx'
 import { useDeploysDaSemana, type Deploy, type Fonte } from './useDeploysDaSemana.ts'
 import { useAvisoDeErro } from '../../ui/avisos.ts'
@@ -10,18 +10,9 @@ import './calendario.css'
 const diaSemana = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' })
 const diaNumero = new Intl.DateTimeFormat('pt-BR', { day: 'numeric' })
 const diaLongo = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-const mesLongo = new Intl.DateTimeFormat('pt-BR', { month: 'long' })
-const mesCurto = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
 const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' })
 
 const AMBIENTES: Record<string, string> = { producao: 'produção', homologacao: 'homologação' }
-
-/** "16 a 22 de novembro" ou, virando o mês, "30 de nov. a 6 de dez.". */
-function periodo(dias: Date[]): string {
-  const [inicio, fim] = [dias[0], dias[dias.length - 1]]
-  if (inicio.getMonth() === fim.getMonth()) return `${inicio.getDate()} a ${fim.getDate()} de ${mesLongo.format(fim)}`
-  return `${inicio.getDate()} de ${mesCurto.format(inicio)} a ${fim.getDate()} de ${mesCurto.format(fim)}`
-}
 
 const semPonto = (texto: string) => texto.replace('.', '')
 

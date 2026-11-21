@@ -15,7 +15,10 @@ function cliente(s: Session | null) {
   return { auth } as unknown as SupabaseClient
 }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  window.history.replaceState(null, '', '/')
+})
 
 describe('App — calendário de deploys', () => {
   it('depois do login, com workspace ativo, renderiza o Calendario', async () => {
@@ -28,6 +31,7 @@ describe('App — calendário de deploys', () => {
         : new Response('[]', { status: 200 }),
     )
     vi.stubGlobal('fetch', f)
+    window.history.replaceState(null, '', '/#/deploys') // o destino padrão agora é o Início
     render(<App cliente={cliente(sessao)} />)
     expect(await screen.findByText('Nenhum deploy nesta semana')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Próxima semana' })).toBeInTheDocument()

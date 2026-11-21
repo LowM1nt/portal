@@ -53,3 +53,13 @@ export function chaveDia(d: Date): string {
 export function chaveDiaUtc(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
+
+const mesLongo = new Intl.DateTimeFormat('pt-BR', { month: 'long' })
+const mesCurto = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+
+/** "16 a 22 de novembro" ou, virando o mês, "30 de nov. a 6 de dez.". */
+export function periodo(dias: Date[]): string {
+  const [inicio, fim] = [dias[0], dias[dias.length - 1]]
+  if (inicio.getMonth() === fim.getMonth()) return `${inicio.getDate()} a ${fim.getDate()} de ${mesLongo.format(fim)}`
+  return `${inicio.getDate()} de ${mesCurto.format(inicio)} a ${fim.getDate()} de ${mesCurto.format(fim)}`
+}
