@@ -5,7 +5,8 @@ using System.Text.RegularExpressions;
 
 namespace Portal.Api.Integracoes.GitHub;
 
-public record PrGitHub(int Numero, string Titulo, string Autor, string Url, DateTimeOffset? AtualizadaEm, string? Sha = null);
+public record PrGitHub(int Numero, string Titulo, string Autor, string Url, DateTimeOffset? AtualizadaEm, string? Sha = null,
+    bool Draft = false, IReadOnlyList<string>? Revisores = null, IReadOnlyList<string>? Equipes = null);
 
 public static class StatusCi
 {
@@ -99,7 +100,17 @@ public partial class ClienteGitHub
         p.TryGetProperty("html_url", out var h) ? h.GetString() ?? "" : "",
         p.TryGetProperty("updated_at", out var a) && a.TryGetDateTimeOffset(out var d) ? d : null,
         p.TryGetProperty("head", out var hd) && hd.ValueKind == JsonValueKind.Object
-            && hd.TryGetProperty("sha", out var sh) ? sh.GetString() : null);
+            && hd.TryGetProperty("sha", out var sh) ? sh.GetString() : null,
+        p.TryGetProperty("draft", out var dr) && dr.ValueKind == JsonValueKind.True,
+        Nomes(p, "requested_reviewers", "login"),
+        Nomes(p, "requested_teams", "name"));
+
+    private static List<string> Nomes(JsonElement p, string lista, string campo) =>
+        p.TryGetProperty(lista, out var arr) && arr.ValueKind == JsonValueKind.Array
+            ? arr.EnumerateArray()
+                .Select(i => i.ValueKind == JsonValueKind.Object && i.TryGetProperty(campo, out var n) ? n.GetString() : null)
+                .OfType<string>().ToList()
+            : [];
 
     private static readonly string[] ConclusoesDeFalha = ["failure", "timed_out", "cancelled", "action_required", "startup_failure"]; // "stale" é check marcado como velho, não falha
 

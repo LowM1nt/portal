@@ -14,5 +14,10 @@ public class PullRequest
     /// <summary>sucesso, falhou, rodando ou sem CI; "sem CI" até a primeira consulta bem-sucedida.</summary>
     public string StatusCi { get; set; } = "sem CI";
     public string? ShaUltimoCommit { get; set; }
+    public bool Draft { get; set; }
+    /// <summary>Logins dos revisores solicitados ainda pendentes.</summary>
+    public List<string> RevisoresSolicitados { get; set; } = [];
+    /// <summary>Nomes das equipes solicitadas ainda pendentes.</summary>
+    public List<string> EquipesSolicitadas { get; set; } = [];
     public DateTimeOffset CriadoEm { get; set; } = DateTimeOffset.UtcNow;
 }

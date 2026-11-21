@@ -5,6 +5,7 @@ using Portal.Api.Auth;
 using Portal.Api.Dados;
 using Portal.Api.Demo;
 using Portal.Api.Deploys;
+using Portal.Api.Revisoes;
 using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Workspaces;
 
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<PortalDbContext>((sp, o) =>
 builder.Services.AddScoped<WorkspaceAtual>();
 builder.Services.AddScoped<WorkspaceService>();
 builder.Services.AddScoped<DeploysService>();
+builder.Services.AddScoped<RevisoesService>();
 builder.Services.AddScoped<GitHubConfigService>();
 builder.Services.AddHttpClient<ClienteGitHub>();
 builder.Services.AddSingleton<EtagsGitHub>();
@@ -63,6 +65,7 @@ app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapWorkspaces();
 app.MapDeploys();
+app.MapRevisoes();
 app.MapGitHub();
 if (demoLigada) app.MapDemo();
 

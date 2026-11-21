@@ -104,6 +104,9 @@ public class ImportadorDePrs
                 atual.Estado = "open";
                 atual.Url = pr.Url;
                 atual.AtualizadaEm = pr.AtualizadaEm;
+                atual.Draft = pr.Draft;
+                atual.RevisoresSolicitados = [.. pr.Revisores ?? []];
+                atual.EquipesSolicitadas = [.. pr.Equipes ?? []];
                 // O SHA vem sempre da listagem. Se o commit mudou e o CI dele não pôde ser lido agora,
                 // o status do commit antigo não vale mais: fica "rodando" até a próxima consulta.
                 if (statusCi is not null) atual.StatusCi = statusCi;
@@ -117,6 +120,7 @@ public class ImportadorDePrs
                     WorkspaceId = workspaceId, RepositorioId = rep.Id, Numero = pr.Numero,
                     Titulo = pr.Titulo, Autor = pr.Autor, Estado = "open",
                     Url = pr.Url, AtualizadaEm = pr.AtualizadaEm,
+                    Draft = pr.Draft, RevisoresSolicitados = [.. pr.Revisores ?? []], EquipesSolicitadas = [.. pr.Equipes ?? []],
                     StatusCi = statusCi ?? (pr.Sha is { Length: > 0 } ? StatusCi.Rodando : StatusCi.SemCi), ShaUltimoCommit = pr.Sha,
                 });
             }

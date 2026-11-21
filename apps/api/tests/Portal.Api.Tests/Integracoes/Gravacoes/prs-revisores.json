@@ -1,0 +1,19 @@
+[
+  {
+    "url": "https://api.github.com/repos/acme/portal/pulls/21",
+    "number": 21,
+    "state": "open",
+    "draft": true,
+    "title": "Rascunho de relatório",
+    "user": { "login": "ana-dev", "id": 1001 },
+    "html_url": "https://github.com/acme/portal/pull/21",
+    "updated_at": "2026-11-18T09:41:27Z",
+    "requested_reviewers": [
+      { "login": "bruno-dev", "id": 1002 },
+      { "login": "carla-dev", "id": 1003 }
+    ],
+    "requested_teams": [
+      { "name": "Time Backend", "slug": "time-backend", "id": 77 }
+    ]
+  }
+]
