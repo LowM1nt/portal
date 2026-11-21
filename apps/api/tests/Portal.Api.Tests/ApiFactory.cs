@@ -68,7 +68,7 @@ public class ApiTesting : ApiFactory
 /// <summary>Um Postgres descartável (D-002) por execução; cada teste pega um banco novo dentro dele.</summary>
 public class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder().WithImage("postgres:16-alpine").WithCommand("-c", "max_connections=500").Build();
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:16-alpine").WithCommand("-c", "max_connections=500").Build();
 
     public Task InitializeAsync() => _container.StartAsync();
 
