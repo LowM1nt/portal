@@ -652,3 +652,85 @@ kbd {
 
 /* Resposta neutra nas telas de conta (dentro do formulário L2) */
 .estado-login { padding: 0 0 var(--e2); }
+
+/* ===================================================================================
+   Lote B: listas de configuração, faixas de aviso, nota, ícone do modal, link-botão,
+   segmentado com rádio e o pé do dock (Configurações).
+   =================================================================================== */
+
+/* Configurações no pé do dock, acima do avatar */
+.dock-pe { margin-bottom: var(--e1); }
+
+/* Segmentado também como grupo de rádio (tema em Minha conta) */
+.segmento-op[aria-checked="true"] { background: var(--roxo); color: var(--sobre-roxo); }
+.segmento-op svg { width: 16px; height: 16px; }
+
+/* Modal com ícone (confirmação de ação perigosa) */
+.modal-icone {
+  width: 40px; height: 40px; margin-bottom: var(--e4); display: grid; place-items: center;
+  border-radius: var(--raio-campo); background: var(--erro-fundo); color: var(--erro);
+}
+.modal-icone svg { width: 20px; height: 20px; }
+
+/* Botão com cara de link (ex.: "Sair" no rodapé do login) */
+.link-botao {
+  padding: 0; border: 0; background: none; color: var(--roxo-claro); font: inherit; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+
+/* Faixas: informação (roxo) e aviso (âmbar) */
+.faixa-info, .faixa-aviso, .faixa-convite {
+  padding: var(--e3) var(--e4); border-radius: var(--raio-campo); font: var(--t-pequeno);
+}
+.faixa-info, .faixa-convite { border: 1px solid var(--borda-forte); background: var(--roxo-suave); color: var(--texto); }
+.faixa-aviso { border: 1px solid color-mix(in srgb, var(--aviso) 40%, transparent); background: var(--aviso-fundo); color: var(--texto); }
+.faixa-aviso b { color: var(--aviso); }
+
+/* Nota: texto de apoio discreto */
+.nota { color: var(--texto-suave); font: var(--t-pequeno); }
+.nota-bloco { padding: var(--e4) var(--e5); }
+.nota-lista { margin: 0; padding: 0 0 0 var(--e5); display: grid; gap: var(--e1); }
+.bloco-dica { padding: 0 var(--e5) var(--e4); color: var(--texto-apagado); font: var(--t-legenda); }
+
+/* Listas de configuração: linhas de 64 px com ícone, texto e ação */
+.lista-cfg { list-style: none; margin: 0; padding: 0; display: grid; min-width: 0; }
+.lista-cfg > li, .linha-cfg {
+  min-height: 64px; padding: var(--e3) var(--e5); display: flex; align-items: center; gap: var(--e3); min-width: 0;
+}
+.lista-cfg > li + li { border-top: 1px solid var(--borda); }
+.lista-cfg > li > svg, .linha-cfg-icone svg { width: 20px; height: 20px; color: var(--texto-suave); }
+.linha-cfg-icone { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: var(--raio-campo); background: var(--superficie-2); }
+.lista-cfg .txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.lista-cfg .txt b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lista-cfg .txt > span { color: var(--texto-apagado); font: var(--t-legenda); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lista-cfg span.txt.mono { display: block; font-size: 13px; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Formulário dentro de um bloco (Configurações, Minha conta) */
+.config-form { padding: var(--e4) var(--e5) var(--e5); display: grid; gap: var(--e4); min-width: 0; }
+.config-form > .lista-cfg { margin: 0 calc(-1 * var(--e5)); border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); }
+.config-form > .bloco-vazio { min-height: 64px; padding: var(--e3) 0; }
+/* Lista logo no topo do formulário: encosta no cabeçalho do bloco (sem linha dupla). */
+.config-form > .lista-cfg:first-child { margin-top: calc(-1 * var(--e4)); border-top: 0; }
+.config-form > .lista-cfg:last-child { margin-bottom: calc(-1 * var(--e5)); border-bottom: 0; }
+.linha-campo { display: flex; align-items: center; gap: var(--e3); min-width: 0; }
+.linha-campo > .controle, .linha-campo > .controle-com-icone { flex: 1; }
+.controle-p { height: var(--altura-controle-p); width: auto; padding: 0 var(--e8) 0 var(--e3); font: 600 13px/1 var(--fonte); }
+.controle-com-icone { position: relative; display: flex; align-items: center; min-width: 0; }
+.controle-com-icone > svg { position: absolute; left: var(--e3); width: 16px; height: 16px; color: var(--texto-suave); pointer-events: none; }
+.controle-com-icone > .controle { padding-left: var(--e10); }
+.contagem { font: var(--t-legenda); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.osso-campo { height: 64px; }
+.osso-botao { display: block; width: 72px; height: var(--altura-controle-p); border-radius: var(--raio-pilula); background: color-mix(in srgb, var(--roxo) 8%, transparent); }
+
+/* Login: aviso de convite acima do formulário */
+.login-coluna { width: 100%; max-width: 392px; display: grid; gap: var(--e5); }
+
+@media (max-width: 767px) {
+  .lista-cfg > li, .linha-cfg { padding: var(--e3) var(--e4); flex-wrap: wrap; }
+  .lista-cfg .txt { flex: 1 1 160px; }
+  .config-form { padding: var(--e4); }
+  .config-form > .lista-cfg { margin-left: calc(-1 * var(--e4)); margin-right: calc(-1 * var(--e4)); }
+  .config-form > .lista-cfg:last-child { margin-bottom: calc(-1 * var(--e4)); }
+  .nota-bloco { padding: var(--e4); }
+  .bloco-dica { padding: 0 var(--e4) var(--e4); }
+}

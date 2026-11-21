@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { alternarTema, CHAVE_TEMA, esquecerTema, temaInicial, useTema } from './tema.ts'
+import { acompanharSistema, alternarTema, CHAVE_TEMA, definirPreferenciaTema, esquecerTema, temaInicial, useTema } from './tema.ts'
 
 const raiz = document.documentElement
 
@@ -20,9 +20,43 @@ describe('tema', () => {
     expect(temaInicial()).toBe('escuro')
   })
 
-  it('sem escolha salva, respeita o sistema que prefere claro', () => {
+  it('1ª visita (sem escolha salva) é escuro, mesmo com o sistema no claro', () => {
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('light'), media: q }))
+    expect(temaInicial()).toBe('escuro')
+  })
+
+  it('a escolha “sistema” segue o sistema e fica salva', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('light'), media: q }))
+    definirPreferenciaTema('sistema')
+    expect(raiz.dataset.theme).toBe('light')
+    expect(window.localStorage.getItem(CHAVE_TEMA)).toBe('sistema')
+    esquecerTema()
     expect(temaInicial()).toBe('claro')
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: false, media: q }))
+    expect(temaInicial()).toBe('escuro')
+  })
+
+  it('com “sistema”, acompanha a troca do sistema; com tema fixo, não', () => {
+    let claro = false
+    const ouvintes: (() => void)[] = []
+    vi.stubGlobal('matchMedia', (q: string) => ({
+      get matches() {
+        return claro && q.includes('light')
+      },
+      media: q,
+      addEventListener: (_: string, f: () => void) => ouvintes.push(f),
+      removeEventListener: vi.fn(),
+    }))
+    const parar = acompanharSistema()
+    definirPreferenciaTema('sistema')
+    expect(raiz.dataset.theme).toBe('dark')
+    claro = true
+    ouvintes.forEach((f) => f())
+    expect(raiz.dataset.theme).toBe('light')
+    definirPreferenciaTema('escuro')
+    ouvintes.forEach((f) => f())
+    expect(raiz.dataset.theme).toBe('dark')
+    parar()
   })
 
   it('a escolha salva vale mais que o sistema', () => {

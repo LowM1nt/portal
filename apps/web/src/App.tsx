@@ -6,6 +6,16 @@ import { Bugs } from './features/bugs/Bugs.tsx'
 import { RelatarBug } from './features/bugs/RelatarBug.tsx'
 import type { Bug } from './features/bugs/api.ts'
 import { Calendario } from './features/calendario/Calendario.tsx'
+import type { Deploy } from './features/calendario/useDeploysDaSemana.ts'
+import { Config } from './features/config/Config.tsx'
+import { MinhaConta } from './features/conta/MinhaConta.tsx'
+import { pedeRevisaoDe } from './features/conta/github.ts'
+import { capturarConvite } from './features/convite/convite.ts'
+import { useAceitarConvitePendente } from './features/convite/useAceitarConvite.ts'
+import { NovoDeploy } from './features/deploys/NovoDeploy.tsx'
+import { PainelDeploy } from './features/deploys/PainelDeploy.tsx'
+import { Metricas } from './features/metricas/Metricas.tsx'
+import { PERIODOS, periodoDaRota } from './features/metricas/formato.ts'
 import { diasDaSemana, periodo, rotuloSemana } from './features/calendario/semana.ts'
 import { DemoPage } from './features/demo/DemoPage.tsx'
 import { NaoEncontrado } from './features/erros/NaoEncontrado.tsx'
@@ -21,10 +31,13 @@ import { Casca, type Fab, type ItemNav } from './ui/Casca.tsx'
 import { Carregando, EstadoErro, EstadoVazio } from './ui/Estados.tsx'
 import {
   IconeBugs,
+  IconeConfig,
   IconeDeploys,
   IconeInicio,
   IconeMais,
+  IconeMetricas,
   IconeNovo,
+  IconePessoa,
   IconeRevisoes,
   IconeRoadmap,
   IconeSetaBaixo,
@@ -39,6 +52,11 @@ import { TransicaoProvider } from './ui/Transicao.tsx'
 type Props = { cliente?: SupabaseClient | null }
 
 function App({ cliente = clientePadrao }: Props) {
+  // Link de convite (/convite#token=…): guarda o token, limpa o endereço e segue pro Início (uma vez por montagem).
+  useState(() => {
+    capturarConvite()
+    return true
+  })
   // A demo é pública: não passa pelo AuthProvider nem exige a configuração do Supabase.
   const caminho = window.location.pathname.replace(/\/+$/, '')
   const demo = caminho === '/demo'
@@ -85,6 +103,12 @@ function titulos(destino: Destino): { titulo: string; texto: string } {
       return { titulo: 'Bugs', texto: 'Relatados pelo time e pelo Discord.' }
     case 'roadmap':
       return { titulo: 'Roadmap', texto: 'O que vem por aí, da ideia à entrega.' }
+    case 'metricas':
+      return { titulo: 'Métricas', texto: 'Como o time está entregando.' }
+    case 'config':
+      return { titulo: 'Configurações', texto: 'Integrações, repositórios e o time do workspace.' }
+    case 'conta':
+      return { titulo: 'Minha conta', texto: 'Seu perfil, aparência e segurança.' }
     case 'mais':
       return { titulo: 'Mais', texto: 'Outras telas e preferências.' }
   }
@@ -101,20 +125,41 @@ export function Telas() {
 
 function TelasDoWorkspace() {
   const [rota, ir] = useRota()
-  const { estado, email, workspaces, workspaceAtivo, trocarWorkspace, sair, tentarDeNovo } = useAuth()
+  const { estado, email, githubLogin, workspaces, workspaceAtivo, trocarWorkspace, sair, tentarDeNovo } = useAuth()
   const pendencias = usePendencias()
   const { avisar } = useAvisos()
   const [relatando, setRelatando] = useState(false)
+  const [criandoDeploy, setCriandoDeploy] = useState(false)
+  // Muda depois de criar ou marcar um deploy: o calendário busca de novo sem voltar ao esqueleto.
+  const [versaoDeploys, setVersaoDeploys] = useState(0)
+  useAceitarConvitePendente()
   useAvisoDeErro(estado === 'erro', 'Seus dados não vieram', 'Pode ser a conexão. Dá pra tentar de novo ali no meio da tela.')
 
   const destino = rota.destino
   if (destino === null) return <NaoEncontrado />
 
   const pronto = estado === 'pronto' && workspaceAtivo !== null
-  const conta = { email, aoSair: () => void sair().catch(() => undefined) }
+  const conta = { email, aoSair: () => void sair().catch(() => undefined), aoAbrirConta: () => ir('#/conta') }
   const { titulo, texto } = titulos(destino)
   const c = contadores(pendencias)
+  // Com o login do GitHub configurado, a bolinha conta só o que pede a sua revisão.
+  const contadorRevisoes =
+    githubLogin && pendencias.revisoes.dados
+      ? pendencias.revisoes.dados.filter((p) => pedeRevisaoDe(p.revisores, githubLogin)).length
+      : c.revisoes
   const relatar = () => setRelatando(true)
+  const novoDeploy = () => setCriandoDeploy(true)
+  const idDeploy = destino === 'deploys' ? (rota.partes[1] ?? null) : null
+
+  function deployCriado(deploy: Deploy) {
+    setCriandoDeploy(false)
+    setVersaoDeploys((v) => v + 1)
+    const dia = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(
+      new Date(deploy.agendadoPara),
+    )
+    avisar({ tipo: 'ok', titulo: 'Deploy criado!', texto: `Já tá no calendário: ${dia}.` })
+    if (destino !== 'deploys') ir('#/deploys')
+  }
   const novoItem = () => ir(hrefRoadmap(visaoDaRota(rota), 'novo'))
 
   function bugCriado(bug: Bug) {
@@ -132,7 +177,14 @@ function TelasDoWorkspace() {
       id: 'revisoes',
       nome: 'Revisões',
       icone: <IconeRevisoes />,
-      contador: c.revisoes ? { valor: c.revisoes, descricao: plural(c.revisoes, 'PR esperando revisão', 'PRs esperando revisão') } : null,
+      contador: contadorRevisoes
+        ? {
+            valor: contadorRevisoes,
+            descricao: githubLogin
+              ? plural(contadorRevisoes, 'PR esperando você', 'PRs esperando você')
+              : plural(contadorRevisoes, 'PR esperando revisão', 'PRs esperando revisão'),
+          }
+        : null,
     },
     {
       id: 'bugs',
@@ -141,13 +193,17 @@ function TelasDoWorkspace() {
       contador: c.bugsATriar ? { valor: c.bugsATriar, descricao: plural(c.bugsATriar, 'bug a triar', 'bugs a triar') } : null,
     },
     { id: 'roadmap', nome: 'Roadmap', icone: <IconeRoadmap />, so: 'desk' },
-    { id: 'mais', nome: 'Mais', icone: <IconeMais />, so: 'cel', ativoEm: ['roadmap'] },
+    { id: 'metricas', nome: 'Métricas', icone: <IconeMetricas />, so: 'desk' },
+    { id: 'mais', nome: 'Mais', icone: <IconeMais />, so: 'cel', ativoEm: ['roadmap', 'metricas', 'config', 'conta'] },
+    { id: 'config', nome: 'Configurações', icone: <IconeConfig />, so: 'desk', lugar: 'pe' },
   ]
 
   const acoes: Comando[] = pronto
     ? [
+        { id: 'novo-deploy', grupo: 'Ações', nome: 'Novo deploy', icone: <IconeDeploys />, executar: novoDeploy },
         { id: 'relatar-bug', grupo: 'Ações', nome: 'Relatar bug', icone: <IconeBugs />, executar: relatar },
         { id: 'novo-item', grupo: 'Ações', nome: 'Novo item no roadmap', icone: <IconeRoadmap />, executar: () => ir(hrefRoadmap('quadro', 'novo')) },
+        { id: 'conta', grupo: 'Ir para', nome: 'Minha conta', icone: <IconePessoa />, executar: () => ir('#/conta') },
       ]
     : []
 
@@ -161,6 +217,25 @@ function TelasDoWorkspace() {
         <IconeNovo />
         Relatar bug
       </button>
+    )
+  } else if (pronto && destino === 'deploys') {
+    fab = { rotulo: 'Novo deploy', aoClicar: novoDeploy }
+    acaoCab = (
+      <button type="button" className="botao botao-primario so-desk" onClick={novoDeploy}>
+        <IconeNovo />
+        Novo deploy
+      </button>
+    )
+  } else if (estado === 'pronto' && destino === 'metricas') {
+    const atual = periodoDaRota(rota.params)
+    acaoCab = (
+      <nav className="segmento" aria-label="Período">
+        {PERIODOS.map((p) => (
+          <a key={p} className="segmento-op" href={`#/metricas?p=${p}`} aria-current={p === atual ? 'true' : undefined}>
+            {p} semanas
+          </a>
+        ))}
+      </nav>
     )
   } else if (pronto && destino === 'roadmap') {
     fab = { rotulo: 'Novo item', aoClicar: novoItem }
@@ -193,6 +268,8 @@ function TelasDoWorkspace() {
     )
   } else if (destino === 'mais') {
     corpo = <Mais aoSair={conta.aoSair} />
+  } else if (destino === 'conta') {
+    corpo = <MinhaConta aoSair={conta.aoSair} />
   } else if (!workspaceAtivo) {
     corpo = (
       <div className="cartao">
@@ -204,10 +281,24 @@ function TelasDoWorkspace() {
       </div>
     )
   } else if (destino === 'inicio') corpo = <Inicio />
-  else if (destino === 'revisoes') corpo = <FilaRevisao />
+  else if (destino === 'revisoes') corpo = <FilaRevisao soMinhas={rota.params.get('f') !== 'todas'} />
   else if (destino === 'bugs') corpo = <Bugs rota={rota} ir={ir} aoRelatar={relatar} />
   else if (destino === 'roadmap') corpo = <Roadmap rota={rota} ir={ir} />
-  else corpo = <Calendario />
+  else if (destino === 'metricas') corpo = <Metricas semanas={periodoDaRota(rota.params)} />
+  else if (destino === 'config') corpo = <Config rota={rota} />
+  else
+    corpo = (
+      <Calendario
+        versao={versaoDeploys}
+        aoAbrir={(id) => ir(`#/deploys/${encodeURIComponent(id)}`)}
+        acaoVazio={
+          <button type="button" className="botao botao-primario" onClick={novoDeploy}>
+            <IconeNovo />
+            Novo deploy
+          </button>
+        }
+      />
+    )
 
   return (
     <>
@@ -247,6 +338,10 @@ function TelasDoWorkspace() {
         {corpo}
       </Casca>
       {relatando && pronto && <RelatarBug aoFechar={() => setRelatando(false)} aoCriado={bugCriado} />}
+      {criandoDeploy && pronto && <NovoDeploy aoFechar={() => setCriandoDeploy(false)} aoCriado={deployCriado} />}
+      {idDeploy && pronto && (
+        <PainelDeploy id={idDeploy} aoFechar={() => ir('#/deploys')} aoMudar={() => setVersaoDeploys((v) => v + 1)} />
+      )}
     </>
   )
 }

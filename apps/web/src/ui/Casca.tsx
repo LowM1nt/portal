@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode, type TouchEvent } from 'react'
-import { IconeBusca, IconeLua, IconeNovo, IconeSair, IconeSol } from './icones.tsx'
+import { IconeBusca, IconeLua, IconeNovo, IconePessoa, IconeSair, IconeSol } from './icones.tsx'
 import { Logo, LogoCurto } from './Marca.tsx'
 import { Paleta, type Comando } from './Paleta.tsx'
 import { eCelular } from './preferencias.ts'
@@ -16,10 +16,12 @@ export type ItemNav = {
   ativoEm?: Destino[]
   /** Bolinha de pendências; a descrição é o que o leitor de tela ouve. */
   contador?: { valor: number; descricao: string } | null
+  /** 'pe': no pé do dock, acima do avatar (Configurações), em vez de junto dos destinos. */
+  lugar?: 'pe'
 }
 
 /** Conta de quem está logado; `null` na demo pública (sem menu de conta). */
-export type Conta = { email: string | null; aoSair: () => void }
+export type Conta = { email: string | null; aoSair: () => void; aoAbrirConta?: () => void }
 
 /** Ação principal da tela no celular: o botão "+" redondo acima das abas. */
 export type Fab = { rotulo: string; aoClicar: () => void }
@@ -121,7 +123,7 @@ export function Casca({ itens, ativo, aoIr, conta, acoes = [], fab = null, child
       <nav className="dock" aria-label="Navegação principal">
         <LogoCurto />
         <ul className="dock-itens">
-          {itens.map((item) => {
+          {itens.filter((item) => item.lugar !== 'pe').map((item) => {
             const descricao = item.contador ? `${id}-${item.id}-contador` : undefined
             return (
               <li key={item.id} className={item.so ? `so-${item.so}` : undefined}>
@@ -164,6 +166,28 @@ export function Casca({ itens, ativo, aoIr, conta, acoes = [], fab = null, child
           </span>
         </button>
         <span className="dock-espaco" aria-hidden="true" />
+        {itens.some((item) => item.lugar === 'pe') && (
+          <ul className="dock-itens dock-pe so-desk">
+            {itens
+              .filter((item) => item.lugar === 'pe')
+              .map((item) => (
+                <li key={item.id}>
+                  <a
+                    className="dock-item"
+                    href={hrefDe(item.id)}
+                    aria-current={estaAtivo(item, ativo) ? 'page' : undefined}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      aoIr(item.id)
+                    }}
+                  >
+                    <span className="dock-ic">{item.icone}</span>
+                    <span className="dock-rotulo">{item.nome}</span>
+                  </a>
+                </li>
+              ))}
+          </ul>
+        )}
         {conta ? (
           <MenuConta conta={conta} nomeTema={nomeTema} iconeTema={iconeTema} />
         ) : (
@@ -251,6 +275,19 @@ function MenuConta({ conta, nomeTema, iconeTema }: { conta: Conta; nomeTema: str
               <span>{conta.email ?? 'Sem e-mail'}</span>
             </div>
           </div>
+          {conta.aoAbrirConta && (
+            <button
+              type="button"
+              className="menu-conta-item"
+              onClick={() => {
+                setAberto(false)
+                conta.aoAbrirConta?.()
+              }}
+            >
+              <IconePessoa />
+              Minha conta
+            </button>
+          )}
           <button
             type="button"
             className="menu-conta-item"

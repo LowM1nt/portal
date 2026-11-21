@@ -38,6 +38,11 @@
 .dep-hora { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .dep-ambiente { font-family: var(--fonte-mono); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dep-cancelado .dep-titulo { color: var(--texto-suave); text-decoration: line-through; }
+/* Cartão que abre o detalhe: o título cobre o cartão inteiro (link esticado). */
+.dep-clicavel { position: relative; transition: border-color var(--rapido) var(--curva); }
+.dep-clicavel:hover { border-color: var(--borda-forte); }
+a.dep-titulo { text-decoration: none; }
+.dep-clicavel:hover .dep-titulo { color: var(--roxo-claro); }
 
 .dia-vazio {
   flex: 1; display: grid; place-items: center; min-height: 44px;

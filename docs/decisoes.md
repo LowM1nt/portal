@@ -169,3 +169,39 @@ Contrato:
 | `POST /api/convites/aceitar` | Bearer, `{ token }` | `{ workspaceId, nome, papel }` | 400 (mensagem neutra), 401, 409 (já é membro) |
 | `PATCH /api/workspace/membros/{usuarioId}` | Bearer, `X-Workspace-Id`, `{ papel: "dono"\|"admin"\|"membro" }` (só dono) | `{ usuarioId, email, papel, voce }` | 400, 401, 403, 404, 409 (último dono) |
 | `DELETE /api/workspace/membros/{usuarioId}` | Bearer, `X-Workspace-Id` (só dono) | 204 | 400 (a si mesmo), 401, 403, 404 |
+
+## D-012 — Lote B: status do deploy, convites pendentes e login do GitHub · 21/11/2026 · decidida na implementação
+
+- **Status do deploy**: qualquer membro do workspace marca `concluido` ou `falhou` (e volta para `agendado` se marcou por
+  engano). Deploy `cancelado` não muda mais (409). Com isso as métricas (D-010) passam a ter dados reais.
+- **Repositórios do formulário**: `GET /api/repositorios` lista os do workspace. Salvar a configuração do GitHub já cria os
+  registros dos repositórios (mesmo nome que o importador usa), para dar para marcar deploy antes da 1ª sincronização.
+  Tirar um repositório da lista **não** apaga o registro (os deploys dele continuam).
+- **GitHub sem token novo**: `PUT /api/integracoes/github` sem `token`, com o GitHub já configurado, troca só a lista de
+  repositórios (o token guardado e a data de configuração continuam). Sem configuração, o token segue obrigatório (400).
+  A resposta passa a trazer `configuradoEm` (a tela mostra "configurado em DD/MM/AAAA · final ••••abcd").
+- **Convites pendentes**: listar e revogar são só do dono. A lista **nunca** traz token, hash nem link. Revogar apaga o
+  convite: o link deixa de achar o hash e cai na mesma mensagem neutra de convite inválido (D-011). Convite já usado ou de
+  outro workspace → 404.
+- **Login do GitHub**: é da **pessoa** (não do workspace): tabela `perfis_usuario (usuario_id, github_login)`, com RLS,
+  sempre lida e escrita pelo `sub` do JWT. Formato do GitHub: 1 a 39 letras, números ou hífens, sem hífen no começo, no fim
+  ou dois seguidos; `@` na frente é ignorado; vazio apaga. O web usa o login para "Esperando você" (Início, fila e contador),
+  comparando sem diferenciar maiúsculas; sem login, mostra a fila do time com uma dica para configurar.
+- **Convite no web**: o link `/convite#token=…` é lido do fragmento, guardado só na aba (sessionStorage) e o endereço é
+  limpo na hora. Logado, aceita uma vez e entra no workspace; sem login, as telas de entrar/criar conta avisam do convite e
+  ele é aceito logo depois do login. O token nunca vai em query string nem em log.
+- **Duas etapas (MFA TOTP)**: pelo SDK do Supabase (`mfa.enroll/challengeAndVerify/unenroll`). O QR code é a imagem SVG em
+  data URI que o próprio SDK devolve (só é desenhada se começar com `data:image/svg+xml`); a CSP já tinha `img-src 'self'
+  data:`, então nada mudou nela. Desligar pede o código antes (sessão aal2). Com fator verificado e sessão aal1, o web pede
+  o código depois da senha. **Limite**: a API ainda não exige `aal2` no JWT; isso fica para um item futuro.
+
+Contrato (novos):
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `PATCH /api/deploys/{id}/status` | Bearer, `X-Workspace-Id`, `{ status: "concluido"\|"falhou"\|"agendado" }` | o deploy | 400 (status inválido), 401, 404, 409 (cancelado) |
+| `GET /api/repositorios` | Bearer, `X-Workspace-Id` | `[{ id, nome }]` em ordem de nome | 400, 401, 404 |
+| `GET /api/workspace/convites` | Bearer, `X-Workspace-Id` (só dono) | `[{ id, email, papel, criadoEm, expiraEm }]` (pendentes) | 400, 401, 403, 404 |
+| `DELETE /api/workspace/convites/{id}` | Bearer, `X-Workspace-Id` (só dono) | 204 | 400, 401, 403, 404 (não existe, já usado ou de outro workspace) |
+| `PUT /api/me/github` | Bearer, `{ login }` (vazio apaga) | `{ githubLogin }` | 400 (formato), 401 |
+| `GET /api/me` | Bearer | passa a trazer `githubLogin` (ou null) | 401 |

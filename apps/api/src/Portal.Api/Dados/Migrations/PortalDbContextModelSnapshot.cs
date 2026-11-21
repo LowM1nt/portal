@@ -333,6 +333,26 @@ namespace Portal.Api.Dados.Migrations
                     b.ToTable("configuracoes_github", (string)null);
                 });
 
+            modelBuilder.Entity("Portal.Api.Perfil.PerfilUsuario", b =>
+                {
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<DateTimeOffset>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizado_em");
+
+                    b.Property<string>("GithubLogin")
+                        .HasMaxLength(39)
+                        .HasColumnType("character varying(39)")
+                        .HasColumnName("github_login");
+
+                    b.HasKey("UsuarioId");
+
+                    b.ToTable("perfis_usuario", (string)null);
+                });
+
             modelBuilder.Entity("Portal.Api.Roadmap.ItemRoadmap", b =>
                 {
                     b.Property<Guid>("Id")

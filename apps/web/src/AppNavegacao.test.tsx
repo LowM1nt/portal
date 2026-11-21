@@ -45,14 +45,18 @@ afterEach(() => {
 })
 
 describe('Casca — destinos, contadores e Mais', () => {
-  it('dock com Início, Deploys, Revisões, Bugs e Roadmap; abas do celular com Mais no lugar do Roadmap', async () => {
+  it('dock com Início, Deploys, Revisões, Bugs, Roadmap, Métricas e Configurações no pé; abas do celular com Mais', async () => {
     stubApi()
     montarApp('/')
     await screen.findByText('Tudo quietinho por aqui')
     const nomes = within(nav()).getAllByRole('link').map((a) => a.textContent)
-    expect(nomes).toEqual(['Início', 'Deploys', 'Revisões', 'Bugs', 'Roadmap', 'Mais'])
+    expect(nomes).toEqual(['Início', 'Deploys', 'Revisões', 'Bugs', 'Roadmap', 'Métricas', 'Mais', 'Configurações'])
     expect(link('Roadmap').closest('li')).toHaveClass('so-desk')
+    expect(link('Métricas').closest('li')).toHaveClass('so-desk')
     expect(link('Mais').closest('li')).toHaveClass('so-cel')
+    // Configurações fica no pé do dock (acima do avatar), fora das abas do celular.
+    expect(link('Configurações').closest('ul')).toHaveClass('dock-pe', 'so-desk')
+    expect(link('Configurações')).toHaveAttribute('href', '#/config')
   })
 
   it('contadores: PRs esperando revisão e bugs a triar, com descrição para leitor de tela', async () => {
@@ -73,6 +77,29 @@ describe('Casca — destinos, contadores e Mais', () => {
     expect(screen.queryByTestId('contador-revisoes')).not.toBeInTheDocument()
   })
 
+  it('em Métricas, Configurações e Minha conta, a aba "Mais" fica ativa (é onde moram no celular)', async () => {
+    stubApi()
+    montarApp('#/config/time')
+    await screen.findByRole('heading', { level: 1, name: 'Configurações' })
+    expect(link('Configurações')).toHaveAttribute('aria-current', 'page')
+    expect(link('Mais')).toHaveAttribute('aria-current', 'page')
+    window.history.replaceState(null, '', '/#/conta')
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    await screen.findByRole('heading', { level: 1, name: 'Minha conta' })
+    expect(link('Mais')).toHaveAttribute('aria-current', 'page')
+    expect(link('Configurações')).not.toHaveAttribute('aria-current')
+  })
+
+  it('menu da conta leva a Minha conta', async () => {
+    stubApi()
+    montarApp('/')
+    await screen.findByText('Tudo quietinho por aqui')
+    fireEvent.click(screen.getByRole('button', { name: 'Sua conta' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Minha conta' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Minha conta' })).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/conta')
+  })
+
   it('no Roadmap, a aba "Mais" também fica ativa (é onde ele mora no celular)', async () => {
     stubApi()
     montarApp('#/roadmap')
@@ -82,19 +109,22 @@ describe('Casca — destinos, contadores e Mais', () => {
     expect(link('Início')).not.toHaveAttribute('aria-current')
   })
 
-  it('tela Mais: leva ao Roadmap, troca o tema e sai', async () => {
+  it('tela Mais: leva ao Roadmap, Métricas, Configurações e Minha conta, troca o tema e sai', async () => {
     stubApi()
     const { auth, cliente } = clienteFalso()
     montarApp('#/mais', cliente)
     const mais = await screen.findByRole('region', { name: 'Mais opções' })
     expect(within(mais).getByRole('link', { name: 'Roadmap' })).toHaveAttribute('href', '#/roadmap')
+    expect(within(mais).getByRole('link', { name: 'Métricas' })).toHaveAttribute('href', '#/metricas')
+    expect(within(mais).getByRole('link', { name: 'Configurações' })).toHaveAttribute('href', '#/config/repositorios')
+    expect(within(mais).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '#/conta')
     fireEvent.click(within(mais).getByRole('button', { name: 'Usar tema claro' }))
     expect(document.documentElement.dataset.theme).toBe('light')
     fireEvent.click(within(mais).getByRole('button', { name: 'Sair' }))
     await waitFor(() => expect(auth.signOut).toHaveBeenCalled())
   })
 
-  it('"+" flutuante: relatar bug no Início e nos Bugs, novo item no Roadmap, nada nos Deploys', async () => {
+  it('"+" flutuante: relatar bug no Início e nos Bugs, novo item no Roadmap, novo deploy nos Deploys', async () => {
     stubApi()
     montarApp('#/bugs')
     await screen.findByText('Nenhum bug esperando triagem')
@@ -108,6 +138,9 @@ describe('Casca — destinos, contadores e Mais', () => {
     expect(fab()).toHaveAccessibleName('Novo item')
     fireEvent.click(link('Deploys'))
     await screen.findByText('Nenhum deploy nesta semana')
+    expect(fab()).toHaveAccessibleName('Novo deploy')
+    fireEvent.click(link('Métricas'))
+    await screen.findByText('Ops, não deu pra calcular as métricas.')
     expect(fab()).toBeNull()
   })
 })
@@ -121,15 +154,19 @@ describe('Casca — busca rápida e arrastar', () => {
     const paleta = screen.getByRole('dialog', { name: 'Busca rápida' })
     const nomes = within(paleta).getAllByRole('option').map((o) => o.textContent)
     expect(nomes).toEqual([
+      'Novo deploy',
       'Relatar bug',
       'Novo item no roadmap',
       'Alternar tema claro/escuro',
       'Sair',
+      'Minha conta',
       'Início',
       'Deploys',
       'Revisões',
       'Bugs',
       'Roadmap',
+      'Métricas',
+      'Configurações',
     ])
     fireEvent.click(within(paleta).getByRole('option', { name: 'Relatar bug' }))
     expect(screen.getByRole('dialog', { name: 'Relatar bug' })).toBeInTheDocument()

@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider.tsx'
+import { pedeRevisaoDe } from '../conta/github.ts'
 import { buscarFila, type PrRevisao, type StatusCi } from './api.ts'
 import { haQuantoTempo } from './tempo.ts'
 import { useAvisoDeErro } from '../../ui/avisos.ts'
@@ -16,8 +17,9 @@ const CI: Record<StatusCi, { rotulo: string; classe: string }> = {
 
 type Resultado = { chave: string; lista: PrRevisao[] | null }
 
-export function FilaRevisao() {
-  const { api, workspaceAtivo } = useAuth()
+/** `soMinhas`: com o login do GitHub configurado, começa em "Esperando você" (`#/revisoes?f=todas` mostra tudo). */
+export function FilaRevisao({ soMinhas = true }: { soMinhas?: boolean }) {
+  const { api, workspaceAtivo, githubLogin } = useAuth()
   const [tentativa, setTentativa] = useState(0)
   const [resultado, setResultado] = useState<Resultado | null>(null)
   const [repo, setRepo] = useState('')
@@ -62,8 +64,12 @@ export function FilaRevisao() {
       </div>
     )
   } else {
+    const minhas = Boolean(githubLogin) && soMinhas
     const visiveis = lista.filter(
-      (p) => (!repo || p.repositorio === repo) && (!revisor || p.revisores.includes(revisor)),
+      (p) =>
+        (!minhas || pedeRevisaoDe(p.revisores, githubLogin)) &&
+        (!repo || p.repositorio === repo) &&
+        (!revisor || p.revisores.includes(revisor)),
     )
     const filtrando = Boolean(repo || revisor)
     const agora = new Date()
@@ -72,8 +78,14 @@ export function FilaRevisao() {
         <div className="cartao">
           <EstadoVazio
             icone={<IconeRevisoes />}
-            titulo="Nenhuma PR esperando revisão"
-            texto={filtrando ? 'Nada com esses filtros. Que tal ver tudo?' : 'Fila zerada! Bom trabalho, time.'}
+            titulo={minhas && !filtrando ? 'Nada esperando você' : 'Nenhuma PR esperando revisão'}
+            texto={
+              filtrando
+                ? 'Nada com esses filtros. Que tal ver tudo?'
+                : minhas
+                  ? 'Ninguém pediu a sua revisão agora. Dá uma olhada na fila do time em "Todas".'
+                  : 'Fila zerada! Bom trabalho, time.'
+            }
             acao={
               filtrando && (
                 <button
@@ -126,6 +138,23 @@ export function FilaRevisao() {
 
   return (
     <section className="fila-revisao" aria-label="Fila de revisão">
+      {pronto && lista !== null && githubLogin && (
+        <nav className="segmento" aria-label="Quais PRs mostrar">
+          <a className="segmento-op" href="#/revisoes" aria-current={soMinhas ? 'true' : undefined}>
+            Esperando você
+            <span className="segmento-cont">{lista.filter((p) => pedeRevisaoDe(p.revisores, githubLogin)).length}</span>
+          </a>
+          <a className="segmento-op" href="#/revisoes?f=todas" aria-current={soMinhas ? undefined : 'true'}>
+            Todas
+            <span className="segmento-cont">{lista.length}</span>
+          </a>
+        </nav>
+      )}
+      {pronto && lista !== null && !githubLogin && (
+        <p className="faixa-info" role="note">
+          Configure seu login do GitHub em <a href="#/conta">Minha conta</a> pra ver só o que espera a sua revisão.
+        </p>
+      )}
       {pronto && lista !== null && (
         <div className="fila-filtros">
           <div className="campo">

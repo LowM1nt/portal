@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Logo } from '../../ui/Marca.tsx'
+import { convitePendente } from '../convite/convite.ts'
 
 // Prévia decorativa do lado da marca (não são dados de ninguém).
 const PREVIA = [
@@ -31,7 +32,18 @@ export function LayoutL2({ children }: { children: ReactNode }) {
           ))}
         </div>
       </section>
-      <section className="login-lado-form">{children}</section>
+      <section className="login-lado-form">
+        {convitePendente() ? (
+          <div className="login-coluna">
+            <p className="faixa-convite" role="status">
+              Você recebeu um convite! Entre ou crie sua conta com o e-mail convidado e a gente te leva pro workspace.
+            </p>
+            {children}
+          </div>
+        ) : (
+          children
+        )}
+      </section>
     </main>
   )
 }

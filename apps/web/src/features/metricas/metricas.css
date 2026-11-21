@@ -1,0 +1,52 @@
+/* Métricas: quatro números + quatro gráficos de linha (2 × 2 no computador, um embaixo do outro no celular). */
+
+.tela-metricas { display: grid; gap: var(--e4); min-width: 0; }
+.graficos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e4); }
+.grafico-corpo { padding: var(--e4) var(--e5) var(--e4); }
+
+.numero em.variacao-melhor { color: var(--ok); }
+.numero em.variacao-pior { color: var(--erro); }
+
+/* Gráfico: o SVG estica na largura; rótulos, máximo e pontos em HTML (texto sem deformar). */
+.grafico { margin: 0; display: grid; gap: var(--e2); min-width: 0; }
+.grafico-area { position: relative; height: 180px; }
+.grafico-area svg { width: 100%; height: 100%; overflow: visible; }
+.grafico-grade { stroke: var(--borda); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.grafico-linha {
+  fill: none; stroke: var(--roxo); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.grafico-ponto {
+  position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background: var(--roxo); box-shadow: 0 0 0 2px var(--superficie-solida); pointer-events: none;
+}
+.grafico-max {
+  position: absolute; top: 0; left: 0; padding: 0 var(--e1);
+  font: var(--t-legenda); color: var(--texto-apagado); font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--superficie-solida) 70%, transparent); border-radius: var(--e1);
+}
+.grafico-eixo { position: relative; height: 16px; font: var(--t-legenda); color: var(--texto-apagado); }
+.grafico-eixo span {
+  position: absolute; top: 0; transform: translateX(-50%);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.grafico-eixo .grafico-eixo-ini { transform: none; }
+.grafico-eixo .grafico-eixo-fim { transform: translateX(-100%); }
+
+.osso-grafico { height: 284px; border-radius: var(--raio-cartao); }
+
+@media (max-width: 1023px) {
+  .graficos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .grafico-corpo { padding: var(--e3) var(--e4); }
+  .grafico-area { height: 152px; }
+}
+.grafico-sem-dados {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font: var(--t-pequeno); color: var(--texto-apagado);
+}
+.tela-metricas .numero em { white-space: normal; }
+@media (max-width: 767px) {
+  .grafico-eixo .grafico-eixo-alt { display: none; }
+}

@@ -20,6 +20,9 @@ public record ConviteAceitoDto(Guid WorkspaceId, string Nome, string Papel);
 
 public record PapelPedido(string? Papel);
 
+/// <summary>Convite ainda não usado e não expirado. Nunca leva o token nem o hash.</summary>
+public record ConvitePendenteDto(Guid Id, string Email, string Papel, DateTimeOffset CriadoEm, DateTimeOffset ExpiraEm);
+
 /// <summary>Membros e convites do workspace (D-011). Toda consulta filtra pelo workspace recebido do filtro da rota.</summary>
 public class MembrosService
 {
@@ -106,6 +109,25 @@ public class MembrosService
         var nome = await _db.Workspaces.Where(w => w.Id == workspaceId).Select(w => w.Nome).FirstAsync(ct);
         await _email.EnviarConviteAsync(email, nome, link, ct);
         return new(ResultadoTipo.Ok, new ConviteCriadoDto(convite.Id, email, papel, convite.ExpiraEm, link));
+    }
+
+    public async Task<List<ConvitePendenteDto>> ListarConvitesAsync(Guid workspaceId, CancellationToken ct)
+    {
+        var agora = _relogio.GetUtcNow();
+        return await _db.Convites.AsNoTracking()
+            .Where(c => c.WorkspaceId == workspaceId && c.UsadoEm == null && c.ExpiraEm > agora)
+            .OrderByDescending(c => c.CriadoEm).ThenBy(c => c.Id)
+            .Select(c => new ConvitePendenteDto(c.Id, c.Email, c.Papel, c.CriadoEm, c.ExpiraEm))
+            .ToListAsync(ct);
+    }
+
+    /// <summary>Apaga o convite pendente: o link para de valer (o aceite não acha mais o hash).</summary>
+    public async Task<Resultado<bool>> RevogarConviteAsync(Guid workspaceId, Guid conviteId, CancellationToken ct)
+    {
+        var apagados = await _db.Convites
+            .Where(c => c.Id == conviteId && c.WorkspaceId == workspaceId && c.UsadoEm == null)
+            .ExecuteDeleteAsync(ct);
+        return apagados == 0 ? new(ResultadoTipo.NaoEncontrado) : new(ResultadoTipo.Ok, true);
     }
 
     public async Task<Resultado<ConviteAceitoDto>> AceitarAsync(AceitarConvitePedido pedido, CancellationToken ct)

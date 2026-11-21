@@ -56,3 +56,5 @@
   .fila-revisores { display: block; grid-area: rev; font: var(--t-pequeno); color: var(--texto-apagado); }
   .fila-revisores::before { content: "Revisores · "; }
 }
+/* "Esperando você / Todas": do tamanho do conteúdo, como os outros segmentados. */
+.fila-revisao > .segmento { justify-self: start; }

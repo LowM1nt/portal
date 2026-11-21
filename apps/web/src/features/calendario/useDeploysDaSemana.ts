@@ -19,7 +19,8 @@ export type Fonte = {
 
 type Resultado = { chave: string; deploys: Deploy[] | null }
 
-export function useDeploysDaSemana(semana: string, { buscar, caminho, escopo }: Fonte) {
+/** `versao`: quando muda, busca de novo sem voltar ao esqueleto (depois de criar ou marcar um deploy). */
+export function useDeploysDaSemana(semana: string, { buscar, caminho, escopo }: Fonte, versao = 0) {
   const [tentativa, setTentativa] = useState(0)
   const [resultado, setResultado] = useState<Resultado | null>(null)
   const chave = `${escopo}#${semana}#${tentativa}`
@@ -38,7 +39,7 @@ export function useDeploysDaSemana(semana: string, { buscar, caminho, escopo }: 
     return () => {
       ativo = false
     }
-  }, [buscar, caminho, semana, chave])
+  }, [buscar, caminho, semana, chave, versao])
 
   const recarregar = useCallback(() => setTentativa((n) => n + 1), [])
   const pronto = resultado?.chave === chave
