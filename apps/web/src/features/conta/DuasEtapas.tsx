@@ -11,6 +11,7 @@ type Fator = { id: string; status: string; factor_type?: string }
 type Cadastro = { id: string; qr: string; segredo: string }
 
 const MSG_CODIGO = 'Código não confere ou expirou. Espera o próximo no app e tenta de novo.'
+const MSG_API = 'Não deu pra salvar no Releasy agora. Espera o próximo código e tenta de novo.'
 
 /** Verificação em duas etapas (TOTP) com o SDK do Supabase: ativar com QR code, desativar com um código. */
 export function DuasEtapas() {
@@ -116,7 +117,7 @@ function CampoCodigo({ id, valor, aoMudar, invalido }: { id: string; valor: stri
 }
 
 function Ativar({ pendentes, aoFechar, aoAtivado }: { pendentes: Fator[]; aoFechar: () => void; aoAtivado: () => void }) {
-  const { cliente } = useAuth()
+  const { cliente, salvarMfaExigido } = useAuth()
   const id = useId()
   const [cadastro, setCadastro] = useState<Cadastro | null>(null)
   const [codigo, setCodigo] = useState('')
@@ -150,6 +151,8 @@ function Ativar({ pendentes, aoFechar, aoAtivado }: { pendentes: Fator[]; aoFech
     try {
       const { error } = await cliente.auth.mfa.challengeAndVerify({ factorId: cadastro.id, code: limpo })
       if (error) return setErro(MSG_CODIGO)
+      // A sessão virou aal2: agora a API passa a exigir o código em toda chamada (D-013).
+      if (!(await salvarMfaExigido(true))) return setErro(MSG_API)
       aoAtivado()
     } catch {
       setErro('Não deu pra conferir o código. Sem conexão? Tenta de novo em instantes.')
@@ -225,7 +228,7 @@ function Ativar({ pendentes, aoFechar, aoAtivado }: { pendentes: Fator[]; aoFech
 }
 
 function Desativar({ fatorId, aoFechar, aoDesativado }: { fatorId: string; aoFechar: () => void; aoDesativado: () => void }) {
-  const { cliente } = useAuth()
+  const { cliente, salvarMfaExigido } = useAuth()
   const id = useId()
   const [codigo, setCodigo] = useState('')
   const [erro, setErro] = useState('')
@@ -241,8 +244,14 @@ function Desativar({ fatorId, aoFechar, aoDesativado }: { fatorId: string; aoFec
       // Desligar pede a sessão verificada (aal2): o código confirma que é você mesmo.
       const verificacao = await cliente.auth.mfa.challengeAndVerify({ factorId: fatorId, code: limpo })
       if (verificacao.error) return setErro(MSG_CODIGO)
-      const { error } = await cliente.auth.mfa.unenroll({ factorId: fatorId })
-      if (error) return setErro('Não deu pra desligar agora. Tenta de novo em instantes.')
+      // Primeiro a API deixa de exigir (pede aal2, que o código acabou de dar); só então o fator some.
+      if (!(await salvarMfaExigido(false))) return setErro(MSG_API)
+      const { error } = await cliente.auth.mfa.unenroll({ factorId: fatorId }).catch(() => ({ error: true }))
+      if (error) {
+        // O fator continua (erro ou sem conexão): a API volta a exigir o código.
+        await salvarMfaExigido(true)
+        return setErro('Não deu pra desligar agora. Tenta de novo em instantes.')
+      }
       aoDesativado()
     } catch {
       setErro('Não deu pra desligar. Sem conexão? Tenta de novo em instantes.')

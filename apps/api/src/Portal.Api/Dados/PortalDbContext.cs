@@ -219,6 +219,7 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
             e.HasKey(p => p.UsuarioId);
             e.Property(p => p.UsuarioId).HasColumnName("usuario_id").ValueGeneratedNever();
             e.Property(p => p.GithubLogin).HasColumnName("github_login").HasMaxLength(PerfilUsuario.GithubLoginMaximo);
+            e.Property(p => p.MfaExigido).HasColumnName("mfa_exigido");
             e.Property(p => p.AtualizadoEm).HasColumnName("atualizado_em");
         });
 

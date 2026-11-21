@@ -193,7 +193,7 @@ Contrato:
 - **Duas etapas (MFA TOTP)**: pelo SDK do Supabase (`mfa.enroll/challengeAndVerify/unenroll`). O QR code é a imagem SVG em
   data URI que o próprio SDK devolve (só é desenhada se começar com `data:image/svg+xml`); a CSP já tinha `img-src 'self'
   data:`, então nada mudou nela. Desligar pede o código antes (sessão aal2). Com fator verificado e sessão aal1, o web pede
-  o código depois da senha. **Limite**: a API ainda não exige `aal2` no JWT; isso fica para um item futuro.
+  o código depois da senha. A API passou a exigir `aal2` de quem ligou: ver D-013.
 
 Contrato (novos):
 
@@ -205,3 +205,45 @@ Contrato (novos):
 | `DELETE /api/workspace/convites/{id}` | Bearer, `X-Workspace-Id` (só dono) | 204 | 400, 401, 403, 404 (não existe, já usado ou de outro workspace) |
 | `PUT /api/me/github` | Bearer, `{ login }` (vazio apaga) | `{ githubLogin }` | 400 (formato), 401 |
 | `GET /api/me` | Bearer | passa a trazer `githubLogin` (ou null) | 401 |
+
+## D-013 — A API exige as duas etapas de quem ligou · 21/11/2026 · decidida na implementação
+
+Fecha o limite da D-012: antes, só a tela do web pedia o código; com a senha roubada dava para chamar a API direto com um
+token `aal1`.
+
+- **Estado**: coluna `perfis_usuario.mfa_exigido` (bool, padrão `false`; a tabela já tem RLS). Só a própria pessoa muda,
+  sempre pelo `sub` do JWT.
+- **Regra**: em toda rota que exige login (presente ou futura), se `mfa_exigido = true` e o JWT não traz `aal = "aal2"`
+  (inclusive sem a claim) → **403** `{ "erro": "Confirme o código de duas etapas pra continuar.", "codigo": "mfa_necessario" }`.
+  É um middleware logo depois de `UseAuthorization` (vale para rotas novas sem precisar lembrar de marcar), e não toca rota
+  anônima (`/health`, demo).
+- **Exceção única**: `GET /api/me` (marcada com `PermitirSemMfa()`), porque o web precisa saber o estado (`mfaExigido`)
+  antes do código. Ela só lê os dados da própria pessoa (e cria o workspace pessoal se faltar).
+- **Ligar/desligar**: `PUT /api/me/mfa { exigir }` só com token `aal2` (o código acabou de ser conferido); com `aal1` → 403
+  `mfa_necessario`, nos dois sentidos. Não recebe id de usuário: ninguém muda o de outra pessoa.
+- **Desempenho e janela**: token `aal2` não consulta nada. Para `aal1`, o valor fica num cache em memória por usuário por
+  **60 s** por instância. Quem muda o próprio estado pelo `PUT` atualiza o cache da instância na hora. Mudança feita em
+  outra instância ou direto no banco (recuperação, abaixo) pode levar **até 60 s** para valer numa instância que já tinha
+  o valor em cache (hoje o Render roda uma instância só).
+- **Web**: ligar = `enroll` → `challengeAndVerify` (sessão vira `aal2`) → `PUT {exigir:true}`; se a API falhar, a tela
+  avisa e não mostra "ligada". Desligar = pede o código (`aal2`) → `PUT {exigir:false}` → só então `unenroll` (se o
+  `unenroll` falhar, volta `exigir:true`). Qualquer 403 `mfa_necessario` leva para a tela do código (não desloga).
+  O token do `PUT` é lido do SDK na hora, porque logo depois do verify o estado do React ainda tem o token `aal1`.
+- **Quem já tinha ligado antes desta mudança** (fator verificado e `mfa_exigido = false`): ao abrir o app com sessão
+  `aal2`, ou logo depois de digitar o código no login, o web chama `PUT {exigir:true}` sozinho.
+- **Recuperação (perdeu o celular)**: sem endpoint público. A pessoa fala com o dono do sistema, que confirma a identidade
+  por fora e:
+  1. no painel do Supabase (Authentication → Users → a pessoa → Factors), remove o fator TOTP;
+  2. no banco: `UPDATE perfis_usuario SET mfa_exigido = false WHERE usuario_id = '<uuid do usuário>';`
+  3. avisa que pode levar até 60 s para valer (cache); depois a pessoa entra só com a senha e, se quiser, liga de novo.
+- **Limites**: testado com tokens de teste que imitam a claim `aal` do Supabase, não contra um Supabase real. Quem impede
+  um `aal1` de cadastrar um fator novo ou remover o verificado é o próprio Supabase (essas chamadas exigem `aal2` quando já
+  existe fator verificado — comportamento do Supabase Auth, não verificado contra o projeto real).
+
+Contrato (novos):
+
+| Método e rota | Entrada | Saída | Erros |
+| --- | --- | --- | --- |
+| `PUT /api/me/mfa` | Bearer **aal2**, `{ exigir: true\|false }` | `{ mfaExigido }` | 400 (sem `exigir`), 401, 403 `mfa_necessario` (token aal1) |
+| `GET /api/me` | Bearer (aal1 ou aal2) | passa a trazer `mfaExigido` | 401 |
+| qualquer rota autenticada | Bearer aal1 com `mfa_exigido` | — | 403 `{ erro, codigo: "mfa_necessario" }` |

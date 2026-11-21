@@ -49,6 +49,7 @@ else if (!string.IsNullOrWhiteSpace(pastaDasChaves))
     protecaoDeDados.PersistKeysToFileSystem(new DirectoryInfo(pastaDasChaves));
 builder.Services.AddAutenticacaoSupabase();
 builder.Services.AddSegurancaHttp();
+builder.Services.AddMfaExigido();
 builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = SegurancaExtensions.CorpoMaximoBytes);
 
 // CORS: só a origem do web (Cors:Origem; padrão = Vite local).
@@ -82,6 +83,8 @@ app.UseCors();
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
+// Depois da autorização: quem ligou as duas etapas precisa de token aal2 nas rotas autenticadas (D-013).
+app.UseMfaExigido();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapWorkspaces();

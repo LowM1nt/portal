@@ -6,7 +6,7 @@ namespace Portal.Api.Workspaces;
 
 public record WorkspaceDto(Guid Id, string Nome, string Papel);
 
-public record MeDto(Guid UsuarioId, string? Email, List<WorkspaceDto> Workspaces, string? GithubLogin = null);
+public record MeDto(Guid UsuarioId, string? Email, List<WorkspaceDto> Workspaces, string? GithubLogin = null, bool MfaExigido = false);
 
 public class WorkspaceService
 {
@@ -25,9 +25,9 @@ public class WorkspaceService
     {
         await GarantirWorkspacePessoalAsync(ct);
         var workspaces = await Meus().ToListAsync(ct);
-        var githubLogin = await _db.PerfisUsuario.AsNoTracking()
-            .Where(p => p.UsuarioId == _usuario.Id).Select(p => p.GithubLogin).FirstOrDefaultAsync(ct);
-        return new MeDto(_usuario.Id, _usuario.Email, workspaces, githubLogin);
+        var perfil = await _db.PerfisUsuario.AsNoTracking()
+            .Where(p => p.UsuarioId == _usuario.Id).Select(p => new { p.GithubLogin, p.MfaExigido }).FirstOrDefaultAsync(ct);
+        return new MeDto(_usuario.Id, _usuario.Email, workspaces, perfil?.GithubLogin, perfil?.MfaExigido ?? false);
     }
 
     /// <summary>Workspaces em que o usuário é dono (o pessoal conta).</summary>

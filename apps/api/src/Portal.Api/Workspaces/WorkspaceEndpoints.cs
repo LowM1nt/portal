@@ -1,5 +1,6 @@
 using Portal.Api.Deploys;
 using Portal.Api.Perfil;
+using Portal.Api.Seguranca;
 
 namespace Portal.Api.Workspaces;
 
@@ -11,13 +12,22 @@ public static class WorkspaceEndpoints
     {
         var api = app.MapGroup("/api").RequireAuthorization();
 
+        // Única rota liberada do filtro de duas etapas (D-013): o web precisa saber o estado (mfaExigido) para pedir o código.
         api.MapGet("/me", async (WorkspaceService servico, CancellationToken ct) =>
-            Results.Ok(await servico.ObterMeAsync(ct)));
+            Results.Ok(await servico.ObterMeAsync(ct))).PermitirSemMfa();
 
         // Login do GitHub de quem está logado (filtra "Esperando você"). Vale para a pessoa, em todos os workspaces.
         api.MapPut("/me/github", async (GithubLoginPedido pedido, PerfilService servico, CancellationToken ct) =>
         {
             var r = await servico.SalvarGithubLoginAsync(pedido, ct);
+            return r.Tipo == ResultadoTipo.Ok ? Results.Ok(r.Valor) : Results.BadRequest(new { erro = r.Erro });
+        });
+
+        // Ligar e desligar a exigência de duas etapas na API: só com token aal2 (o código acabou de ser conferido).
+        api.MapPut("/me/mfa", async (MfaPedido pedido, HttpContext http, PerfilService servico, CancellationToken ct) =>
+        {
+            if (!MfaExigido.TokenAal2(http.User)) return MfaExigido.Necessario();
+            var r = await servico.SalvarMfaExigidoAsync(pedido, ct);
             return r.Tipo == ResultadoTipo.Ok ? Results.Ok(r.Valor) : Results.BadRequest(new { erro = r.Erro });
         });
 
