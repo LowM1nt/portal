@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Portal.Api.Bugs;
 using Portal.Api.Dados.Entidades;
 using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Workspaces;
@@ -25,6 +26,8 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<Deploy> Deploys => Set<Deploy>();
 
     public DbSet<PullRequest> PullRequests => Set<PullRequest>();
+
+    public DbSet<Bug> Bugs => Set<Bug>();
 
     public DbSet<ConfiguracaoGitHub> ConfiguracoesGitHub => Set<ConfiguracaoGitHub>();
 
@@ -134,6 +137,29 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
             e.Property(c => c.UltimoErro).HasColumnName("ultimo_erro");
             e.HasOne<Workspace>().WithMany().HasForeignKey(c => c.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(c => c.WorkspaceId).IsUnique();
+        });
+
+        modelBuilder.Entity<Bug>(e =>
+        {
+            e.ToTable("bugs");
+            e.HasKey(b => b.Id);
+            e.Property(b => b.Id).HasColumnName("id");
+            e.Property(b => b.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(b => b.Titulo).HasColumnName("titulo").HasMaxLength(BugsService.TituloMaximo).IsRequired();
+            e.Property(b => b.Relato).HasColumnName("relato").HasMaxLength(BugsService.RelatoMaximo).IsRequired();
+            e.Property(b => b.Passos).HasColumnName("passos").HasMaxLength(BugsService.CampoMaximo).IsRequired();
+            e.Property(b => b.Esperado).HasColumnName("esperado").HasMaxLength(BugsService.CampoMaximo).IsRequired();
+            e.Property(b => b.Obtido).HasColumnName("obtido").HasMaxLength(BugsService.CampoMaximo).IsRequired();
+            e.Property(b => b.Severidade).HasColumnName("severidade").HasMaxLength(20).IsRequired()
+                .HasConversion(v => TextoBug.Para(v), t => TextoBug.Severidade(t)!.Value);
+            e.Property(b => b.Origem).HasColumnName("origem").HasMaxLength(20).IsRequired()
+                .HasConversion(v => TextoBug.Para(v), t => TextoBug.Origem(t)!.Value);
+            e.Property(b => b.Status).HasColumnName("status").HasMaxLength(20).IsRequired()
+                .HasConversion(v => TextoBug.Para(v), t => TextoBug.Status(t)!.Value);
+            e.Property(b => b.CriadoEm).HasColumnName("criado_em");
+            e.Property(b => b.AtualizadoEm).HasColumnName("atualizado_em");
+            e.HasOne<Workspace>().WithMany().HasForeignKey(b => b.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(b => new { b.WorkspaceId, b.Status });
         });
 
         AplicarFiltroPorWorkspace(modelBuilder);
