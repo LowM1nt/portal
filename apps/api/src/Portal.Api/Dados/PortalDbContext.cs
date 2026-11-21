@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Portal.Api.Dados.Entidades;
 using Portal.Api.Integracoes.GitHub;
@@ -6,7 +7,7 @@ using Portal.Api.Workspaces;
 
 namespace Portal.Api.Dados;
 
-public class PortalDbContext : DbContext
+public class PortalDbContext : DbContext, IDataProtectionKeyContext
 {
     private readonly WorkspaceAtual _workspaceAtual;
 
@@ -27,11 +28,23 @@ public class PortalDbContext : DbContext
 
     public DbSet<ConfiguracaoGitHub> ConfiguracoesGitHub => Set<ConfiguracaoGitHub>();
 
+    /// <summary>Chaves do Data Protection (cifram o token do GitHub). Sobrevivem a reinícios e a várias instâncias.</summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     // Lido pelo query filter a cada consulta (o EF o trata como parâmetro, não como constante).
     private Guid WorkspaceIdAtual => _workspaceAtual.Id;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<DataProtectionKey>(e =>
+        {
+            e.ToTable("chaves_protecao_dados");
+            e.HasKey(k => k.Id);
+            e.Property(k => k.Id).HasColumnName("id");
+            e.Property(k => k.FriendlyName).HasColumnName("nome");
+            e.Property(k => k.Xml).HasColumnName("xml");
+        });
+
         modelBuilder.Entity<Workspace>(e =>
         {
             e.ToTable("workspaces");
