@@ -19,6 +19,14 @@ updates:
     directory: /apps/api
     schedule: { interval: weekly }
     open-pull-requests-limit: 3
+    # Ficamos no .NET 8 (LTS): majors do EF Core/Npgsql (9+) exigem .NET 9+.
+    ignore:
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Npgsql*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.AspNetCore*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
