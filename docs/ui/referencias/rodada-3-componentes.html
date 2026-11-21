@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Padrão visual — rodada 3: componentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fundo:#110b1b; --superficie:rgba(34,20,52,.78); --superficie-solida:#1e1330; --superficie-2:rgba(52,32,78,.6);
+    --borda:rgba(155,77,255,.22); --borda-forte:rgba(155,77,255,.45);
+    --texto:#f5effb; --suave:#b3a6c9; --apagado:#7f7396;
+    --roxo:#9b4dff; --roxo-hover:#a964ff; --roxo-claro:#c89bff; --roxo-suave:rgba(155,77,255,.17); --roxo-sombra:rgba(155,77,255,.38);
+    --ok:#34d399; --ok-fundo:rgba(52,211,153,.13); --erro:#fb7185; --erro-fundo:rgba(251,113,133,.14); --aviso:#fbbf24; --aviso-fundo:rgba(251,191,36,.13);
+    --sombra:0 10px 30px rgba(10,4,22,.6); --raio:16px; --raio-m:12px; --raio-p:10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: var(--fundo); color: var(--texto); padding: 48px 32px 96px; min-height: 100vh;
+  }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(900px 420px at 85% -5%, rgba(155,77,255,.30), transparent 70%), radial-gradient(800px 380px at 0% 100%, rgba(214,92,255,.16), transparent 70%); }
+  .pagina { max-width: 1120px; margin: 0 auto; }
+  h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; }
+  .intro { color: var(--suave); margin-top: 10px; font-size: 15px; line-height: 1.6; max-width: 820px; }
+  .secao { margin-top: 48px; }
+  .secao > h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.015em; display: flex; align-items: center; gap: 12px; }
+  .secao > h2 span { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: var(--roxo); font-size: 14px; }
+  .secao > p { color: var(--suave); margin-top: 6px; font-size: 14px; }
+  .vitrine { margin-top: 16px; background: var(--superficie); backdrop-filter: blur(8px); border: 1px solid var(--borda); border-radius: 20px; padding: 24px; box-shadow: var(--sombra); }
+  .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .fila + .fila { margin-top: 16px; }
+  .legenda { width: 110px; color: var(--apagado); font-size: 12px; font-weight: 600; flex: none; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .rot { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 14px; margin-bottom: 12px; }
+  .rot b { display: inline-grid; place-items: center; min-width: 28px; height: 24px; border-radius: 8px; background: var(--superficie-2); font-size: 12px; }
+  .rot small { color: var(--suave); font-weight: 500; }
+
+  /* Botões */
+  .botao { height: 40px; padding: 0 18px; border-radius: var(--raio-m); border: 1px solid transparent; font: 600 14px/1 Inter, sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; cursor: pointer; color: var(--texto); background: none; transition: background .15s, box-shadow .15s, transform .15s; }
+  .botao svg { width: 16px; height: 16px; }
+  .botao.p { background: var(--roxo); color: #fff; box-shadow: 0 6px 18px var(--roxo-sombra); }
+  .botao.p:hover { background: var(--roxo-hover); transform: translateY(-1px); }
+  .botao.s { background: var(--superficie-2); border-color: var(--borda); }
+  .botao.s:hover { border-color: var(--borda-forte); }
+  .botao.f { color: var(--suave); } .botao.f:hover { background: var(--superficie-2); color: var(--texto); }
+  .botao.perigo { background: var(--erro-fundo); color: var(--erro); border-color: rgba(251,113,133,.3); }
+  .botao.peq { height: 32px; padding: 0 12px; font-size: 13px; border-radius: var(--raio-p); }
+  .botao.gde { height: 48px; padding: 0 24px; font-size: 15px; }
+  .botao.icone { width: 40px; padding: 0; }
+  .botao.desab { opacity: .45; cursor: not-allowed; box-shadow: none; }
+  .pilula .botao { border-radius: 999px; }
+  .giro { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: gira .8s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+
+  /* Campos */
+  .campo { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+  .campo label { font-size: 13px; font-weight: 600; }
+  .campo .ajuda { font-size: 12px; color: var(--apagado); }
+  .campo .msg-erro { font-size: 12px; color: var(--erro); font-weight: 600; }
+  .entrada { height: 42px; border-radius: var(--raio-m); padding: 0 14px; font: 500 14px Inter, sans-serif; color: var(--texto); width: 100%; outline: none; transition: border-color .15s, box-shadow .15s; }
+  .contorno .entrada { background: rgba(17,11,27,.6); border: 1px solid var(--borda); }
+  .preenchido .entrada { background: var(--superficie-2); border: 1px solid transparent; }
+  .entrada::placeholder { color: var(--apagado); }
+  .entrada:focus, .entrada.foco { border-color: var(--roxo); box-shadow: 0 0 0 4px var(--roxo-suave); }
+  .entrada.invalida { border-color: var(--erro); box-shadow: 0 0 0 4px var(--erro-fundo); }
+  .grade-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Selos */
+  .selo { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .selo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .ok { color: var(--ok); background: var(--ok-fundo); } .rod { color: var(--roxo-claro); background: var(--roxo-suave); } .fal { color: var(--erro); background: var(--erro-fundo); } .avi { color: var(--aviso); background: var(--aviso-fundo); }
+
+  /* Palco: simula a tela onde modal/painel/toast aparecem */
+  .palco { position: relative; height: 440px; border-radius: 20px; overflow: hidden; border: 1px solid var(--borda); background: var(--fundo);
+    background-image: radial-gradient(500px 220px at 85% -10%, rgba(155,77,255,.30), transparent 70%); margin-top: 16px; }
+  .palco .fantasma { position: absolute; inset: 24px; display: grid; grid-template-rows: 40px 90px 1fr; gap: 14px; }
+  .palco .fantasma div { background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px; }
+  .veu { position: absolute; inset: 0; background: rgba(8,4,14,.6); backdrop-filter: blur(3px); }
+  .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 420px; background: var(--superficie-solida); border: 1px solid var(--borda); border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,.6); padding: 24px; }
+  .modal h3, .painel h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.015em; }
+  .modal p { color: var(--suave); font-size: 14px; line-height: 1.55; margin-top: 8px; }
+  .modal .rodape, .painel .rodape { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+  .modal .icone-topo { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--erro-fundo); color: var(--erro); margin-bottom: 14px; }
+  .modal .icone-topo svg { width: 22px; height: 22px; }
+  .fechar { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--apagado); background: none; border: 0; cursor: pointer; }
+  .fechar:hover { background: var(--superficie-2); color: var(--texto); }
+  .fechar svg { width: 16px; height: 16px; }
+  .painel { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 380px; background: var(--superficie-solida); border: 1px solid var(--borda); border-radius: 20px; box-shadow: -20px 0 60px rgba(0,0,0,.5); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .painel .rodape { margin-top: auto; }
+
+  /* Toast */
+  .toasts { position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px; width: 340px; }
+  .toast { position: relative; overflow: hidden; display: flex; gap: 12px; align-items: flex-start; padding: 14px 44px 16px 14px; background: var(--superficie-solida); border: 1px solid var(--borda); border-radius: 16px; box-shadow: var(--sombra); }
+  .toast .ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .toast .ic svg { width: 16px; height: 16px; }
+  .toast b { font-size: 14px; display: block; }
+  .toast span { font-size: 13px; color: var(--suave); display: block; margin-top: 2px; }
+  .toast .acao { color: var(--roxo-claro); font-weight: 700; font-size: 13px; margin-top: 6px; display: inline-block; }
+  .toast .fechar { top: 10px; right: 10px; width: 26px; height: 26px; }
+  .toast .tempo { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--cor, var(--roxo)); animation: esvazia 5s linear infinite; }
+  @keyframes esvazia { from { width: 100%; } to { width: 0; } }
+
+  /* Ctrl+K */
+  .paleta { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); width: 520px; background: var(--superficie-solida); border: 1px solid var(--borda); border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,.6); overflow: hidden; }
+  .paleta .busca { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 18px; border-bottom: 1px solid var(--borda); font-size: 15px; }
+  .paleta .busca svg { width: 18px; height: 18px; color: var(--suave); }
+  .paleta .busca .cursor { width: 2px; height: 18px; background: var(--roxo); animation: pisca 1s steps(2) infinite; }
+  @keyframes pisca { 50% { opacity: 0; } }
+  .paleta .grupo { padding: 8px; }
+  .paleta .grupo small { display: block; padding: 8px 10px 6px; font-size: 11px; font-weight: 700; color: var(--apagado); text-transform: uppercase; letter-spacing: .06em; }
+  .paleta .op { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 10px; border-radius: 12px; font-size: 14px; color: var(--suave); }
+  .paleta .op svg { width: 17px; height: 17px; }
+  .paleta .op.sel { background: var(--roxo-suave); color: var(--texto); }
+  .paleta .op kbd, .tecla { margin-left: auto; font: 600 11px Inter, sans-serif; color: var(--apagado); border: 1px solid var(--borda); border-radius: 6px; padding: 3px 6px; }
+
+  /* Estados */
+  .estados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
+  .estado { background: var(--superficie); backdrop-filter: blur(8px); border: 1px solid var(--borda); border-radius: 20px; padding: 20px; min-height: 230px; }
+  .estado .tit { font-size: 12px; font-weight: 700; color: var(--apagado); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+  .osso { background: linear-gradient(90deg, rgba(155,77,255,.08) 0%, rgba(155,77,255,.18) 50%, rgba(155,77,255,.08) 100%); background-size: 200% 100%; border-radius: 8px; animation: brilha 1.4s ease-in-out infinite; }
+  @keyframes brilha { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .vazio { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding-top: 6px; }
+  .vazio .circ { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; background: var(--roxo-suave); color: var(--roxo-claro); }
+  .vazio .circ svg { width: 26px; height: 26px; }
+  .vazio b { font-size: 15px; } .vazio span { font-size: 13px; color: var(--suave); max-width: 240px; line-height: 1.5; }
+  .vazio.erro .circ { background: var(--erro-fundo); color: var(--erro); }
+
+  /* Tabela */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: var(--apagado); padding: 0 16px 10px; }
+  td { height: 52px; padding: 0 16px; border-top: 1px solid var(--borda); white-space: nowrap; }
+  tr.linha:hover td { background: rgba(155,77,255,.06); }
+  td.num, th.num { text-align: right; }
+  .pessoa { display: inline-flex; align-items: center; gap: 10px; }
+  .pessoa i { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--roxo-claro), #ff9ccc); }
+  .abas { display: inline-flex; gap: 4px; padding: 4px; background: rgba(17,11,27,.6); border: 1px solid var(--borda); border-radius: 14px; }
+  .abas span { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--suave); }
+  .abas span.at { background: var(--roxo); color: #fff; }
+  .chave { width: 40px; height: 24px; border-radius: 999px; background: var(--roxo); position: relative; flex: none; }
+  .chave::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+  .chave.off { background: var(--superficie-2); border: 1px solid var(--borda); } .chave.off::after { right: auto; left: 3px; background: var(--suave); }
+  .marca { width: 20px; height: 20px; border-radius: 6px; background: var(--roxo); display: grid; place-items: center; color: #fff; flex: none; }
+  .marca svg { width: 13px; height: 13px; }
+  .opcao-linha { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <h1>Rodada 3: componentes em ação</h1>
+  <p class="intro">Tudo no tema Aurora berinjela, com a Inter. Onde houver <b>A/B</b>, escolha um; no resto, diga só se algo te incomoda. Passe o mouse nos botões e nas linhas da tabela.</p>
+
+  <section class="secao">
+    <h2><span>1</span>Botões</h2>
+    <p>Primário (a ação principal da tela, só um por área), secundário, fantasma e perigo.</p>
+    <div class="duas" style="margin-top:16px">
+      <div class="vitrine"><div class="rot"><b>A</b>Cantos arredondados <small>12 px</small></div>
+        <div class="fila"><button class="botao p">+ Novo deploy</button><button class="botao s">Exportar</button><button class="botao f">Cancelar</button></div>
+        <div class="fila"><button class="botao perigo">Excluir</button><button class="botao p"><span class="giro"></span>Salvando…</button><button class="botao p desab">Desativado</button></div>
+        <div class="fila"><button class="botao p peq">Pequeno</button><button class="botao p">Médio</button><button class="botao p gde">Grande</button></div>
+      </div>
+      <div class="vitrine pilula"><div class="rot"><b>B</b>Pílula <small>totalmente redondo</small></div>
+        <div class="fila"><button class="botao p">+ Novo deploy</button><button class="botao s">Exportar</button><button class="botao f">Cancelar</button></div>
+        <div class="fila"><button class="botao perigo">Excluir</button><button class="botao p"><span class="giro"></span>Salvando…</button><button class="botao p desab">Desativado</button></div>
+        <div class="fila"><button class="botao p peq">Pequeno</button><button class="botao p">Médio</button><button class="botao p gde">Grande</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2><span>2</span>Campos de formulário</h2>
+    <p>Rótulo em cima, ajuda embaixo, erro em vermelho com a mensagem do que fazer.</p>
+    <div class="duas" style="margin-top:16px">
+      <div class="vitrine contorno"><div class="rot"><b>A</b>Com contorno</div>
+        <div class="grade-campos">
+          <div class="campo"><label>Título do deploy</label><input class="entrada" placeholder="Ex.: Filtro por ambiente"><span class="ajuda">Aparece no calendário.</span></div>
+          <div class="campo"><label>Repositório</label><input class="entrada foco" value="acme/portal"><span class="ajuda">Selecionado (em foco).</span></div>
+          <div class="campo"><label>Data</label><input class="entrada invalida" value="31/02"><span class="msg-erro">Essa data não existe. Bora tentar outra?</span></div>
+          <div class="campo"><label>Responsável</label><input class="entrada" value="Ana Souza"><span class="ajuda">&nbsp;</span></div>
+        </div>
+      </div>
+      <div class="vitrine preenchido"><div class="rot"><b>B</b>Preenchido</div>
+        <div class="grade-campos">
+          <div class="campo"><label>Título do deploy</label><input class="entrada" placeholder="Ex.: Filtro por ambiente"><span class="ajuda">Aparece no calendário.</span></div>
+          <div class="campo"><label>Repositório</label><input class="entrada foco" value="acme/portal"><span class="ajuda">Selecionado (em foco).</span></div>
+          <div class="campo"><label>Data</label><input class="entrada invalida" value="31/02"><span class="msg-erro">Essa data não existe. Bora tentar outra?</span></div>
+          <div class="campo"><label>Responsável</label><input class="entrada" value="Ana Souza"><span class="ajuda">&nbsp;</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="vitrine">
+      <div class="fila"><span class="legenda">Abas</span><div class="abas"><span class="at">Semana</span><span>Mês</span><span>Lista</span></div></div>
+      <div class="fila"><span class="legenda">Chave e marcação</span><span class="opcao-linha"><span class="chave"></span>Avisar no Discord</span><span class="opcao-linha"><span class="chave off"></span>Modo silencioso</span><span class="opcao-linha"><span class="marca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>Lembrar de mim</span></div>
+      <div class="fila"><span class="legenda">Selos de status</span><span class="selo ok">Sucesso</span><span class="selo rod">Rodando</span><span class="selo avi">Atenção</span><span class="selo fal">Falhou</span></div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2><span>3</span>Tabela</h2>
+    <p>Linhas de 52 px, cabeçalho discreto, números à direita, destaque suave ao passar o mouse.</p>
+    <div class="vitrine" style="padding:20px 8px 8px">
+      <table>
+        <thead><tr><th>Deploy</th><th>Responsável</th><th>Status do CI</th><th class="num">Quando</th><th class="num"></th></tr></thead>
+        <tbody>
+          <tr class="linha"><td>Filtro por ambiente nos deploys</td><td><span class="pessoa"><i></i>Ana Souza</span></td><td><span class="selo ok">Sucesso</span></td><td class="num">Hoje, 16:00</td><td class="num"><button class="botao f peq">Abrir</button></td></tr>
+          <tr class="linha"><td>Correção do cálculo de lead time</td><td><span class="pessoa"><i></i>Bruno Lima</span></td><td><span class="selo rod">Rodando</span></td><td class="num">Amanhã, 11:00</td><td class="num"><button class="botao f peq">Abrir</button></td></tr>
+          <tr class="linha"><td>Novo tema escuro</td><td><span class="pessoa"><i></i>Carla Dias</span></td><td><span class="selo fal">Falhou</span></td><td class="num">Sex, 15:00</td><td class="num"><button class="botao f peq">Abrir</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2><span>4</span>Modal central e painel lateral</h2>
+    <p>Modal para coisas curtas (confirmar, até ~5 campos). Painel lateral para formulários maiores e detalhes.</p>
+    <div class="duas">
+      <div class="palco"><div class="fantasma"><div></div><div></div><div></div></div><div class="veu"></div>
+        <div class="modal" style="width:360px">
+          <button class="fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <div class="icone-topo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div>
+          <h3>Excluir este deploy?</h3>
+          <p>"Novo tema escuro" sai do calendário. Relaxa: dá pra desfazer logo depois.</p>
+          <div class="rodape"><button class="botao f">Cancelar</button><button class="botao perigo">Excluir</button></div>
+        </div>
+      </div>
+      <div class="palco"><div class="fantasma"><div></div><div></div><div></div></div><div class="veu"></div>
+        <div class="painel" style="width:330px">
+          <button class="fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <h3>Novo deploy</h3>
+          <div class="campo contorno"><label>Título</label><input class="entrada" placeholder="Ex.: Filtro por ambiente"></div>
+          <div class="campo contorno"><label>Repositório</label><input class="entrada" value="acme/portal"></div>
+          <div class="campo contorno"><label>Data e hora</label><input class="entrada" value="21/11, 16:00"></div>
+          <div class="rodape"><button class="botao f">Cancelar</button><button class="botao p">Criar deploy</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2><span>5</span>Avisos e busca rápida (Ctrl+K)</h2>
+    <p>Avisos no canto superior direito, com barrinha de tempo e X suave. Erro fica até você fechar.</p>
+    <div class="duas">
+      <div class="palco"><div class="fantasma"><div></div><div></div><div></div></div>
+        <div class="toasts">
+          <div class="toast" style="--cor:var(--ok)"><span class="ic ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span><div><b>Deploy criado!</b><span>Já tá no calendário de sexta.</span></div><button class="fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><i class="tempo"></i></div>
+          <div class="toast"><span class="ic rod"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M6 7l1 13h10l1-13"/></svg></span><div><b>Deploy excluído</b><span>"Novo tema escuro" saiu da agenda.</span><a class="acao">Desfazer</a></div><button class="fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><i class="tempo"></i></div>
+          <div class="toast"><span class="ic fal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/></svg></span><div><b>Ops, não deu pra salvar</b><span>Sem conexão. Tenta de novo em instantes.</span></div><button class="fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        </div>
+      </div>
+      <div class="palco"><div class="fantasma"><div></div><div></div><div></div></div><div class="veu"></div>
+        <div class="paleta" style="width:440px">
+          <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>novo</span><span class="cursor"></span><span class="tecla" style="margin-left:auto">Esc</span></div>
+          <div class="grupo"><small>Ações</small>
+            <div class="op sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Novo deploy<kbd>N D</kbd></div>
+            <div class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Novo workspace</div>
+          </div>
+          <div class="grupo" style="padding-top:0"><small>Ir para</small>
+            <div class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5v7M18 15.5V10a4 4 0 0 0-4-4h-3"/></svg>Revisões<kbd>G R</kbd></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <h2><span>6</span>Carregando, vazio e erro</h2>
+    <p>Esqueleto no formato do conteúdo; vazio com ícone, frase e botão; erro explica e oferece saída.</p>
+    <div class="estados">
+      <div class="estado"><div class="tit">Carregando</div>
+        <div class="osso" style="height:18px;width:60%"></div><div class="osso" style="height:12px;width:40%;margin-top:10px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px"><div class="osso" style="height:64px;border-radius:12px"></div><div class="osso" style="height:64px;border-radius:12px"></div></div>
+        <div class="osso" style="height:40px;margin-top:10px;border-radius:12px"></div>
+      </div>
+      <div class="estado"><div class="tit">Vazio</div>
+        <div class="vazio"><div class="circ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div><b>Semana tranquila por aqui</b><span>Nenhum deploy marcado. Que tal agendar o primeiro?</span><button class="botao p peq">+ Novo deploy</button></div>
+      </div>
+      <div class="estado"><div class="tit">Erro</div>
+        <div class="vazio erro"><div class="circ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg></div><b>Não rolou carregar os deploys</b><span>O servidor demorou demais. Seus dados estão seguros.</span><button class="botao s peq">Tentar de novo</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
