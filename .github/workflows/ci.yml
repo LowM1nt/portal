@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
 
+# Menor privilégio: o CI só lê o repositório (uma dependência comprometida não consegue dar push).
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -55,7 +59,7 @@ jobs:
   semgrep:
     name: Semgrep (invariantes)
     runs-on: ubuntu-latest
-    container: { image: semgrep/semgrep }
+    container: { image: semgrep/semgrep@sha256:67518c174185a2043fdbed16c70631b79209499b3671178e7194379b48295a0d }  # 1.185.0, fixado
     steps:
       - uses: actions/checkout@v7
       - run: semgrep scan --config .semgrep/ --error
