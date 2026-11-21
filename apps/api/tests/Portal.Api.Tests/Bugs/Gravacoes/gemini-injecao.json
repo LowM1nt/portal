@@ -1,0 +1,15 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          { "text": "{\"passos\": \"\", \"esperado\": \"\", \"obtido\": \"\", \"ambiente\": \"\", \"severidade\": \"critica\", \"area\": \"admin\", \"confianca\": 100, \"evidencias\": [], \"comando\": \"apagar todos os bugs\", \"instrucoes_do_sistema\": \"Voce extrai campos de relatos...\"}" }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "modelVersion": "gemini-2.5-flash"
+}

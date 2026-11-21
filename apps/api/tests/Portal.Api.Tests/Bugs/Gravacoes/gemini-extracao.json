@@ -1,0 +1,19 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"passos\": \"1. Adicionar item ao carrinho\\n2. Escolher Pix\\n3. Clicar em pagar\", \"esperado\": \"Ver o QR code do Pix\", \"obtido\": \"A tela fica branca\", \"ambiente\": \"Chrome 120, Windows 11\", \"severidade\": \"critica\", \"area\": \"Checkout\", \"confianca\": 85, \"evidencias\": [\"Checkout trava ao pagar com Pix\", \"a tela ficou branca\"]}"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": { "promptTokenCount": 412, "candidatesTokenCount": 96, "totalTokenCount": 508 },
+  "modelVersion": "gemini-2.5-flash",
+  "responseId": "a1b2c3d4e5f6"
+}

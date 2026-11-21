@@ -2,6 +2,8 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Portal.Api.Bugs;
+using Portal.Api.Bugs.Discord;
+using Portal.Api.Bugs.Extracao;
 using Portal.Api.Dados.Entidades;
 using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Perfil;
@@ -38,6 +40,13 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<PerfilUsuario> PerfisUsuario => Set<PerfilUsuario>();
 
     public DbSet<ConfiguracaoGitHub> ConfiguracoesGitHub => Set<ConfiguracaoGitHub>();
+
+    public DbSet<ConfiguracaoDiscord> ConfiguracoesDiscord => Set<ConfiguracaoDiscord>();
+
+    public DbSet<ConfiguracaoIa> ConfiguracoesIa => Set<ConfiguracaoIa>();
+
+    /// <summary>Sugestões da IA por bug (P-026), separadas do que o humano confirmou no bug.</summary>
+    public DbSet<SugestaoIa> SugestoesIa => Set<SugestaoIa>();
 
     /// <summary>Chaves do Data Protection (cifram o token do GitHub). Sobrevivem a reinícios e a várias instâncias.</summary>
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
@@ -209,8 +218,68 @@ public class PortalDbContext : DbContext, IDataProtectionKeyContext
                 .HasConversion(v => TextoBug.Para(v), t => TextoBug.Status(t)!.Value);
             e.Property(b => b.CriadoEm).HasColumnName("criado_em");
             e.Property(b => b.AtualizadoEm).HasColumnName("atualizado_em");
+            e.Property(b => b.Autor).HasColumnName("autor").HasMaxLength(ImportadorDoDiscord.AutorMaximo);
+            e.Property(b => b.MensagemExternaId).HasColumnName("mensagem_externa_id").HasMaxLength(32);
             e.HasOne<Workspace>().WithMany().HasForeignKey(b => b.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(b => new { b.WorkspaceId, b.Status });
+            // Deduplicação do bot (P-025): a mesma mensagem nunca vira dois bugs no workspace.
+            e.HasIndex(b => new { b.WorkspaceId, b.MensagemExternaId }).IsUnique().HasFilter("mensagem_externa_id IS NOT NULL");
+        });
+
+        modelBuilder.Entity<ConfiguracaoDiscord>(e =>
+        {
+            e.ToTable("configuracoes_discord");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).HasColumnName("id");
+            e.Property(c => c.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(c => c.TokenCriptografado).HasColumnName("token_criptografado").IsRequired();
+            e.Property(c => c.FinalToken).HasColumnName("final_token").HasMaxLength(4).IsRequired();
+            e.Property(c => c.CanalId).HasColumnName("canal_id").HasMaxLength(20).IsRequired();
+            e.Property(c => c.UltimaMensagemId).HasColumnName("ultima_mensagem_id").HasMaxLength(20);
+            e.Property(c => c.ConfiguradoEm).HasColumnName("configurado_em");
+            e.Property(c => c.UltimaLeitura).HasColumnName("ultima_leitura");
+            e.Property(c => c.UltimoErro).HasColumnName("ultimo_erro");
+            e.HasOne<Workspace>().WithMany().HasForeignKey(c => c.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => c.WorkspaceId).IsUnique();
+        });
+
+        modelBuilder.Entity<ConfiguracaoIa>(e =>
+        {
+            e.ToTable("configuracoes_ia");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).HasColumnName("id");
+            e.Property(c => c.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(c => c.Provedor).HasColumnName("provedor").HasMaxLength(30).IsRequired();
+            e.Property(c => c.ChaveCriptografada).HasColumnName("chave_criptografada").IsRequired();
+            e.Property(c => c.ConfiguradoEm).HasColumnName("configurado_em");
+            e.HasOne<Workspace>().WithMany().HasForeignKey(c => c.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => c.WorkspaceId).IsUnique();
+        });
+
+        modelBuilder.Entity<SugestaoIa>(e =>
+        {
+            e.ToTable("sugestoes_ia");
+            e.HasKey(s => s.BugId);
+            e.Property(s => s.BugId).HasColumnName("bug_id").ValueGeneratedNever();
+            e.Property(s => s.WorkspaceId).HasColumnName("workspace_id");
+            e.Property(s => s.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+            e.Property(s => s.Tentativas).HasColumnName("tentativas");
+            e.Property(s => s.ProximaTentativaEm).HasColumnName("proxima_tentativa_em");
+            e.Property(s => s.Passos).HasColumnName("passos").HasMaxLength(ExtratorDeRelato.CampoMaximo).IsRequired();
+            e.Property(s => s.Esperado).HasColumnName("esperado").HasMaxLength(ExtratorDeRelato.CampoMaximo).IsRequired();
+            e.Property(s => s.Obtido).HasColumnName("obtido").HasMaxLength(ExtratorDeRelato.CampoMaximo).IsRequired();
+            e.Property(s => s.Ambiente).HasColumnName("ambiente").HasMaxLength(ExtratorDeRelato.AmbienteMaximo).IsRequired();
+            e.Property(s => s.Severidade).HasColumnName("severidade").HasMaxLength(20);
+            e.Property(s => s.Area).HasColumnName("area").HasMaxLength(ExtratorDeRelato.AreaMaxima);
+            e.Property(s => s.Confianca).HasColumnName("confianca");
+            e.Property(s => s.Evidencias).HasColumnName("evidencias");
+            e.Property(s => s.Erro).HasColumnName("erro").HasMaxLength(200);
+            e.Property(s => s.CriadoEm).HasColumnName("criado_em");
+            e.Property(s => s.AtualizadoEm).HasColumnName("atualizado_em");
+            e.HasOne<Bug>().WithOne().HasForeignKey<SugestaoIa>(s => s.BugId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Workspace>().WithMany().HasForeignKey(s => s.WorkspaceId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(s => new { s.Status, s.ProximaTentativaEm });
+            e.HasIndex(s => s.WorkspaceId);
         });
 
         modelBuilder.Entity<PerfilUsuario>(e =>
