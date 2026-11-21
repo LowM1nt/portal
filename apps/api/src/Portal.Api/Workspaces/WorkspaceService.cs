@@ -10,6 +10,8 @@ public record MeDto(Guid UsuarioId, string? Email, List<WorkspaceDto> Workspaces
 
 public class WorkspaceService
 {
+    public const int WorkspacesMaximosPorUsuario = 20;
+
     private readonly PortalDbContext _db;
     private readonly UsuarioAtual _usuario;
 
@@ -25,6 +27,10 @@ public class WorkspaceService
         var workspaces = await Meus().ToListAsync(ct);
         return new MeDto(_usuario.Id, _usuario.Email, workspaces);
     }
+
+    /// <summary>Workspaces em que o usuário é dono (o pessoal conta).</summary>
+    public Task<int> ContarComoDonoAsync(CancellationToken ct) =>
+        _db.WorkspaceMembros.CountAsync(m => m.UsuarioId == _usuario.Id && m.Papel == Papeis.Dono, ct);
 
     public async Task<WorkspaceDto> CriarAsync(string nome, CancellationToken ct)
     {

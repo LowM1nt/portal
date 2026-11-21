@@ -19,6 +19,9 @@ public static class WorkspaceEndpoints
             if (nome.Length > Workspace.NomeMaximo)
                 return Results.BadRequest(new { erro = $"O nome do workspace pode ter até {Workspace.NomeMaximo} caracteres." });
 
+            if (await servico.ContarComoDonoAsync(ct) >= WorkspaceService.WorkspacesMaximosPorUsuario)
+                return Results.BadRequest(new { erro = $"Você chegou ao limite de {WorkspaceService.WorkspacesMaximosPorUsuario} workspaces." });
+
             var criado = await servico.CriarAsync(nome, ct);
             return Results.Created($"/api/workspaces/{criado.Id}", criado);
         });

@@ -13,4 +13,5 @@ public class WorkspaceMembro
 public static class Papeis
 {
     public const string Dono = "dono";
+    public const string Membro = "membro";
 }

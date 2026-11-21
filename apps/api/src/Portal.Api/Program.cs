@@ -6,6 +6,7 @@ using Portal.Api.Dados;
 using Portal.Api.Demo;
 using Portal.Api.Deploys;
 using Portal.Api.Revisoes;
+using Portal.Api.Seguranca;
 using Portal.Api.Integracoes.GitHub;
 using Portal.Api.Workspaces;
 
@@ -33,6 +34,8 @@ var pastaDasChaves = builder.Configuration["DataProtection:PastaDasChaves"];
 if (!string.IsNullOrWhiteSpace(pastaDasChaves))
     protecaoDeDados.PersistKeysToFileSystem(new DirectoryInfo(pastaDasChaves));
 builder.Services.AddAutenticacaoSupabase();
+builder.Services.AddSegurancaHttp();
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = SegurancaExtensions.CorpoMaximoBytes);
 
 // CORS: só a origem do web (Cors:Origem; padrão = Vite local).
 builder.Services.AddCors();
@@ -58,8 +61,12 @@ if (demoLigada && !string.IsNullOrWhiteSpace(app.Configuration.GetConnectionStri
     await DemoSeeder.SemearAsync(escopo.ServiceProvider.GetRequiredService<PortalDbContext>());
 }
 
+app.UseForwardedHeaders();
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+    app.UseHsts();
 app.UseCors();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
